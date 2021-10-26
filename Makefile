@@ -1,8 +1,25 @@
+# Setting SHELL to bash allows bash commands to be executed by recipes.
+# This is a requirement for 'setup-envtest.sh' in the test target.
+# Options are set to exit when a recipe line exits non-zero or a piped command fails.
+SHELL = /usr/bin/env bash -o pipefail
+.SHELLFLAGS = -ec
 
-# Image URL to use all building/pushing image targets
-IMG ?= controller:latest
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
+TAG ?= dev
+ARCH ?= amd64
+CONTROLLER_IMAGE_NAME := cluster-api-microvm-controller
+# Todo add registry prefix
+CONTROLLER_IMAGE ?= $(CONTROLLER_IMAGE_NAME)
+
+REPO_ROOT := $(shell git rev-parse --show-toplevel)
+# Set --output-base for conversion-gen if we are not within GOPATH
+ifneq ($(abspath $(REPO_ROOT)),$(shell go env GOPATH)/src/github.com/weaveworks/cluster-api-provider-microvm)
+	GEN_OUTPUT_BASE := --output-base=$(REPO_ROOT)
+else
+	export GOPATH := $(shell go env GOPATH)
+endif
+
+# Set build time variables including version details
+LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -10,12 +27,6 @@ GOBIN=$(shell go env GOPATH)/bin
 else
 GOBIN=$(shell go env GOBIN)
 endif
-
-# Setting SHELL to bash allows bash commands to be executed by recipes.
-# This is a requirement for 'setup-envtest.sh' in the test target.
-# Options are set to exit when a recipe line exits non-zero or a piped command fails.
-SHELL = /usr/bin/env bash -o pipefail
-.SHELLFLAGS = -ec
 
 all: build
 
@@ -37,12 +48,6 @@ help: ## Display this help.
 
 ##@ Development
 
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-
-generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
-
 fmt: ## Run go fmt against code.
 	go fmt ./...
 
@@ -63,11 +68,42 @@ build: generate fmt vet ## Build manager binary.
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
 
-docker-build: test ## Build docker image with the manager.
-	docker build -t ${IMG} .
+##@ Docker
+
+.PHONY: docker-build
+docker-build: docker-pull-prerequisites ## Build docker image with the manager.
+	docker build --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMAGE)-$(ARCH):$(TAG)
 
 docker-push: ## Push docker image with the manager.
-	docker push ${IMG}
+	docker push $(CONTROLLER_IMAGE)-$(ARCH):$(TAG)
+
+.PHONY: docker-pull-prerequisites
+docker-pull-prerequisites:
+	docker pull docker.io/docker/dockerfile:1.1-experimental
+	docker pull gcr.io/distroless/static:latest
+
+##@ Generate
+
+CRD_OPTIONS ?= "crd:Versions=v1"
+
+.PHONY: generate
+generate: ## Runs code generation tooling
+	$(MAKE) generate-api
+
+generate-api: controller-gen defaulter-gen
+	$(CONTROLLER_GEN) \
+		paths=./api/... \
+		output:crd:artifacts:config=config/crd/bases \
+		object:headerFile="hack/boilerplate.go.txt" \
+		crd:crdVersions=v1 \
+		rbac:roleName=manager-role \
+		webhook
+
+	$(DEFAULTER_GEN) \
+		--input-dirs=./api/v1alpha1 \
+		--v=0 $(GEN_OUTPUT_BASE) \
+		--go-header-file=./hack/boilerplate.go.txt
+
 
 ##@ Deployment
 
@@ -92,6 +128,10 @@ controller-gen: ## Download controller-gen locally if necessary.
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+
+DEFAULTER_GEN = $(shell pwd)/bin/defaulter-gen
+defaulter-gen: ## Download defaulter-gen locally if necessary.
+	$(call go-get-tool,$(DEFAULTER_GEN),k8s.io/code-generator/cmd/defaulter-gen@v0.22.2)
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
