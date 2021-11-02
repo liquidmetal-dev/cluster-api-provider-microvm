@@ -1,0 +1,19 @@
+[
+    {
+      "name": "mixcrovm",
+      "config": {
+        "image": "cluster-api-microvm-controller",
+        "live_reload_deps": [
+          "main.go",
+          "go.mod",
+          "go.sum",
+          "api",
+          "controllers",
+          "pkg"
+        ],
+        "label": "CAPMVM",
+        "manager_name": "capmvm-controller-manager"
+      }
+    }
+  ]
+  
