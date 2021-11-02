@@ -1,6 +1,6 @@
 [
     {
-      "name": "mixcrovm",
+      "name": "microvm",
       "config": {
         "image": "cluster-api-microvm-controller",
         "live_reload_deps": [
