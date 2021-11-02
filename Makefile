@@ -10,7 +10,14 @@ CONTROLLER_IMAGE_NAME := cluster-api-microvm-controller
 # Todo add registry prefix
 CONTROLLER_IMAGE ?= $(CONTROLLER_IMAGE_NAME)
 
+# Directories
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
+BIN_DIR := bin
+OUT_DIR := out
+TOOLS_DIR := hack/tools
+TOOLS_BIN_DIR := $(TOOLS_DIR)/bin
+TOOLS_SHARE_DIR := $(TOOLS_DIR)/share
+
 # Set --output-base for conversion-gen if we are not within GOPATH
 ifneq ($(abspath $(REPO_ROOT)),$(shell go env GOPATH)/src/github.com/weaveworks/cluster-api-provider-microvm)
 	GEN_OUTPUT_BASE := --output-base=$(REPO_ROOT)
@@ -19,7 +26,24 @@ else
 endif
 
 # Set build time variables including version details
-LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
+LDFLAGS := $(shell source ./hack/scripts/version.sh; version::ldflags)
+
+PATH := $(abspath $(TOOLS_BIN_DIR)):$(PATH)
+
+$(TOOLS_BIN_DIR):
+	mkdir -p $@
+
+$(TOOLS_SHARE_DIR):
+	mkdir -p $@
+
+$(BIN_DIR):
+	mkdir -p $@
+
+$(OUT_DIR):
+	mkdir -p $@
+
+# Binaries
+GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -53,6 +77,10 @@ fmt: ## Run go fmt against code.
 
 vet: ## Run go vet against code.
 	go vet ./...
+
+.PHONY: lint
+lint: $(GOLANGCI_LINT) ## Lint
+	$(GOLANGCI_LINT) run -v --fast=false
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 test: manifests generate fmt vet ## Run tests.
@@ -146,3 +174,8 @@ GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
 rm -rf $$TMP_DIR ;\
 }
 endef
+
+##@ Tools binaries
+
+$(GOLANGCI_LINT): $(TOOLS_DIR)/go.mod # Get and build golangci-lint
+	cd $(TOOLS_DIR); go build -tags=tools -o $(subst hack/tools/,,$@) github.com/golangci/golangci-lint/cmd/golangci-lint

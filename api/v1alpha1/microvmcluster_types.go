@@ -7,28 +7,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// MicrovmClusterSpec defines the desired state of MicrovmCluster
+// MicrovmClusterSpec defines the desired state of MicrovmCluster.
 type MicrovmClusterSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// Foo is an example field of MicrovmCluster. Edit microvmcluster_types.go to remove/update
 	Foo string `json:"foo,omitempty"`
 }
 
-// MicrovmClusterStatus defines the observed state of MicrovmCluster
-type MicrovmClusterStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-}
+// MicrovmClusterStatus defines the observed state of MicrovmCluster.
+type MicrovmClusterStatus struct{}
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// MicrovmCluster is the Schema for the microvmclusters API
+// MicrovmCluster is the Schema for the microvmclusters API.
 type MicrovmCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -39,7 +30,7 @@ type MicrovmCluster struct {
 
 //+kubebuilder:object:root=true
 
-// MicrovmClusterList contains a list of MicrovmCluster
+// MicrovmClusterList contains a list of MicrovmCluster.
 type MicrovmClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

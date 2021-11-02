@@ -19,7 +19,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: MicrovmCluster is the Schema for the microvmclusters API
+        description: MicrovmCluster is the Schema for the microvmclusters API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,7 +34,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: MicrovmClusterSpec defines the desired state of MicrovmCluster
+            description: MicrovmClusterSpec defines the desired state of MicrovmCluster.
             properties:
               foo:
                 description: Foo is an example field of MicrovmCluster. Edit microvmcluster_types.go
@@ -42,7 +42,7 @@ spec:
                 type: string
             type: object
           status:
-            description: MicrovmClusterStatus defines the observed state of MicrovmCluster
+            description: MicrovmClusterStatus defines the observed state of MicrovmCluster.
             type: object
         type: object
     served: true

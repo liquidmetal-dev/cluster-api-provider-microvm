@@ -14,7 +14,7 @@ import (
 	infrastructurev1alpha1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
 )
 
-// MicrovmClusterReconciler reconciles a MicrovmCluster object
+// MicrovmClusterReconciler reconciles a MicrovmCluster object.
 type MicrovmClusterReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
