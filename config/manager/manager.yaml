@@ -5,19 +5,17 @@ metadata:
   name: controller-manager
   namespace: system
   labels:
-    control-plane: capmvm-controller-manager
+    control-plane: controller-manager
 spec:
   selector:
     matchLabels:
-      control-plane: capmvm-controller-manager
+      control-plane: controller-manager
   replicas: 1
   template:
     metadata:
       labels:
-        control-plane: capmvm-controller-manager
+        control-plane: controller-manager
     spec:
-      securityContext:
-        runAsNonRoot: true
       containers:
       - command:
         - /manager
@@ -37,7 +35,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: health
+            port: healthz
         resources:
           limits:
             cpu: 100m
@@ -65,4 +63,4 @@ spec:
               matchExpressions:
               - key: node-role.kubernetes.io/master
                 operator: Exists
-      serviceAccountName: manager
+      serviceAccountName: controller-manager

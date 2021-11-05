@@ -17,6 +17,10 @@ OUT_DIR := out
 TOOLS_DIR := hack/tools
 TOOLS_BIN_DIR := $(TOOLS_DIR)/bin
 TOOLS_SHARE_DIR := $(TOOLS_DIR)/share
+MANIFEST_ROOT ?= config
+CRD_ROOT ?= $(MANIFEST_ROOT)/crd/bases
+WEBHOOK_ROOT ?= $(MANIFEST_ROOT)/webhook
+RBAC_ROOT ?= $(MANIFEST_ROOT)/rbac
 
 # Set --output-base for conversion-gen if we are not within GOPATH
 ifneq ($(abspath $(REPO_ROOT)),$(shell go env GOPATH)/src/github.com/weaveworks/cluster-api-provider-microvm)
@@ -118,19 +122,32 @@ CRD_OPTIONS ?= "crd:Versions=v1"
 generate: ## Runs code generation tooling
 	$(MAKE) generate-api
 
-generate-api: controller-gen defaulter-gen
+generate-go: $(CONTROLLER_GEN) $(DEFAULTER_GEN)
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
-		output:crd:artifacts:config=config/crd/bases \
-		object:headerFile="hack/boilerplate.go.txt" \
-		crd:crdVersions=v1 \
-		rbac:roleName=manager-role \
-		webhook
+		object:headerFile="hack/boilerplate.go.txt" 
 
 	$(DEFAULTER_GEN) \
 		--input-dirs=./api/v1alpha1 \
 		--v=0 $(GEN_OUTPUT_BASE) \
 		--go-header-file=./hack/boilerplate.go.txt
+
+	go generate ./...
+
+
+generate-manifests: $(CONTROLLER_GEN)
+	$(CONTROLLER_GEN) \
+		paths=./api/... \
+		crd:crdVersions=v1 \
+		rbac:roleName=manager-role \
+		output:crd:dir=$(CRD_ROOT) \
+		output:webhook:dir=$(WEBHOOK_ROOT) \
+		webhook
+	$(CONTROLLER_GEN) \
+		paths=./controllers/... \
+		output:rbac:dir=$(RBAC_ROOT) \
+		rbac:roleName=manager-role
+	
 
 
 ##@ Deployment
