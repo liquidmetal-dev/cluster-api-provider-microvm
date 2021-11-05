@@ -293,6 +293,10 @@ func setupWebhooks(mgr ctrl.Manager) error {
 		return fmt.Errorf("unable to setup MicrovmMachine webhook:%w", err)
 	}
 
+	if err := (&infrav1.MicrovmMachineTemplate{}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to setup MicrovmMachineTemplate webhook:%w", err)
+	}
+
 	return nil
 }
 

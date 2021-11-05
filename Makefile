@@ -120,7 +120,8 @@ CRD_OPTIONS ?= "crd:Versions=v1"
 
 .PHONY: generate
 generate: ## Runs code generation tooling
-	$(MAKE) generate-api
+	$(MAKE) generate-go
+	$(MAKE) generate-manifests
 
 generate-go: $(CONTROLLER_GEN) $(DEFAULTER_GEN)
 	$(CONTROLLER_GEN) \
