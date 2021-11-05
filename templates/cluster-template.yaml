@@ -6,7 +6,11 @@ metadata:
 spec:
   clusterNetwork:
     pods:
-      cidrBlocks: ["192.168.0.0/16"]
+      cidrBlocks: 
+        - ${POD_CIDR:=192.168.0.0/16}
+    services:
+      cidrBlocks:
+        - ${SERVICES_CIDR:=172.26.0.0/16}
   infrastructureRef:
     apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
     kind: MicrovmCluster
@@ -16,11 +20,14 @@ spec:
     apiVersion: controlplane.cluster.x-k8s.io/v1beta1
     name: "${CLUSTER_NAME}-control-plane"
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
 kind: MicrovmCluster
 metadata:
   name: "${CLUSTER_NAME}"
-spec: {}
+spec:
+  controlPlaneEndpoint:
+    host: "${CONTROL_PLANE_VIP}"
+    port: 6443
 ---
 kind: KubeadmControlPlane
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1
@@ -32,7 +39,7 @@ spec:
   machineTemplate:
     infrastructureRef:
       kind: MicrovmMachineTemplate
-      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
       name: "${CLUSTER_NAME}-control-plane"
   kubeadmConfigSpec:
     initConfiguration:
@@ -44,6 +51,8 @@ spec:
       nodeRegistration:
         kubeletExtraArgs:
           provider-id: "PROVIDER_ID"
+    preKubeadmCommands:
+            - mkdir -p /etc/kubernetes/manifests && ctr images pull ghcr.io/kube-vip/kube-vip:v0.4.0 && ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:v0.4.0 vip /kube-vip manifest pod --arp --interface $(ip -4 -j route list default | jq -r .[0].dev) --address ${CONTROL_PLANE_VIP} --controlplane --leaderElection > /etc/kubernetes/manifests/kube-vip.yaml
 ---
 kind: MicrovmMachineTemplate
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
@@ -55,8 +64,9 @@ spec:
       vcpu: 2
       memoryMb: 2048
       rootVolume:
-        image: {MVM_ROOT_IMAGE}
-      kernel: {MVM_KERNEL_IMAGE}
+        image: ${MVM_ROOT_IMAGE}
+      kernel: 
+        image: ${MVM_KERNEL_IMAGE}
       networkInterfaces:
       - guestDeviceName: "eth0"
         type: "macvtap"
@@ -84,7 +94,7 @@ spec:
         apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
         kind: MicrovmMachineTemplate
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
 kind: MicrovmMachineTemplate
 metadata:
   name: "${CLUSTER_NAME}-md-0"
@@ -94,8 +104,9 @@ spec:
       vcpu: 2
       memoryMb: 2048
       rootVolume:
-        image: {MVM_ROOT_IMAGE}
-      kernel: {MVM_KERNEL_IMAGE}
+        image: ${MVM_ROOT_IMAGE}
+      kernel: 
+        image: ${MVM_KERNEL_IMAGE}
       networkInterfaces:
       - guestDeviceName: "eth0"
         type: "macvtap"
