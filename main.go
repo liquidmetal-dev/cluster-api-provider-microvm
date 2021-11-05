@@ -17,27 +17,33 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
+	"net/http"
 	"os"
+	"time"
 
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that exec-entrypoint and run can make use of them.
+	"github.com/spf13/pflag"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/klog/klogr"
+	"k8s.io/klog/v2"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
+	cgrecord "k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 
-	infrastructurev1alpha1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	expclusterv1 "sigs.k8s.io/cluster-api/exp/api/v1beta1"
+	"sigs.k8s.io/cluster-api/util/record"
+
+	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks/cluster-api-provider-microvm/controllers"
+	"github.com/weaveworks/cluster-api-provider-microvm/version"
 	//+kubebuilder:scaffold:imports
-)
-
-const (
-	webhookPort = 9443
 )
 
 var (
@@ -46,70 +52,258 @@ var (
 )
 
 func init() {
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
-	utilruntime.Must(infrastructurev1alpha1.AddToScheme(scheme))
+	_ = infrav1.AddToScheme(scheme)
+	_ = clientgoscheme.AddToScheme(scheme)
+	_ = clusterv1.AddToScheme(scheme)
+	_ = expclusterv1.AddToScheme(scheme)
 	//+kubebuilder:scaffold:scheme
 }
 
-func main() {
-	var metricsAddr string
-	var enableLeaderElection bool
-	var probeAddr string
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
-	opts := zap.Options{
-		Development: true,
-	}
-	opts.BindFlags(flag.CommandLine)
-	flag.Parse()
+var (
+	enableLeaderElection        bool
+	metricsAddr                 string
+	leaderElectionNamespace     string
+	watchNamespace              string
+	profilerAddress             string
+	healthAddr                  string
+	watchFilterValue            string
+	webhookCertDir              string
+	microvmClusterConcurrency   int
+	microvmMachineConcurrency   int
+	webhookPort                 int
+	syncPeriod                  time.Duration
+	leaderElectionLeaseDuration time.Duration
+	leaderElectionRenewDeadline time.Duration
+	leaderElectionRetryPeriod   time.Duration
 
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	defaultLeaderElectionDur   = 15 * time.Second
+	defaultLeaderElectRenew    = 10 * time.Second
+	defaultLeaderElectionRetry = 2 * time.Second
+	defaultSyncPeriod          = 10 * time.Minute
+	defaultWebhookPort         = 9443
+	defaultEventBurstSize      = 100
+)
+
+func initFlags(fs *pflag.FlagSet) {
+	fs.StringVar(
+		&metricsAddr,
+		"metrics-bind-addr",
+		"localhost:8080",
+		"The address the metric endpoint binds to.",
+	)
+
+	fs.BoolVar(
+		&enableLeaderElection,
+		"leader-elect",
+		false,
+		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.", //nolint:lll
+	)
+
+	fs.DurationVar(
+		&leaderElectionLeaseDuration,
+		"leader-elect-lease-duration",
+		defaultLeaderElectionDur,
+		"Interval at which non-leader candidates will wait to force acquire leadership (duration string)",
+	)
+
+	fs.DurationVar(
+		&leaderElectionRenewDeadline,
+		"leader-elect-renew-deadline",
+		defaultLeaderElectRenew,
+		"Duration that the leading controller manager will retry refreshing leadership before giving up (duration string)",
+	)
+
+	fs.DurationVar(
+		&leaderElectionRetryPeriod,
+		"leader-elect-retry-period",
+		defaultLeaderElectionRetry,
+		"Duration the LeaderElector clients should wait between tries of actions (duration string)",
+	)
+
+	fs.StringVar(
+		&watchNamespace,
+		"namespace",
+		"",
+		"Namespace that the controller watches to reconcile cluster-api objects. If unspecified, the controller watches for cluster-api objects across all namespaces.", //nolint:lll
+	)
+
+	fs.StringVar(
+		&leaderElectionNamespace,
+		"leader-election-namespace",
+		"",
+		"Namespace that the controller performs leader election in. If unspecified, the controller will discover which namespace it is running in.", //nolint:lll
+	)
+
+	fs.StringVar(
+		&profilerAddress,
+		"profiler-address",
+		"",
+		"Bind address to expose the pprof profiler (e.g. localhost:6060)",
+	)
+
+	fs.StringVar(
+		&watchFilterValue,
+		"watch-filter",
+		"",
+		fmt.Sprintf("Label value that the controller watches to reconcile cluster-api objects. Label key is always %s. If unspecified, the controller watches for all cluster-api objects.", clusterv1.WatchLabel), //nolint:lll
+	)
+
+	fs.IntVar(&microvmClusterConcurrency,
+		"microvmcluster-concurrency",
+		1,
+		"Number of MicrovmClusters to process simultaneously",
+	)
+
+	fs.IntVar(&microvmMachineConcurrency,
+		"microvmmachine-concurrency",
+		1,
+		"Number of MicrovmMachines to process simultaneously",
+	)
+
+	fs.DurationVar(&syncPeriod,
+		"sync-period",
+		defaultSyncPeriod,
+		"The minimum interval at which watched resources are reconciled (e.g. 15m)",
+	)
+
+	fs.IntVar(&webhookPort,
+		"webhook-port",
+		defaultWebhookPort,
+		"Webhook Server port",
+	)
+
+	fs.StringVar(&webhookCertDir,
+		"webhook-cert-dir",
+		"/tmp/k8s-webhook-server/serving-certs",
+		"Webhook Server Certificate Directory, is the directory that contains the server key and certificate",
+	)
+
+	fs.StringVar(&healthAddr,
+		"health-addr",
+		":9440",
+		"The address the health endpoint binds to.",
+	)
+}
+
+func main() {
+	klog.InitFlags(nil)
+
+	initFlags(pflag.CommandLine)
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	pflag.Parse()
+
+	if watchNamespace != "" {
+		setupLog.Info("Watching cluster-api objects only in namespace for reconciliation", "namespace", watchNamespace)
+	}
+
+	if profilerAddress != "" {
+		setupLog.Info("Profiler listening for requests", "profiler-address", profilerAddress)
+
+		go func() {
+			setupLog.Error(http.ListenAndServe(profilerAddress, nil), "listen and serve error")
+		}()
+	}
+
+	ctrl.SetLogger(klogr.New())
+
+	// Machine and cluster operations can create enough events to trigger the event recorder spam filter
+	// Setting the burst size higher ensures all events will be recorded and submitted to the API
+	broadcaster := cgrecord.NewBroadcasterWithCorrelatorOptions(cgrecord.CorrelatorOptions{
+		BurstSize: defaultEventBurstSize,
+	})
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
-		Port:                   webhookPort,
-		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "e03c5cdc.cluster.x-k8s.io",
+		Scheme:                     scheme,
+		MetricsBindAddress:         metricsAddr,
+		LeaderElection:             enableLeaderElection,
+		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
+		LeaderElectionID:           "controller-leader-elect-capmvm",
+		LeaderElectionNamespace:    leaderElectionNamespace,
+		SyncPeriod:                 &syncPeriod,
+		Namespace:                  watchNamespace,
+		EventBroadcaster:           broadcaster,
+		Port:                       webhookPort,
+		CertDir:                    webhookCertDir,
+		HealthProbeBindAddress:     healthAddr,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
-	if err = (&controllers.MicrovmClusterReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "MicrovmCluster")
+	// Initialize event recorder.
+	record.InitFromRecorder(mgr.GetEventRecorderFor("microvm-controller"))
+
+	// Setup the context that's going to be used in controllers and for the manager.
+	ctx := ctrl.SetupSignalHandler()
+
+	if err := setupReconcilers(ctx, mgr); err != nil {
+		setupLog.Error(err, "failed to add Microvm Reconcilers")
 		os.Exit(1)
 	}
-	if err = (&controllers.MicrovmMachineReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "MicrovmMachine")
+
+	if err := setupWebhooks(mgr); err != nil {
+		setupLog.Error(err, "failed to add Microvm Webhooks")
 		os.Exit(1)
 	}
+
+	if err := addHealthChecks(mgr); err != nil {
+		setupLog.Error(err, "failed to add health checks")
+		os.Exit(1)
+	}
+
 	//+kubebuilder:scaffold:builder
 
-	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up health check")
-		os.Exit(1)
-	}
-	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up ready check")
-		os.Exit(1)
-	}
+	setupLog.Info("starting manager", "version", version.Get().String())
 
-	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err := mgr.Start(ctx); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func setupReconcilers(ctx context.Context, mgr ctrl.Manager) error {
+	if err := (&controllers.MicrovmClusterReconciler{
+		Client:           mgr.GetClient(),
+		Scheme:           mgr.GetScheme(),
+		Recorder:         mgr.GetEventRecorderFor("microvmcluster-controller"),
+		WatchFilterValue: watchFilterValue,
+	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: microvmClusterConcurrency, RecoverPanic: true}); err != nil {
+		return fmt.Errorf("unable to create microvm cluster controller: %w", err)
+	}
+
+	if err := (&controllers.MicrovmMachineReconciler{
+		Client:           mgr.GetClient(),
+		Scheme:           mgr.GetScheme(),
+		Recorder:         mgr.GetEventRecorderFor("microvmmachine-controller"),
+		WatchFilterValue: watchFilterValue,
+	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: microvmMachineConcurrency, RecoverPanic: true}); err != nil {
+		return fmt.Errorf("unable to create microvm machine controller: %w", err)
+	}
+
+	return nil
+}
+
+func setupWebhooks(mgr ctrl.Manager) error {
+	if err := (&infrav1.MicrovmCluster{}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to setup MicrovmCluster webhook:%w", err)
+	}
+
+	if err := (&infrav1.MicrovmMachine{}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to setup MicrovmMachine webhook:%w", err)
+	}
+
+	return nil
+}
+
+func addHealthChecks(mgr ctrl.Manager) error {
+	if err := mgr.AddReadyzCheck("webhook", mgr.GetWebhookServer().StartedChecker()); err != nil {
+		return fmt.Errorf("unable to create ready check: %w", err)
+	}
+
+	if err := mgr.AddHealthzCheck("webhook", mgr.GetWebhookServer().StartedChecker()); err != nil {
+		return fmt.Errorf("unable to create healthz check: %w", err)
+	}
+
+	return nil
 }
