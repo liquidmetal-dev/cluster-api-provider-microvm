@@ -35,6 +35,10 @@ type MicrovmClusterStatus struct {
 	// Conditions defines current service state of the MicrovmCluster.
 	// +optional
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
+
+	// FailureDomains is a list of the failure domains that CAPI should spread the machines across. For
+	// the CAPMVM provider this equates to host machines that can run microvms using Flintlock.
+	FailureDomains clusterv1.FailureDomains `json:"failureDomains,omitempty"`
 }
 
 // +kubebuilder:object:root=true

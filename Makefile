@@ -47,7 +47,12 @@ $(OUT_DIR):
 	mkdir -p $@
 
 # Binaries
+COUNTERFEITER := $(TOOLS_BIN_DIR)/counterfeiter
 GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
+CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
+DEFAULTER_GEN := $(TOOLS_BIN_DIR)/defaulter-gen
+
+.DEFAULT_GOAL := help
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -56,46 +61,23 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-all: build
 
-##@ General
-
-# The help target prints out all targets with their descriptions organized
-# beneath their categories. The categories are represented by '##@' and the
-# target descriptions by '##'. The awk commands is responsible for reading the
-# entire set of makefiles included in this invocation, looking for lines of the
-# file as xyz: ## something, and then pretty-format the target and help. Then,
-# if there's a line with ##@ something, that gets pretty-printed as a category.
-# More info on the usage of ANSI control characters for terminal formatting:
-# https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters
-# More info on the awk command:
-# http://linuxcommand.org/lc3_adv_awk.php
-
-help: ## Display this help.
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
-
-##@ Development
-
-fmt: ## Run go fmt against code.
-	go fmt ./...
-
-vet: ## Run go vet against code.
-	go vet ./...
+##@ Linting
 
 .PHONY: lint
 lint: $(GOLANGCI_LINT) ## Lint
 	$(GOLANGCI_LINT) run -v --fast=false
 
+.PHONY: test
 test: ## Run tests.
 	go test -v ./...
 
-##@ Build
+##@ Binaries
 
-build: generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+.PHONY: managers
+managers: ## Build manager binary.
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS} -extldflags '-static'" -o $(BIN_DIR)/manager .
 
-run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go
 
 ##@ Docker
 
@@ -120,7 +102,7 @@ generate: ## Runs code generation tooling
 	$(MAKE) generate-go
 	$(MAKE) generate-manifests
 
-generate-go: controller-gen defaulter-gen $(CONTROLLER_GEN) $(DEFAULTER_GEN)
+generate-go: $(CONTROLLER_GEN) $(DEFAULTER_GEN) $(COUNTERFEITER)
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		object:headerFile="hack/boilerplate.go.txt" 
@@ -133,7 +115,7 @@ generate-go: controller-gen defaulter-gen $(CONTROLLER_GEN) $(DEFAULTER_GEN)
 	go generate ./...
 
 
-generate-manifests: controller-gen $(CONTROLLER_GEN)
+generate-manifests: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		crd:crdVersions=v1 \
@@ -147,50 +129,23 @@ generate-manifests: controller-gen $(CONTROLLER_GEN)
 		rbac:roleName=manager-role
 	
 
-
-##@ Deployment
-
-install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
-
-uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl delete -f -
-
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
-
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/default | kubectl delete -f -
-
-
-CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
-controller-gen: ## Download controller-gen locally if necessary.
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1)
-
-KUSTOMIZE = $(shell pwd)/bin/kustomize
-kustomize: ## Download kustomize locally if necessary.
-	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
-
-DEFAULTER_GEN = $(shell pwd)/bin/defaulter-gen
-defaulter-gen: ## Download defaulter-gen locally if necessary.
-	$(call go-get-tool,$(DEFAULTER_GEN),k8s.io/code-generator/cmd/defaulter-gen@v0.22.2)
-
-# go-get-tool will 'go get' any package $2 and install it to $1.
-PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
-define go-get-tool
-@[ -f $(1) ] || { \
-set -e ;\
-TMP_DIR=$$(mktemp -d) ;\
-cd $$TMP_DIR ;\
-go mod init tmp ;\
-echo "Downloading $(2)" ;\
-GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
-rm -rf $$TMP_DIR ;\
-}
-endef
-
 ##@ Tools binaries
+
+$(CONTROLLER_GEN): $(TOOLS_DIR)/go.mod # Get and build controller-gen
+	cd $(TOOLS_DIR); go build -tags=tools -o $(subst hack/tools/,,$@) sigs.k8s.io/controller-tools/cmd/controller-gen
+
+$(DEFAULTER_GEN): $(TOOLS_DIR)/go.mod # Get and build defaulter-gen
+	cd $(TOOLS_DIR); go build -tags=tools -o $(subst hack/tools/,,$@) k8s.io/code-generator/cmd/defaulter-gen
 
 $(GOLANGCI_LINT): $(TOOLS_DIR)/go.mod # Get and build golangci-lint
 	cd $(TOOLS_DIR); go build -tags=tools -o $(subst hack/tools/,,$@) github.com/golangci/golangci-lint/cmd/golangci-lint
+
+$(COUNTERFEITER): $(TOOLS_DIR)/go.mod # Get and build counterfieter
+	cd $(TOOLS_DIR); go build -tags=tools -o $(subst hack/tools/,,$@) github.com/maxbrunsfeld/counterfeiter/v6
+
+##@ Utility
+
+.PHONY: help
+help: ## Display this help.
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+

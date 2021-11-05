@@ -69,12 +69,19 @@ type ContainerFileSource struct {
 
 // Volume represents a volume to be attached to a microvm.
 type Volume struct {
+	// ID is a unique identifier for this volume.
+	// +kubebuilder:validation:Required
+	ID string `json:"id"`
+
 	// Image is the container image to use for the volume.
 	// +kubebuilder:validation:Required
 	Image string `json:"image"`
 	// ReadOnly specifies that the volume is to be mounted readonly.
 	// +optional
 	ReadOnly bool `json:"readOnly,omitempty"`
+	// MountPoint is the mount point of the volume in the machine.
+	// +kubebuilder:default:=/
+	MountPoint string `json:"mountPoint,omitempty"`
 }
 
 // IfaceType is a type representing the network interface types.
@@ -109,11 +116,13 @@ type VMState string
 
 var (
 	// VMStatePending indicates the microvm hasn't been started.
-	VMStatePending = "pending"
+	VMStatePending = VMState("pending")
 	// VMStateRunning indicates the microvm is running.
-	VMStateRunning = "running"
+	VMStateRunning = VMState("running")
 	// VMStateFailed indicates the microvm has failed.
-	VMStateFailed = "failed"
+	VMStateFailed = VMState("failed")
 	// VMStateDeleted indicates the microvm has been deleted.
-	VMStateDeleted = "deleted"
+	VMStateDeleted = VMState("deleted")
+	// VMStateUnknown indicates the microvm is in an state that is unknown/supported by CAPMVM.
+	VMStateUnknown = VMState("unknown")
 )

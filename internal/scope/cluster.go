@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
 )
 
 var _ Scoper = &ClusterScope{}
@@ -42,7 +43,7 @@ func NewClusterScope(cluster *clusterv1.Cluster,
 		Cluster:        cluster,
 		MvmCluster:     microvmCluster,
 		client:         client,
-		controllerName: "microvm-manager",
+		controllerName: defaults.ManagerName,
 		Logger:         klogr.New(),
 		patchHelper:    patchHelper,
 	}

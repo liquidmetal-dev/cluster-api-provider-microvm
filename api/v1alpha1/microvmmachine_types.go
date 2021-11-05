@@ -21,6 +21,10 @@ type MicrovmMachineSpec struct {
 
 	// ProviderID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
+
+	// FailureDomain is the failure domain unique identifier this Machine should be attached to, as defined in Cluster API.
+	// For this infrastructure provider, the ID is equivalent to a host machine:port running flintlock.
+	FailureDomain *string `json:"failureDomain,omitempty"`
 }
 
 // MicrovmMachineStatus defines the observed state of MicrovmMachine.
@@ -89,6 +93,16 @@ type MicrovmMachine struct {
 
 	Spec   MicrovmMachineSpec   `json:"spec,omitempty"`
 	Status MicrovmMachineStatus `json:"status,omitempty"`
+}
+
+// GetConditions returns the observations of the operational state of the MicrovmMachine resource.
+func (r *MicrovmMachine) GetConditions() clusterv1.Conditions {
+	return r.Status.Conditions
+}
+
+// SetConditions sets the underlying service state of the MicrovmMachine to the predescribed clusterv1.Conditions.
+func (r *MicrovmMachine) SetConditions(conditions clusterv1.Conditions) {
+	r.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true
