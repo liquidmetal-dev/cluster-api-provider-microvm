@@ -1,0 +1,211 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: microvmmachinetemplates.infrastructure.cluster.x-k8s.io
+spec:
+  group: infrastructure.cluster.x-k8s.io
+  names:
+    categories:
+    - cluster-api
+    kind: MicrovmMachineTemplate
+    listKind: MicrovmMachineTemplateList
+    plural: microvmmachinetemplates
+    shortNames:
+    - mvmmt
+    singular: microvmmachinetemplate
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: MicrovmMachineTemplate is the Schema for the microvmmachinetemplates
+          API.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: MicrovmMachineTemplateSpec defines the desired state of MicrovmMachineTemplate.
+            properties:
+              template:
+                description: MicrovmMachineTemplateResource describes the data needed
+                  to create a MicrovmMachine from a template.
+                properties:
+                  metadata:
+                    description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata'
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: 'Annotations is an unstructured key value map
+                          stored with a resource that may be set by external tools
+                          to store and retrieve arbitrary metadata. They are not queryable
+                          and should be preserved when modifying objects. More info:
+                          http://kubernetes.io/docs/user-guide/annotations'
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: 'Map of string keys and values that can be used
+                          to organize and categorize (scope and select) objects. May
+                          match selectors of replication controllers and services.
+                          More info: http://kubernetes.io/docs/user-guide/labels'
+                        type: object
+                    type: object
+                  spec:
+                    description: Spec is the specification of the machine.
+                    properties:
+                      initrd:
+                        description: Initrd is an optional initial ramdisk to use.
+                        properties:
+                          filename:
+                            description: Filename is the name of the file in the container
+                              to use.
+                            type: string
+                          image:
+                            description: Image is the container image to use.
+                            type: string
+                        required:
+                        - image
+                        type: object
+                      kernel:
+                        description: Kernel specifies the kernel and its arguments
+                          to use.
+                        properties:
+                          filename:
+                            description: Filename is the name of the file in the container
+                              to use.
+                            type: string
+                          image:
+                            description: Image is the container image to use.
+                            type: string
+                        required:
+                        - image
+                        type: object
+                      kernelCmdline:
+                        default: console=ttyS0 reboot=k panic=1 pci=off i8042.noaux
+                          i8042.nomux i8042.nopnp i8042.dumbkbd
+                        description: KernelCmdLine are the args to use for the kernel
+                          cmdline.
+                        minLength: 5
+                        type: string
+                      memoryMb:
+                        description: MemoryMb is the amount of memory in megabytes
+                          that the microvm will be allocated.
+                        format: int64
+                        minimum: 1024
+                        type: integer
+                      networkInterfaces:
+                        description: NetworkInterfaces specifies the network interfaces
+                          attached to the microvm.
+                        items:
+                          description: NetworkInterface represents a network interface
+                            for the microvm.
+                          properties:
+                            address:
+                              description: Address is an optional IP address to assign
+                                to this interface. If not supplied then DHCP will
+                                be used.
+                              type: string
+                            guestDeviceName:
+                              description: GuestDeviceName is the name of the network
+                                interface to create in the microvm.
+                              type: string
+                            guestMac:
+                              description: GuestMAC allows the specifying of a specific
+                                MAC address to use for the interface. If not supplied
+                                a autogenerated MAC address will be used.
+                              type: string
+                            type:
+                              description: Type is the type of host network interface
+                                type to create to use by the guest.
+                              enum:
+                              - macvtap
+                              - tap
+                              type: string
+                          required:
+                          - guestDeviceName
+                          - type
+                          type: object
+                        minItems: 1
+                        type: array
+                      providerID:
+                        description: ProviderID is the unique identifier as specified
+                          by the cloud provider.
+                        type: string
+                      rootVolume:
+                        description: RootVolume specifies the volume to use for the
+                          root of the microvm.
+                        properties:
+                          image:
+                            description: Image is the container image to use for the
+                              volume.
+                            type: string
+                          readOnly:
+                            description: ReadOnly specifies that the volume is to
+                              be mounted readonly.
+                            type: boolean
+                        required:
+                        - image
+                        type: object
+                      vcpu:
+                        description: VCPU specifies how many vcpu's the microvm will
+                          be allocated.
+                        format: int64
+                        minimum: 1
+                        type: integer
+                      volumes:
+                        description: AdditionalVolumes specifies additional non-root
+                          volumes to attach to the microvm.
+                        items:
+                          description: Volume represents a volume to be attached to
+                            a microvm.
+                          properties:
+                            image:
+                              description: Image is the container image to use for
+                                the volume.
+                              type: string
+                            readOnly:
+                              description: ReadOnly specifies that the volume is to
+                                be mounted readonly.
+                              type: boolean
+                          required:
+                          - image
+                          type: object
+                        type: array
+                    required:
+                    - kernel
+                    - memoryMb
+                    - networkInterfaces
+                    - rootVolume
+                    - vcpu
+                    type: object
+                required:
+                - spec
+                type: object
+            required:
+            - template
+            type: object
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

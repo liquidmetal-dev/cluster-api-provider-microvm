@@ -22,4 +22,13 @@ resources:
   kind: MicrovmMachine
   path: github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: false
+  domain: cluster.x-k8s.io
+  group: infrastructure
+  kind: MicrovmMachineTemplate
+  path: github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1
+  version: v1alpha1
 version: "3"
