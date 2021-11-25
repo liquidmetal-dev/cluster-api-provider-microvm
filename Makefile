@@ -86,11 +86,8 @@ vet: ## Run go vet against code.
 lint: $(GOLANGCI_LINT) ## Lint
 	$(GOLANGCI_LINT) run -v --fast=false
 
-ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
-test: manifests generate fmt vet ## Run tests.
-	mkdir -p ${ENVTEST_ASSETS_DIR}
-	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+test: ## Run tests.
+	go test -v ./...
 
 ##@ Build
 
@@ -120,9 +117,10 @@ CRD_OPTIONS ?= "crd:Versions=v1"
 
 .PHONY: generate
 generate: ## Runs code generation tooling
-	$(MAKE) generate-api
+	$(MAKE) generate-go
+	$(MAKE) generate-manifests
 
-generate-go: $(CONTROLLER_GEN) $(DEFAULTER_GEN)
+generate-go: controller-gen defaulter-gen $(CONTROLLER_GEN) $(DEFAULTER_GEN)
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		object:headerFile="hack/boilerplate.go.txt" 
@@ -135,7 +133,7 @@ generate-go: $(CONTROLLER_GEN) $(DEFAULTER_GEN)
 	go generate ./...
 
 
-generate-manifests: $(CONTROLLER_GEN)
+generate-manifests: controller-gen $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		crd:crdVersions=v1 \

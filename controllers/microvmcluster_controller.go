@@ -6,21 +6,37 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/cluster-api/controllers/remote"
 	"sigs.k8s.io/cluster-api/util"
+	"sigs.k8s.io/cluster-api/util/annotations"
+	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/predicates"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
+	"github.com/weaveworks/cluster-api-provider-microvm/internal/scope"
+)
+
+const (
+	requeuePeriod = 30 * time.Second
 )
 
 // MicrovmClusterReconciler reconciles a MicrovmCluster object.
@@ -29,6 +45,8 @@ type MicrovmClusterReconciler struct {
 	Scheme           *runtime.Scheme
 	Recorder         record.EventRecorder
 	WatchFilterValue string
+
+	RemoteClientGetter remote.ClusterClientGetter
 }
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=microvmclusters,verbs=get;list;watch;create;update;patch;delete
@@ -38,24 +56,134 @@ type MicrovmClusterReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the MicrovmCluster object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *MicrovmClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
-	// your logic here
+	mvmCluster := &infrav1.MicrovmCluster{}
+	err := r.Get(ctx, req.NamespacedName, mvmCluster)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		log.Error(err, "error getting microvmcluster", "id", req.NamespacedName)
 
-	return ctrl.Result{}, nil
+		return ctrl.Result{}, err
+	}
+
+	cluster, err := util.GetOwnerCluster(ctx, r.Client, mvmCluster.ObjectMeta)
+	if err != nil {
+		log.Error(err, "getting owning cluster")
+
+		return ctrl.Result{}, err
+	}
+
+	if cluster == nil {
+		log.Info("Cluster Controller has not yet set OwnerRef")
+
+		return ctrl.Result{}, nil
+	}
+
+	if annotations.IsPaused(cluster, mvmCluster) {
+		log.Info("MicrovmCluster or linked Cluster is marked as paused. Won't reconcile")
+
+		return ctrl.Result{}, nil
+	}
+
+	scope, err := scope.NewClusterScope(cluster,
+		mvmCluster,
+		r.Client,
+		scope.WithClusterLogger(log.WithValues("microvmcluster", req.NamespacedName)))
+	if err != nil {
+		log.Error(err, "creating cluster scope")
+
+		return ctrl.Result{}, err
+	}
+
+	defer func() {
+		if patchErr := scope.Patch(); patchErr != nil {
+			log.Error(patchErr, "failed to patch microvm cluster")
+		}
+	}()
+
+	if !mvmCluster.DeletionTimestamp.IsZero() {
+		log.Info("Deleting cluster")
+
+		return r.reconcileDelete(ctx, scope)
+	}
+
+	return r.reconcileNormal(ctx, scope)
+}
+
+func (r *MicrovmClusterReconciler) reconcileDelete(_ context.Context, clusterScope *scope.ClusterScope) (reconcile.Result, error) {
+	clusterScope.Info("Reconciling MicrovmCluster delete")
+
+	// TODO: do any required deletion
+
+	controllerutil.RemoveFinalizer(clusterScope.MvmCluster, infrav1.ClusterFinalizer)
+
+	return reconcile.Result{}, nil
+}
+
+func (r *MicrovmClusterReconciler) reconcileNormal(ctx context.Context, clusterScope *scope.ClusterScope) (reconcile.Result, error) {
+	clusterScope.Info("Reconciling MicrovmCluster")
+
+	if clusterScope.Cluster.Spec.ControlPlaneEndpoint.IsZero() && clusterScope.MvmCluster.Spec.ControlPlaneEndpoint.IsZero() {
+		return reconcile.Result{}, errControlplaneEndpointRequired
+	}
+
+	controllerutil.AddFinalizer(clusterScope.MvmCluster, infrav1.ClusterFinalizer)
+
+	clusterScope.MvmCluster.Status.Ready = true
+
+	available := r.isAPIServerAvailable(ctx, clusterScope)
+	if !available {
+		conditions.MarkFalse(clusterScope.MvmCluster, infrav1.LoadBalancerAvailableCondition, infrav1.LoadBalancerNotAvailableReason, clusterv1.ConditionSeverityInfo, "control plane load balancer isn't available")
+
+		return reconcile.Result{RequeueAfter: requeuePeriod}, nil
+	}
+	conditions.MarkTrue(clusterScope.MvmCluster, infrav1.LoadBalancerAvailableCondition)
+
+	return reconcile.Result{}, nil
+}
+
+func (r *MicrovmClusterReconciler) isAPIServerAvailable(ctx context.Context, clusterScope *scope.ClusterScope) bool {
+	clusterScope.V(defaults.LogLevelDebug).Info("checking if api server is available", "cluster", clusterScope.ClusterName())
+
+	clusterKey := client.ObjectKey{
+		Name:      clusterScope.Cluster.Name,
+		Namespace: clusterScope.Cluster.Namespace,
+	}
+
+	remoteClient, err := r.RemoteClientGetter(ctx, clusterScope.ClusterName(), r.Client, clusterKey)
+	if err != nil {
+		clusterScope.Error(err, "creating remote cluster client")
+
+		return false
+	}
+
+	nodes := &corev1.NodeList{}
+	if err = remoteClient.List(ctx, nodes); err != nil {
+		return false
+	}
+	if len(nodes.Items) == 0 {
+		return false
+	}
+
+	clusterScope.Info("api server is available", "cluster", clusterScope.ClusterName())
+
+	return true
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *MicrovmClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
 	log := ctrl.LoggerFrom(ctx)
+
+	if r.RemoteClientGetter == nil {
+		r.RemoteClientGetter = remote.NewClusterClient
+	}
 
 	builder := ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).

@@ -4,7 +4,10 @@
 package v1alpha1
 
 import (
+	"reflect"
+
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -38,7 +41,15 @@ func (r *MicrovmMachine) ValidateDelete() error {
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (r *MicrovmMachine) ValidateUpdate(old runtime.Object) error {
-	return nil
+	var allErrs field.ErrorList
+
+	previous, _ := old.(*MicrovmMachine)
+
+	if !reflect.DeepEqual(r.Spec, previous.Spec) {
+		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "microvm machine spec is immutable"))
+	}
+
+	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
 
 // Default satisfies the defaulting webhook interface.
