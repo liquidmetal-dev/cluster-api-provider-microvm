@@ -7,7 +7,7 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
-// MicrovmSpec represents the specification for a microvm
+// MicrovmSpec represents the specification for a microvm.
 type MicrovmSpec struct {
 	// VCPU specifies how many vcpu's the microvm will be allocated.
 	// +kubebuilder:validation:Required

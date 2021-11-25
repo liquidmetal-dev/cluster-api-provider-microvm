@@ -26,3 +26,7 @@ testbin/*
 
 out/
 .tiltbuild/
+
+.vscode/
+.env
+.envrc
