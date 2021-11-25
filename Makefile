@@ -120,7 +120,7 @@ generate: ## Runs code generation tooling
 	$(MAKE) generate-go
 	$(MAKE) generate-manifests
 
-generate-go: $(CONTROLLER_GEN) $(DEFAULTER_GEN)
+generate-go: controller-gen defaulter-gen $(CONTROLLER_GEN) $(DEFAULTER_GEN)
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		object:headerFile="hack/boilerplate.go.txt" 
@@ -133,7 +133,7 @@ generate-go: $(CONTROLLER_GEN) $(DEFAULTER_GEN)
 	go generate ./...
 
 
-generate-manifests: $(CONTROLLER_GEN)
+generate-manifests: controller-gen $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		crd:crdVersions=v1 \
