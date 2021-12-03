@@ -318,7 +318,7 @@ func machineReconcileNoVmCreateSucceeds(t *testing.T) {
 	g.Expect(createReq.Microvm).ToNot(BeNil())
 	g.Expect(createReq.Microvm.Labels).To(HaveLen(1))
 	expectedBootstrapData := base64.StdEncoding.EncodeToString([]byte(testbootStrapData))
-	g.Expect(createReq.Microvm.Metadata).To(HaveKeyWithValue("meta-data", expectedBootstrapData))
+	g.Expect(createReq.Microvm.Metadata).To(HaveKeyWithValue("user-data", expectedBootstrapData))
 }
 
 func machineReconcileNoVmCreateAdditionReconcile(t *testing.T) {
