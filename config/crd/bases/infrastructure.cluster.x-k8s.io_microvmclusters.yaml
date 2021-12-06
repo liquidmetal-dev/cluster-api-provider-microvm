@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.7.1-0.20211110210727-ab52f76cc7d1
   creationTimestamp: null
   name: microvmclusters.infrastructure.cluster.x-k8s.io
 spec:
@@ -119,6 +118,27 @@ spec:
                   - type
                   type: object
                 type: array
+              failureDomains:
+                additionalProperties:
+                  description: FailureDomainSpec is the Schema for Cluster API failure
+                    domains. It allows controllers to understand how many failure
+                    domains a cluster can optionally span across.
+                  properties:
+                    attributes:
+                      additionalProperties:
+                        type: string
+                      description: Attributes is a free form map of attributes an
+                        infrastructure provider might use or require.
+                      type: object
+                    controlPlane:
+                      description: ControlPlane determines if this failure domain
+                        is suitable for use by control plane machines.
+                      type: boolean
+                  type: object
+                description: FailureDomains is a list of the failure domains that
+                  CAPI should spread the machines across. For the CAPMVM provider
+                  this equates to host machines that can run microvms using Flintlock.
+                type: object
               ready:
                 default: false
                 description: Ready indicates that the cluster is ready.

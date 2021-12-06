@@ -21,6 +21,4 @@ type Scoper interface {
 
 	// Patch persists the resource and status.
 	Patch() error
-	// Close closes the current scope persisting the resource and status.
-	Close() error
 }

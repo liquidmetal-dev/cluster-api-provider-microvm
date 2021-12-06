@@ -4,8 +4,10 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"reflect"
 
+	"github.com/yitsushi/macpot"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -31,6 +33,19 @@ var (
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (r *MicrovmMachine) ValidateCreate() error {
+	for i := range r.Spec.NetworkInterfaces {
+		iface := r.Spec.NetworkInterfaces[i]
+
+		if iface.GuestMAC == "" {
+			mac, err := macpot.New(macpot.AsLocal())
+			if err != nil {
+				return fmt.Errorf("creating mac address client: %w", err)
+			}
+
+			iface.GuestMAC = mac.ToString()
+		}
+	}
+
 	return nil
 }
 

@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/spf13/pflag"
+	"google.golang.org/grpc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/klog/klogr"
 	"k8s.io/klog/v2"
@@ -40,8 +41,11 @@ import (
 	expclusterv1 "sigs.k8s.io/cluster-api/exp/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/record"
 
+	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
+
 	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks/cluster-api-provider-microvm/controllers"
+	"github.com/weaveworks/cluster-api-provider-microvm/internal/services/microvm"
 	"github.com/weaveworks/cluster-api-provider-microvm/version"
 	//+kubebuilder:scaffold:imports
 )
@@ -277,6 +281,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager) error {
 		Scheme:           mgr.GetScheme(),
 		Recorder:         mgr.GetEventRecorderFor("microvmmachine-controller"),
 		WatchFilterValue: watchFilterValue,
+		MvmClientFunc:    createFlintlockClient,
 	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: microvmMachineConcurrency, RecoverPanic: true}); err != nil {
 		return fmt.Errorf("unable to create microvm machine controller: %w", err)
 	}
@@ -310,4 +315,19 @@ func addHealthChecks(mgr ctrl.Manager) error {
 	}
 
 	return nil
+}
+
+func createFlintlockClient(address string) (microvm.Client, error) {
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+	}
+
+	conn, err := grpc.Dial(address, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("creating grpc connection: %w", err)
+	}
+
+	flClient := flintlockv1.NewMicroVMClient(conn)
+
+	return flClient, nil
 }

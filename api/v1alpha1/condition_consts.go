@@ -19,3 +19,26 @@ const (
 	// LoadBalancerNotAvailableReason is used to indicate that the load balancer isn't available.
 	LoadBalancerNotAvailableReason = "LoadBalancerNotAvailable"
 )
+
+const (
+	// MicrovmReadyCondition indicates that the microvm is in a running state.
+	MicrovmReadyCondition clusterv1.ConditionType = "MicrovmReady"
+
+	// MicrovmProvisionFailedReason indicates that the microvm failed to provision.
+	MicrovmProvisionFailedReason = "MicrovmProvisionFailed"
+
+	// MicrovmPendingReason indicates the microvm is in a pending state.
+	MicrovmPendingReason = "MicrovmPending"
+
+	// MicrovmUnknownStateReason indicates that the microvm in in an unknown or unsupported state
+	// for reconciliation.
+	MicrovmUnknownStateReason = "MicrovmUnknownState"
+
+	// WaitingForClusterInfraReason indicates that the microvm reconciliation is waiting for
+	// the cluster infrastructure to be ready before proceeding.
+	WaitingForClusterInfraReason = "WaitingForClusterInfra"
+
+	// WaitingForBootstrapDataReason indicates that microvm is waiting for the bootstrap data
+	// to be available before proceeding.
+	WaitingForBootstrapDataReason = "WaitingForBoostrapData"
+)

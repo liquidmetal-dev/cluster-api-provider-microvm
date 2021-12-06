@@ -14,22 +14,11 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	fakeremote "sigs.k8s.io/cluster-api/controllers/remote/fake"
 	"sigs.k8s.io/cluster-api/util/conditions"
 
 	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
-	"github.com/weaveworks/cluster-api-provider-microvm/controllers"
-)
-
-const (
-	testClusterName      = "tenant1"
-	testClusterNamespace = "ns1"
 )
 
 func TestClusterReconciliationNoEndpoint(t *testing.T) {
@@ -290,84 +279,4 @@ func TestClusterReconciliationDelete(t *testing.T) {
 	reconciled, err := getMicrovmCluster(context.TODO(), client, testClusterName, testClusterNamespace)
 	g.Expect(err).NotTo(HaveOccurred())
 	g.Expect(reconciled.Finalizers).To(HaveLen(0))
-}
-
-func reconcileCluster(client client.Client) (ctrl.Result, error) {
-	clusterController := &controllers.MicrovmClusterReconciler{
-		Client:             client,
-		RemoteClientGetter: fakeremote.NewClusterClient,
-	}
-
-	request := ctrl.Request{
-		NamespacedName: types.NamespacedName{
-			Name:      "tenant1",
-			Namespace: "ns1",
-		},
-	}
-
-	return clusterController.Reconcile(context.TODO(), request)
-}
-
-func getCluster(ctx context.Context, c client.Client, name, namespace string) (*clusterv1.Cluster, error) {
-	clusterKey := client.ObjectKey{
-		Name:      name,
-		Namespace: namespace,
-	}
-
-	cluster := &clusterv1.Cluster{}
-	err := c.Get(ctx, clusterKey, cluster)
-	return cluster, err
-}
-
-func getMicrovmCluster(ctx context.Context, c client.Client, name, namespace string) (*infrav1.MicrovmCluster, error) {
-	clusterKey := client.ObjectKey{
-		Name:      name,
-		Namespace: namespace,
-	}
-
-	cluster := &infrav1.MicrovmCluster{}
-	err := c.Get(ctx, clusterKey, cluster)
-	return cluster, err
-}
-
-func createFakeClient(g *WithT, objects []runtime.Object) client.Client {
-	scheme := runtime.NewScheme()
-
-	g.Expect(infrav1.AddToScheme(scheme)).To(Succeed())
-	g.Expect(clusterv1.AddToScheme(scheme)).To(Succeed())
-	g.Expect(corev1.AddToScheme(scheme)).To(Succeed())
-
-	return fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(objects...).Build()
-}
-
-func createMicrovmCluster(name, namespace string) *infrav1.MicrovmCluster {
-	return &infrav1.MicrovmCluster{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion: "cluster.x-k8s.io/v1beta1",
-					Kind:       "Cluster",
-					Name:       name,
-				},
-			},
-		},
-		Spec:   infrav1.MicrovmClusterSpec{},
-		Status: infrav1.MicrovmClusterStatus{},
-	}
-}
-
-func createCluster(name, namespace string) *clusterv1.Cluster {
-	return &clusterv1.Cluster{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: clusterv1.ClusterSpec{
-			InfrastructureRef: &corev1.ObjectReference{
-				Name: name,
-			},
-		},
-	}
 }

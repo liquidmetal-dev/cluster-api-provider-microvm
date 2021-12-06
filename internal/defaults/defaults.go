@@ -6,4 +6,6 @@ package defaults
 const (
 	LogLevelDebug = 2
 	LogLevelTrace = 9
+
+	ManagerName = "microvm-manager"
 )
