@@ -24,7 +24,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -120,9 +119,7 @@ func (r *MicrovmClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 func (r *MicrovmClusterReconciler) reconcileDelete(_ context.Context, clusterScope *scope.ClusterScope) (reconcile.Result, error) {
 	clusterScope.Info("Reconciling MicrovmCluster delete")
 
-	// TODO: do any required deletion
-
-	controllerutil.RemoveFinalizer(clusterScope.MvmCluster, infrav1.ClusterFinalizer)
+	// We currently do not do any Cluster creation so there is nothing to delete.
 
 	return reconcile.Result{}, nil
 }
@@ -133,8 +130,6 @@ func (r *MicrovmClusterReconciler) reconcileNormal(ctx context.Context, clusterS
 	if clusterScope.Cluster.Spec.ControlPlaneEndpoint.IsZero() && clusterScope.MvmCluster.Spec.ControlPlaneEndpoint.IsZero() {
 		return reconcile.Result{}, errControlplaneEndpointRequired
 	}
-
-	controllerutil.AddFinalizer(clusterScope.MvmCluster, infrav1.ClusterFinalizer)
 
 	clusterScope.MvmCluster.Status.Ready = true
 
