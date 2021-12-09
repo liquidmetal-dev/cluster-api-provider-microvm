@@ -84,13 +84,15 @@ When tilt is started you can press the **spacebar** to open up a browser based U
 ## Start flintlock
 
 Ensure that you have an instance of flintlock (and containerd) [configured and running](https://github.com/weaveworks/flintlock/blob/main/docs/quick-start.md).
+Be sure to start flintlock with `--grpc-endpoint=0.0.0.0:9090` or the CAPMVM controller
+will not be able to connect to the server from within the Kind cluster.
 
 ## Create cluster definition
 
 Create the declaration for your cluster. We will use the template in the repo.
 
 1. Open a terminal and go to your **cluster-api-provider-microvm** folder
-2. Create a cluster declaration from the template 
+2. Create a cluster declaration from the template
 
     ```bash
     export KUBERNETES_VERSION=v1.20.0
@@ -100,19 +102,38 @@ Create the declaration for your cluster. We will use the template in the repo.
     export CONTROL_PLANE_VIP=192.168.8.15
     export MVM_ROOT_IMAGE=docker.io/richardcase/ubuntu-bionic-test:cloudimage_v0.0.1
     export MVM_KERNEL_IMAGE=docker.io/richardcase/ubuntu-bionic-kernel:0.0.11
-    
-    cat templates/cluster-template.yaml | envsubst > cluster.yaml 
+
+    cat templates/cluster-template.yaml | envsubst > cluster.yaml
     ```
 3. Edit **cluster.yaml** to make any changes of comment out sections.
-4. Do a dry run for the manifests:
+
+4. Add the `FailureDomain`s
+
+    This step exists just while I figure out how failure domains actually work
+    or until Richard gets back. Without _something_ set, your local clusters will
+    not be able to call flintlock.
+
+    Get your default interface address: `ip route | awk '/default/ {print $3}'`
+
+    In your `cluster.yaml`, add the following to **both** `MicroVMMachineTemplate`
+    specs:
+
+    ```yaml
+    failureDomain: <that address you just got>:9090
+    ```
+
+5. Do a dry run for the manifests:
 
     ```bash
     kubectl apply -f cluster.yaml --dry-run=server
     ```
 
-5. If you are happy apply and watch the logs in the tilt ui.
+6. If you are happy apply and watch the logs in the tilt ui.
 
-> Tilt uses hot reloading so you can make code changes to CAPMVM and it will automaticaly rebuild/deploy capmvm.
+> Tilt uses hot reloading so you can make code changes to CAPMVM and it will automatically rebuild/deploy capmvm.
+
+7. To delete the cluster **do not** use `kubectl delete -f cluster.yaml`.
+    Run `kubectl delete clusters.cluster.x-k8s.io mvm-test`.
 
 ## Debug
 
@@ -137,9 +158,8 @@ You can connect to the running instance of delve. If you are using vscode then y
     }
 ```
 
-Or you cann connect using delve on the command line:
+Or you can connect using delve on the command line (_so the legend goes, I have not been able to get it to work yet_):
 
 ```bash
-dlv-dap connect 127.0.0.1:30000
+dlv connect 127.0.0.1:30000
 ```
-W
