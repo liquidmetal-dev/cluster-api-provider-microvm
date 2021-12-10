@@ -8,12 +8,6 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
-const (
-	// ClusterFinalizer allows ReconcileMicrovmCluster to clean up esources associated with MicrovmCluster before
-	// removing it from the apiserver.
-	ClusterFinalizer = "microvmcluster.infrastructure.cluster.x-k8s.io"
-)
-
 // MicrovmClusterSpec defines the desired state of MicrovmCluster.
 type MicrovmClusterSpec struct {
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.

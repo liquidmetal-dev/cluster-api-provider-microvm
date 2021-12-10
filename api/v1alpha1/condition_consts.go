@@ -30,6 +30,12 @@ const (
 	// MicrovmPendingReason indicates the microvm is in a pending state.
 	MicrovmPendingReason = "MicrovmPending"
 
+	// MicrovmDeletingReason indicates the microvm is in a deleted state.
+	MicrovmDeletingReason = "MicrovmDeleting"
+
+	// MicrovmDeletedFailedReason indicates the microvm failed to deleted cleanly.
+	MicrovmDeleteFailedReason = "MicrovmDeleteFailed"
+
 	// MicrovmUnknownStateReason indicates that the microvm in in an unknown or unsupported state
 	// for reconciliation.
 	MicrovmUnknownStateReason = "MicrovmUnknownState"

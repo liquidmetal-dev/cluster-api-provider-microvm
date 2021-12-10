@@ -145,14 +145,52 @@ func (r *MicrovmMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	return r.reconcileNormal(ctx, machineScope)
 }
 
-func (r *MicrovmMachineReconciler) reconcileDelete(_ context.Context, machineScope *scope.MachineScope) (reconcile.Result, error) {
+func (r *MicrovmMachineReconciler) reconcileDelete(ctx context.Context, machineScope *scope.MachineScope) (reconcile.Result, error) {
 	machineScope.Info("Reconciling MicrovmMachine delete")
 
-	// TODO: call flintlock to delete
+	mvmSvc, err := r.getMicrovmService(machineScope)
+	if err != nil {
+		machineScope.Error(err, "failed to get microvm service")
 
+		return ctrl.Result{}, nil
+	}
+
+	microvm, err := mvmSvc.Get(ctx)
+	if err != nil && !isSpecNotFound(err) {
+		machineScope.Error(err, "failed getting microvm")
+
+		return ctrl.Result{}, err
+	}
+
+	if microvm != nil {
+		machineScope.Info("deleting microvm")
+
+		// Mark the machine as no longer ready before we delete
+		machineScope.SetNotReady(infrav1.MicrovmDeletingReason, clusterv1.ConditionSeverityInfo, "")
+		if err := machineScope.Patch(); err != nil {
+			machineScope.Error(err, "failed to patch object")
+
+			return ctrl.Result{}, err
+		}
+
+		// TODO: we should check the state returned from the above Get and only
+		// call Delete if not "deleting". Flintlock #310
+		if _, err := mvmSvc.Delete(ctx); err != nil {
+			machineScope.SetNotReady(infrav1.MicrovmDeleteFailedReason, clusterv1.ConditionSeverityError, "")
+
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{RequeueAfter: requeuePeriod}, nil
+	}
+
+	// By this point Flintlock has no record of the MvM, so we are good to clear
+	// the finalizer
 	controllerutil.RemoveFinalizer(machineScope.MvmMachine, infrav1.MachineFinalizer)
 
-	return reconcile.Result{}, nil
+	machineScope.Info("microvm deleted")
+
+	return ctrl.Result{}, nil
 }
 
 func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineScope *scope.MachineScope) (reconcile.Result, error) {
@@ -180,12 +218,10 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 	}
 
 	microvm, err := mvmSvc.Get(ctx)
-	if err != nil {
-		if !isSpecNotFound(err) {
-			machineScope.Error(err, "failed checking if microvm exists")
+	if err != nil && !isSpecNotFound(err) {
+		machineScope.Error(err, "failed checking if microvm exists")
 
-			return ctrl.Result{}, err
-		}
+		return ctrl.Result{}, err
 	}
 
 	controllerutil.AddFinalizer(machineScope.MvmMachine, infrav1.MachineFinalizer)
@@ -226,6 +262,7 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 		return ctrl.Result{RequeueAfter: requeuePeriod}, errMicrovmUnknownState
 	}
 
+	machineScope.Info("microvm created")
 	machineScope.MvmMachine.Spec.ProviderID = &microvm.Spec.Id
 	machineScope.SetReady()
 

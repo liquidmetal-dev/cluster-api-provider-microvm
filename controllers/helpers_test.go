@@ -356,3 +356,7 @@ func hasMachineFinalizer(machine *infrav1.MicrovmMachine) bool {
 
 	return false
 }
+
+func assertMachineNotReady(g *WithT, machine *infrav1.MicrovmMachine) {
+	g.Expect(machine.Status.Ready).To(BeFalse())
+}
