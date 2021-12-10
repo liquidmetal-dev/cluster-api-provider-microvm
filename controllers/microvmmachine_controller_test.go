@@ -7,15 +7,20 @@ import (
 	"encoding/base64"
 	"errors"
 	"testing"
+	"time"
 
 	. "github.com/onsi/gomega"
+
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	flintlocktypes "github.com/weaveworks/flintlock/api/types"
 
+	"github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
 	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/services/microvm/mock_client"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestMachineReconcile(t *testing.T) {
@@ -56,6 +61,15 @@ func TestMachineReconcile(t *testing.T) {
 
 		t.Run("and create microvm succeeds", machineReconcileNoVmCreateSucceeds)
 		t.Run("and create microvm succeeds and reconciles again", machineReconcileNoVmCreateAdditionReconcile)
+	})
+
+	t.Run("microvm_has_deletion_timestamp", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("and delete microvm succeeds", machineReconcileDeleteVmSucceeds)
+		t.Run("microvm get returns nil", machineReconcileDeleteGetReturnsNil)
+		t.Run("microvm get returns error", machineReconcileDeleteGetErrors)
+		t.Run("microvm delete returns error", machineReconcileDeleteDeleteErrors)
 	})
 }
 
@@ -337,9 +351,109 @@ func machineReconcileNoVmCreateAdditionReconcile(t *testing.T) {
 	g.Expect(result.IsZero()).To(BeFalse(), "Expect requeue to be requested after create")
 
 	withExistingMicrovm(&fakeAPIClient, flintlocktypes.MicroVMStatus_CREATED)
-	result, err = reconcileMachine(client, &fakeAPIClient)
+	_, err = reconcileMachine(client, &fakeAPIClient)
+	g.Expect(err).NotTo(HaveOccurred(), "Reconciling should not return an error")
 
 	reconciled, err := getMicrovmMachine(client, testMachineName, testClusterNamespace)
 	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
 	assertMachineReconciled(g, reconciled)
+}
+
+func machineReconcileDeleteVmSucceeds(t *testing.T) {
+	t.Parallel()
+	g := NewWithT(t)
+
+	apiObjects := defaultClusterObjects()
+	apiObjects.MvmMachine.DeletionTimestamp = &metav1.Time{
+		Time: time.Now(),
+	}
+	apiObjects.MvmMachine.Finalizers = []string{v1alpha1.MachineFinalizer}
+
+	fakeAPIClient := mock_client.FakeClient{}
+	withExistingMicrovm(&fakeAPIClient, flintlocktypes.MicroVMStatus_CREATED)
+
+	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
+
+	result, err := reconcileMachine(client, &fakeAPIClient)
+	g.Expect(err).NotTo(HaveOccurred(), "Reconciling when deleting microvm should not return error")
+	g.Expect(result.Requeue).To(BeFalse())
+	g.Expect(result.RequeueAfter).To(BeNumerically(">", time.Duration(0)))
+
+	g.Expect(fakeAPIClient.DeleteMicroVMCallCount()).To(Equal(1))
+	_, deleteReq, _ := fakeAPIClient.DeleteMicroVMArgsForCall(0)
+	g.Expect(deleteReq.Id).To(Equal(testMachineName))
+	g.Expect(deleteReq.Namespace).To(Equal(testClusterNamespace))
+
+	_, err = getMicrovmMachine(client, testMachineName, testClusterNamespace)
+	g.Expect(apierrors.IsNotFound(err)).To(BeFalse())
+}
+
+func machineReconcileDeleteGetReturnsNil(t *testing.T) {
+	t.Parallel()
+	g := NewWithT(t)
+
+	apiObjects := defaultClusterObjects()
+	apiObjects.MvmMachine.DeletionTimestamp = &metav1.Time{
+		Time: time.Now(),
+	}
+	apiObjects.MvmMachine.Finalizers = []string{v1alpha1.MachineFinalizer}
+
+	fakeAPIClient := mock_client.FakeClient{}
+	withMissingMicrovm(&fakeAPIClient)
+
+	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
+
+	result, err := reconcileMachine(client, &fakeAPIClient)
+	g.Expect(err).NotTo(HaveOccurred(), "Reconciling when deleting microvm should not return error")
+	g.Expect(result.Requeue).To(BeFalse())
+	g.Expect(result.RequeueAfter).To(Equal(time.Duration(0)))
+
+	g.Expect(fakeAPIClient.DeleteMicroVMCallCount()).To(Equal(0))
+
+	_, err = getMicrovmMachine(client, testMachineName, testClusterNamespace)
+	g.Expect(apierrors.IsNotFound(err)).To(BeTrue())
+}
+
+func machineReconcileDeleteGetErrors(t *testing.T) {
+	t.Parallel()
+	g := NewWithT(t)
+
+	apiObjects := defaultClusterObjects()
+	apiObjects.MvmMachine.DeletionTimestamp = &metav1.Time{
+		Time: time.Now(),
+	}
+	apiObjects.MvmMachine.Finalizers = []string{v1alpha1.MachineFinalizer}
+
+	fakeAPIClient := mock_client.FakeClient{}
+	withExistingMicrovm(&fakeAPIClient, flintlocktypes.MicroVMStatus_CREATED)
+	fakeAPIClient.GetMicroVMReturns(nil, errors.New("something terrible happened"))
+
+	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
+	_, err := reconcileMachine(client, &fakeAPIClient)
+	g.Expect(err).To(HaveOccurred(), "Reconciling when microvm service exists errors should return error")
+}
+
+func machineReconcileDeleteDeleteErrors(t *testing.T) {
+	t.Parallel()
+	g := NewWithT(t)
+
+	apiObjects := defaultClusterObjects()
+	apiObjects.MvmMachine.DeletionTimestamp = &metav1.Time{
+		Time: time.Now(),
+	}
+	apiObjects.MvmMachine.Finalizers = []string{v1alpha1.MachineFinalizer}
+
+	fakeAPIClient := mock_client.FakeClient{}
+	withExistingMicrovm(&fakeAPIClient, flintlocktypes.MicroVMStatus_CREATED)
+	fakeAPIClient.DeleteMicroVMReturns(nil, errors.New("something terrible happened"))
+
+	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
+	_, err := reconcileMachine(client, &fakeAPIClient)
+	g.Expect(err).To(HaveOccurred(), "Reconciling when deleting microvm errors should return error")
+
+	reconciled, err := getMicrovmMachine(client, testMachineName, testClusterNamespace)
+	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
+
+	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmDeleteFailedReason)
+	assertMachineNotReady(g, reconciled)
 }
