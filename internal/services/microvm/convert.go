@@ -4,6 +4,10 @@
 package microvm
 
 import (
+	"encoding/base64"
+	"fmt"
+	"strings"
+
 	flintlocktypes "github.com/weaveworks/flintlock/api/types"
 
 	"github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
@@ -81,6 +85,18 @@ func convertToFlintlockAPI(machineScope *scope.MachineScope) *flintlocktypes.Mic
 
 		apiVM.Interfaces = append(apiVM.Interfaces, apiIface)
 	}
+
+	userMeta := strings.Join(
+		[]string{
+			fmt.Sprintf("instance_id: %s/%s", machineScope.Namespace(), machineScope.Name()),
+			fmt.Sprintf("local_hostname: %s", machineScope.Name()),
+			"platform: liquid_metal",
+			fmt.Sprintf("cluster_name: %s", machineScope.ClusterName()),
+		},
+		"\n",
+	)
+
+	apiVM.Metadata["meta-data"] = base64.StdEncoding.EncodeToString([]byte(userMeta))
 
 	return apiVM
 }
