@@ -69,6 +69,11 @@ spec:
                 - host
                 - port
                 type: object
+              sshPublicKey:
+                description: SSHPublicKey is an SSH public key that will be used with
+                  the default user. If specified this will apply to all machine created
+                  unless you specify a different key at the machine level.
+                type: string
             type: object
           status:
             description: MicrovmClusterStatus defines the observed state of MicrovmCluster.

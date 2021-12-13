@@ -4,12 +4,7 @@
 package microvm
 
 import (
-	"encoding/base64"
-	"fmt"
-
 	flintlocktypes "github.com/weaveworks/flintlock/api/types"
-	flcloudinit "github.com/weaveworks/flintlock/client/cloudinit"
-	"gopkg.in/yaml.v3"
 
 	"github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/scope"
@@ -17,7 +12,7 @@ import (
 
 const platformLiquidMetal = "liquid_metal"
 
-func convertToFlintlockAPI(machineScope *scope.MachineScope) (*flintlocktypes.MicroVMSpec, error) {
+func convertToFlintlockAPI(machineScope *scope.MachineScope) *flintlocktypes.MicroVMSpec {
 	mvmSpec := machineScope.MvmMachine.Spec
 
 	apiVM := &flintlocktypes.MicroVMSpec{
@@ -89,19 +84,5 @@ func convertToFlintlockAPI(machineScope *scope.MachineScope) (*flintlocktypes.Mi
 		apiVM.Interfaces = append(apiVM.Interfaces, apiIface)
 	}
 
-	userMetadata := flcloudinit.Metadata{
-		InstanceID:    fmt.Sprintf("%s/%s", machineScope.Namespace(), machineScope.Name()),
-		LocalHostname: machineScope.Name(),
-		Platform:      platformLiquidMetal,
-		ClusterName:   machineScope.ClusterName(),
-	}
-
-	userMeta, err := yaml.Marshal(userMetadata)
-	if err != nil {
-		return apiVM, fmt.Errorf("unable to marshal metadata: %w", err)
-	}
-
-	apiVM.Metadata["meta-data"] = base64.StdEncoding.EncodeToString(userMeta)
-
-	return apiVM, nil
+	return apiVM
 }

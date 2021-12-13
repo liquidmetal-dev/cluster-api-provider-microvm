@@ -17,6 +17,12 @@ type MicrovmClusterSpec struct {
 	//
 	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
+
+	// SSHPublicKey is an SSH public key that will be used with the default user. If specified
+	// this will apply to all machine created unless you specify a different key at the
+	// machine level.
+	// +optional
+	SSHPublicKey string `json:"sshPublicKey,omitempty"`
 }
 
 // MicrovmClusterStatus defines the observed state of MicrovmCluster.

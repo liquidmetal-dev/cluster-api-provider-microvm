@@ -7,10 +7,11 @@ require (
 	github.com/onsi/gomega v1.17.0
 	github.com/spf13/pflag v1.0.5
 	github.com/weaveworks/flintlock/api v0.0.0-20211124154423-21a022445576
-	github.com/weaveworks/flintlock/client v0.0.0-20211213114330-12eb53621738
+	github.com/weaveworks/flintlock/client v0.0.0-20211213135217-19cc344a892b
 	github.com/yitsushi/macpot v1.0.2
 	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
+	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.22.4
 	k8s.io/apimachinery v0.22.4
 	k8s.io/client-go v0.22.4
@@ -70,7 +71,6 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20211021150943-2b146023228c // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	k8s.io/apiextensions-apiserver v0.22.2 // indirect
 	k8s.io/cluster-bootstrap v0.22.2 // indirect
