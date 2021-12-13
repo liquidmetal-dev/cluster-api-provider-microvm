@@ -17,12 +17,14 @@ type MicrovmClusterSpec struct {
 	//
 	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
-
 	// SSHPublicKey is an SSH public key that will be used with the default user. If specified
 	// this will apply to all machine created unless you specify a different key at the
 	// machine level.
 	// +optional
 	SSHPublicKey string `json:"sshPublicKey,omitempty"`
+	// Placement specifies how machines for the cluster should be placed onto hosts (i.e. where the microvms are created).
+	// +kubebuilder:validation:Required
+	Placement Placement `json:"placement"`
 }
 
 // MicrovmClusterStatus defines the observed state of MicrovmCluster.

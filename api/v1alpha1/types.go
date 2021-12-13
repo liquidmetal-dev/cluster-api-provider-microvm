@@ -126,3 +126,40 @@ var (
 	// VMStateUnknown indicates the microvm is in an state that is unknown/supported by CAPMVM.
 	VMStateUnknown = VMState("unknown")
 )
+
+// Placement represents configuration relating to the placement of the microvms. The number of placement
+// options will grow and so we need to ensure in the validation webhook that only 1 placement types
+// is configured.
+type Placement struct {
+	// StaticPool is used to specify that static pool placement should be used.
+	StaticPool *StaticPoolPlacement `json:"staticPool,omitempty"`
+}
+
+// IsSet returns true if one of the placement options has been configured.
+// NOTE: this will need to be expanded as the placement options grow.
+func (p *Placement) IsSet() bool {
+	return p.StaticPool != nil
+}
+
+// StaticPoolPlacement represents the configuration for placing microvms across
+// a pool of predefined servers.
+type StaticPoolPlacement struct {
+	// Hosts defines the pool of hosts that should be used when creating microvms. The hosts will
+	// be supplied to CAPI (as fault domains) and it will place machines across them.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems:=1
+	Hosts []MicrovmHost `json:"hosts"`
+}
+
+type MicrovmHost struct {
+	// Name is an optional name for the host.
+	// +optional
+	Name string `json:"name,omitempty"`
+	// Endpoint is the API endpoint for the microvm service (i.e. flintlock).
+	// +kubebuilder:validation:Required
+	Endpoint string `json:"endpoint"`
+	// ControlPlaneAllowed marks this host as suitable for running control plane nodes in
+	// addition to worker nodes.
+	// +kubebuilder:default=true
+	ControlPlaneAllowed bool `json:"controlplaneAllowed"`
+}

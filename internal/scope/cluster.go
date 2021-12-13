@@ -126,3 +126,8 @@ func (cs *ClusterScope) Patch() error {
 func (cs *ClusterScope) Close() error {
 	return cs.Patch()
 }
+
+// Placement is used to get the placement configuration for the cluster.
+func (cs *ClusterScope) Placement() infrav1.Placement {
+	return cs.MvmCluster.Spec.Placement
+}

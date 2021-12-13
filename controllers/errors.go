@@ -11,4 +11,5 @@ var (
 	errMicrovmFailed                = errors.New("microvm is in a failed state")
 	errMicrovmUnknownState          = errors.New("microvm is in an unknown/unsupported state")
 	errExpectedMicrovmCluster       = errors.New("expected microvm cluster")
+	errNoPlacement                  = errors.New("no placement specified")
 )
