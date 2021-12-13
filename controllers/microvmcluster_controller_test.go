@@ -42,8 +42,6 @@ func TestClusterReconciliationNoEndpoint(t *testing.T) {
 
 	c := conditions.Get(reconciled, infrav1.LoadBalancerAvailableCondition)
 	g.Expect(c).To(BeNil())
-
-	g.Expect(reconciled.Finalizers).To(HaveLen(0))
 }
 
 func TestClusterReconciliationWithClusterEndpoint(t *testing.T) {
@@ -89,8 +87,6 @@ func TestClusterReconciliationWithClusterEndpoint(t *testing.T) {
 	c = conditions.Get(reconciled, clusterv1.ReadyCondition)
 	g.Expect(c).ToNot(BeNil())
 	g.Expect(c.Status).To(Equal(corev1.ConditionTrue))
-
-	g.Expect(reconciled.Finalizers).To(HaveLen(1))
 }
 
 func TestClusterReconciliationWithMvmClusterEndpoint(t *testing.T) {
@@ -136,8 +132,6 @@ func TestClusterReconciliationWithMvmClusterEndpoint(t *testing.T) {
 	c = conditions.Get(reconciled, clusterv1.ReadyCondition)
 	g.Expect(c).ToNot(BeNil())
 	g.Expect(c.Status).To(Equal(corev1.ConditionTrue))
-
-	g.Expect(reconciled.Finalizers).To(HaveLen(1))
 }
 
 func TestClusterReconciliationWithClusterEndpointAPIServerNotReady(t *testing.T) {
@@ -177,8 +171,6 @@ func TestClusterReconciliationWithClusterEndpointAPIServerNotReady(t *testing.T)
 	c = conditions.Get(reconciled, clusterv1.ReadyCondition)
 	g.Expect(c).ToNot(BeNil())
 	g.Expect(c.Status).To(Equal(corev1.ConditionFalse))
-
-	g.Expect(reconciled.Finalizers).To(HaveLen(1))
 }
 
 func TestClusterReconciliationMicrovmAlreadyDeleted(t *testing.T) {
@@ -221,8 +213,6 @@ func TestClusterReconciliationNotOwner(t *testing.T) {
 
 	c := conditions.Get(reconciled, infrav1.LoadBalancerAvailableCondition)
 	g.Expect(c).To(BeNil())
-
-	g.Expect(reconciled.Finalizers).To(HaveLen(0))
 }
 
 func TestClusterReconciliationWhenPaused(t *testing.T) {
@@ -251,8 +241,6 @@ func TestClusterReconciliationWhenPaused(t *testing.T) {
 
 	c := conditions.Get(reconciled, infrav1.LoadBalancerAvailableCondition)
 	g.Expect(c).To(BeNil())
-
-	g.Expect(reconciled.Finalizers).To(HaveLen(0))
 }
 
 func TestClusterReconciliationDelete(t *testing.T) {
@@ -276,7 +264,6 @@ func TestClusterReconciliationDelete(t *testing.T) {
 	g.Expect(result.RequeueAfter).To(Equal(time.Duration(0)))
 
 	// TODO: when we move to envtest this should return an NotFound error. #30
-	reconciled, err := getMicrovmCluster(context.TODO(), client, testClusterName, testClusterNamespace)
+	_, err = getMicrovmCluster(context.TODO(), client, testClusterName, testClusterNamespace)
 	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(reconciled.Finalizers).To(HaveLen(0))
 }

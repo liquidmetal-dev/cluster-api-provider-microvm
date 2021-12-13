@@ -11,6 +11,7 @@ import (
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/scope"
 	"github.com/yitsushi/macpot"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"k8s.io/utils/pointer"
 
 	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
@@ -91,4 +92,15 @@ func (s *Service) Get(ctx context.Context) (*flintlocktypes.MicroVM, error) {
 	}
 
 	return resp.Microvm, nil
+}
+
+func (s *Service) Delete(ctx context.Context) (*emptypb.Empty, error) {
+	s.scope.V(defaults.LogLevelDebug).Info("Deleting microvm for machine", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
+
+	input := &flintlockv1.DeleteMicroVMRequest{
+		Id:        s.scope.Name(),
+		Namespace: s.scope.Namespace(),
+	}
+
+	return s.client.DeleteMicroVM(ctx, input)
 }
