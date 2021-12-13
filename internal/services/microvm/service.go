@@ -40,7 +40,10 @@ func New(scope *scope.MachineScope, client Client) *Service {
 func (s *Service) Create(ctx context.Context) error {
 	s.scope.V(defaults.LogLevelDebug).Info("Creating microvm", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
-	apiMicroVM := convertToFlintlockAPI(s.scope)
+	apiMicroVM, err := convertToFlintlockAPI(s.scope)
+	if err != nil {
+		return err
+	}
 
 	bootstrapData, err := s.scope.GetRawBootstrapData()
 	if err != nil {
