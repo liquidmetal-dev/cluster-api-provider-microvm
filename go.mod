@@ -6,8 +6,8 @@ require (
 	github.com/go-logr/logr v0.4.0
 	github.com/onsi/gomega v1.17.0
 	github.com/spf13/pflag v1.0.5
-	github.com/weaveworks/flintlock/api v0.0.0-20220110105514-c0ec7b5054ee
-	github.com/weaveworks/flintlock/client v0.0.0-20220107100311-6a2445a32861
+	github.com/weaveworks/flintlock/api v0.0.0-20220125102832-37e5343a008e
+	github.com/weaveworks/flintlock/client v0.0.0-20220125102832-37e5343a008e
 	github.com/yitsushi/macpot v1.0.2
 	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1

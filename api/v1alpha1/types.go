@@ -31,10 +31,10 @@ type MicrovmSpec struct {
 	// +kubebuilder:validation:Required
 	Kernel ContainerFileSource `json:"kernel"`
 
-	// KernelCmdLine are the args to use for the kernel cmdline.
-	// +kubebuilder:validation:MinLength:=5
-	// +kubebuilder:default:=console=ttyS0 reboot=k panic=1 pci=off i8042.noaux i8042.nomux i8042.nopnp i8042.dumbkbd
-	KernelCmdLine string `json:"kernelCmdline,omitempty"`
+	// KernelCmdLine are the additional args to use for the kernel cmdline.
+	// Each MicroVM provider has its own recommended list, they will be used
+	// automatically. This field is for additional values.
+	KernelCmdLine map[string]string `json:"kernelCmdline,omitempty"`
 
 	// Initrd is an optional initial ramdisk to use.
 	// +optional
