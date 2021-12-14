@@ -127,11 +127,11 @@ spec:
                     description: Image is the container image to use for the volume.
                     type: string
                   mountPoint:
-                    default: /
                     description: MountPoint is the mount point of the volume in the
                       machine.
                     type: string
                   readOnly:
+                    default: false
                     description: ReadOnly specifies that the volume is to be mounted
                       readonly.
                     type: boolean
@@ -157,11 +157,11 @@ spec:
                       description: Image is the container image to use for the volume.
                       type: string
                     mountPoint:
-                      default: /
                       description: MountPoint is the mount point of the volume in
                         the machine.
                       type: string
                     readOnly:
+                      default: false
                       description: ReadOnly specifies that the volume is to be mounted
                         readonly.
                       type: boolean
