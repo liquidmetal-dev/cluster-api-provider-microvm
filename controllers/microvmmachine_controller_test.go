@@ -23,58 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestMachineReconcile(t *testing.T) {
-	t.Parallel()
-
-	t.Run("is not requeued when", func(t *testing.T) {
-		t.Parallel()
-
-		t.Run("microvm machinemissing", machineReconcileMissingMvmMachine)
-		t.Run("machine owner ref not set", machineReconcileNoMachineOwnerRef)
-		t.Run("cluster missing", machineReconcileMissingCluster)
-		t.Run("machine has no cluster owned label", machineReconcileMachineMissingClusterLabel)
-		t.Run("microvm machine is paused", machineReconcileMvmMachinePaused)
-		t.Run("cluster is paused", machineReconcileClusterPaused)
-		t.Run("microvm cluster missing", machineReconcileMvmClusterMissing)
-		t.Run("cluster infra is not ready", machineReconcileClusterInfraNotReady)
-		t.Run("bootstrap data not ready", machineReconcileBoostrapNotReady)
-	})
-
-	t.Run("reconciliation fails when", func(t *testing.T) {
-		t.Parallel()
-
-		t.Run("capi machine missing", machineReconcileMissingMachine)
-		t.Run("microvm exists returns error", machineReconcileServiceGetError)
-	})
-
-	t.Run("microvm already exists", func(t *testing.T) {
-		t.Parallel()
-
-		t.Run("and microvm state is pending", machineReconcileMachineExistsAndPending)
-		t.Run("and microvm state is failed", machineReconcileMachineExistsButFailed)
-		t.Run("and microvm state is unknown", machineReconcileMachineExistsButUnknownState)
-		t.Run("and microvm state is running", machineReconcileMachineExistsAndRunning)
-	})
-
-	t.Run("microvm non existing", func(t *testing.T) {
-		t.Parallel()
-
-		t.Run("and create microvm succeeds", machineReconcileNoVmCreateSucceeds)
-		t.Run("and create microvm succeeds and reconciles again", machineReconcileNoVmCreateAdditionReconcile)
-	})
-
-	t.Run("microvm_has_deletion_timestamp", func(t *testing.T) {
-		t.Parallel()
-
-		t.Run("and delete microvm succeeds", machineReconcileDeleteVmSucceeds)
-		t.Run("microvm get returns nil", machineReconcileDeleteGetReturnsNil)
-		t.Run("microvm get returns error", machineReconcileDeleteGetErrors)
-		t.Run("microvm delete returns error", machineReconcileDeleteDeleteErrors)
-	})
-}
-
-func machineReconcileMissingMvmMachine(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileMissingMvmMachine(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -86,8 +35,7 @@ func machineReconcileMissingMvmMachine(t *testing.T) {
 	g.Expect(result.IsZero()).To(BeTrue(), "Expect no requeue to be requested")
 }
 
-func machineReconcileNoMachineOwnerRef(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileNoMachineOwnerRef(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -99,8 +47,7 @@ func machineReconcileNoMachineOwnerRef(t *testing.T) {
 	g.Expect(result.IsZero()).To(BeTrue(), "Expect no requeue to be requested")
 }
 
-func machineReconcileMissingCluster(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileMissingCluster(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -112,8 +59,7 @@ func machineReconcileMissingCluster(t *testing.T) {
 	g.Expect(result.IsZero()).To(BeTrue(), "Expect no requeue to be requested")
 }
 
-func machineReconcileMachineMissingClusterLabel(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileMachineMissingClusterLabel(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -125,8 +71,7 @@ func machineReconcileMachineMissingClusterLabel(t *testing.T) {
 	g.Expect(result.IsZero()).To(BeTrue(), "Expect no requeue to be requested")
 }
 
-func machineReconcileMvmMachinePaused(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileMvmMachinePaused(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -140,8 +85,7 @@ func machineReconcileMvmMachinePaused(t *testing.T) {
 	g.Expect(result.IsZero()).To(BeTrue(), "Expect no requeue to be requested")
 }
 
-func machineReconcileClusterPaused(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileClusterPaused(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -153,8 +97,7 @@ func machineReconcileClusterPaused(t *testing.T) {
 	g.Expect(result.IsZero()).To(BeTrue(), "Expect no requeue to be requested")
 }
 
-func machineReconcileMissingMachine(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileMissingMachine(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -166,8 +109,7 @@ func machineReconcileMissingMachine(t *testing.T) {
 	g.Expect(result.IsZero()).To(BeTrue(), "Expect no requeue to be requested")
 }
 
-func machineReconcileMvmClusterMissing(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileMvmClusterMissing(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -179,8 +121,7 @@ func machineReconcileMvmClusterMissing(t *testing.T) {
 	g.Expect(result.IsZero()).To(BeTrue(), "Expect no requeue to be requested")
 }
 
-func machineReconcileClusterInfraNotReady(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileClusterInfraNotReady(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -197,8 +138,7 @@ func machineReconcileClusterInfraNotReady(t *testing.T) {
 	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.WaitingForClusterInfraReason)
 }
 
-func machineReconcileBoostrapNotReady(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileBoostrapNotReady(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -215,8 +155,7 @@ func machineReconcileBoostrapNotReady(t *testing.T) {
 	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.WaitingForBootstrapDataReason)
 }
 
-func machineReconcileServiceGetError(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileServiceGetError(t *testing.T) {
 	g := NewWithT(t)
 
 	objects := defaultClusterObjects()
@@ -229,8 +168,7 @@ func machineReconcileServiceGetError(t *testing.T) {
 	g.Expect(err).To(HaveOccurred(), "Reconciling when microvm service 'Get' errors should return error")
 }
 
-func machineReconcileMachineExistsAndRunning(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileMachineExistsAndRunning(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -248,8 +186,7 @@ func machineReconcileMachineExistsAndRunning(t *testing.T) {
 	assertMachineReconciled(g, reconciled)
 }
 
-func machineReconcileMachineExistsAndPending(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileMachineExistsAndPending(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -270,8 +207,7 @@ func machineReconcileMachineExistsAndPending(t *testing.T) {
 	assertMachineFinalizer(g, reconciled)
 }
 
-func machineReconcileMachineExistsButFailed(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileMachineExistsButFailed(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -291,8 +227,7 @@ func machineReconcileMachineExistsButFailed(t *testing.T) {
 	assertMachineFinalizer(g, reconciled)
 }
 
-func machineReconcileMachineExistsButUnknownState(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileMachineExistsButUnknownState(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -312,8 +247,7 @@ func machineReconcileMachineExistsButUnknownState(t *testing.T) {
 	assertMachineFinalizer(g, reconciled)
 }
 
-func machineReconcileNoVmCreateSucceeds(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileNoVmCreateSucceeds(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -335,8 +269,7 @@ func machineReconcileNoVmCreateSucceeds(t *testing.T) {
 	g.Expect(createReq.Microvm.Metadata).To(HaveKeyWithValue("user-data", expectedBootstrapData))
 }
 
-func machineReconcileNoVmCreateAdditionReconcile(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileNoVmCreateAdditionReconcile(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -359,8 +292,7 @@ func machineReconcileNoVmCreateAdditionReconcile(t *testing.T) {
 	assertMachineReconciled(g, reconciled)
 }
 
-func machineReconcileDeleteVmSucceeds(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileDeleteVmSucceeds(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -388,8 +320,7 @@ func machineReconcileDeleteVmSucceeds(t *testing.T) {
 	g.Expect(apierrors.IsNotFound(err)).To(BeFalse())
 }
 
-func machineReconcileDeleteGetReturnsNil(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileDeleteGetReturnsNil(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -414,8 +345,7 @@ func machineReconcileDeleteGetReturnsNil(t *testing.T) {
 	g.Expect(apierrors.IsNotFound(err)).To(BeTrue())
 }
 
-func machineReconcileDeleteGetErrors(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileDeleteGetErrors(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
@@ -433,8 +363,7 @@ func machineReconcileDeleteGetErrors(t *testing.T) {
 	g.Expect(err).To(HaveOccurred(), "Reconciling when microvm service exists errors should return error")
 }
 
-func machineReconcileDeleteDeleteErrors(t *testing.T) {
-	t.Parallel()
+func TestMachineReconcileDeleteDeleteErrors(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
