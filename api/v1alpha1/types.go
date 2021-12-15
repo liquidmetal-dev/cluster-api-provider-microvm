@@ -72,15 +72,15 @@ type Volume struct {
 	// ID is a unique identifier for this volume.
 	// +kubebuilder:validation:Required
 	ID string `json:"id"`
-
 	// Image is the container image to use for the volume.
 	// +kubebuilder:validation:Required
 	Image string `json:"image"`
 	// ReadOnly specifies that the volume is to be mounted readonly.
+	// +kubebuilder:default:=false
 	// +optional
 	ReadOnly bool `json:"readOnly,omitempty"`
 	// MountPoint is the mount point of the volume in the machine.
-	// +kubebuilder:default:=/
+	// +kubebuilder:validation:Required
 	MountPoint string `json:"mountPoint,omitempty"`
 }
 
