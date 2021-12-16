@@ -133,6 +133,10 @@ func (r *MicrovmClusterReconciler) reconcileNormal(ctx context.Context, clusterS
 
 	clusterScope.MvmCluster.Status.Ready = true
 
+	if err := r.setFailureDomains(clusterScope); err != nil {
+		return reconcile.Result{}, fmt.Errorf("setting failuredomains: %w", err)
+	}
+
 	available := r.isAPIServerAvailable(ctx, clusterScope)
 	if !available {
 		conditions.MarkFalse(clusterScope.MvmCluster, infrav1.LoadBalancerAvailableCondition, infrav1.LoadBalancerNotAvailableReason, clusterv1.ConditionSeverityInfo, "control plane load balancer isn't available")
@@ -170,6 +174,31 @@ func (r *MicrovmClusterReconciler) isAPIServerAvailable(ctx context.Context, clu
 	clusterScope.Info("api server is available", "cluster", clusterScope.ClusterName())
 
 	return true
+}
+
+func (r *MicrovmClusterReconciler) setFailureDomains(clusterScope *scope.ClusterScope) error {
+	placement := clusterScope.Placement()
+
+	if !placement.IsSet() {
+		return errNoPlacement
+	}
+
+	if placement.StaticPool != nil {
+		clusterScope.Info("using static pool placement")
+
+		failureDomains := clusterv1.FailureDomains{}
+		for _, host := range placement.StaticPool.Hosts {
+			clusterScope.V(defaults.LogLevelTrace).Info("adding failure domain", "endpoint", host.Endpoint, "name", host.Name, "controlplane", host.ControlPlaneAllowed)
+			failureDomains[host.Endpoint] = clusterv1.FailureDomainSpec{
+				ControlPlane: host.ControlPlaneAllowed,
+			}
+		}
+
+		clusterScope.MvmCluster.Status.FailureDomains = failureDomains
+	}
+	// NOTE: additional placement methods can be added the future
+
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

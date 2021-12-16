@@ -69,11 +69,51 @@ spec:
                 - host
                 - port
                 type: object
+              placement:
+                description: Placement specifies how machines for the cluster should
+                  be placed onto hosts (i.e. where the microvms are created).
+                properties:
+                  staticPool:
+                    description: StaticPool is used to specify that static pool placement
+                      should be used.
+                    properties:
+                      hosts:
+                        description: Hosts defines the pool of hosts that should be
+                          used when creating microvms. The hosts will be supplied
+                          to CAPI (as fault domains) and it will place machines across
+                          them.
+                        items:
+                          properties:
+                            controlplaneAllowed:
+                              default: true
+                              description: ControlPlaneAllowed marks this host as
+                                suitable for running control plane nodes in addition
+                                to worker nodes.
+                              type: boolean
+                            endpoint:
+                              description: Endpoint is the API endpoint for the microvm
+                                service (i.e. flintlock).
+                              type: string
+                            name:
+                              description: Name is an optional name for the host.
+                              type: string
+                          required:
+                          - controlplaneAllowed
+                          - endpoint
+                          type: object
+                        minItems: 1
+                        type: array
+                    required:
+                    - hosts
+                    type: object
+                type: object
               sshPublicKey:
                 description: SSHPublicKey is an SSH public key that will be used with
                   the default user. If specified this will apply to all machine created
                   unless you specify a different key at the machine level.
                 type: string
+            required:
+            - placement
             type: object
           status:
             description: MicrovmClusterStatus defines the observed state of MicrovmCluster.

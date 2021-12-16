@@ -27,10 +27,6 @@ type MicrovmMachineSpec struct {
 
 	// ProviderID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
-
-	// FailureDomain is the failure domain unique identifier this Machine should be attached to, as defined in Cluster API.
-	// For this infrastructure provider, the ID is equivalent to a host machine:port running flintlock.
-	FailureDomain *string `json:"failureDomain,omitempty"`
 }
 
 // MicrovmMachineStatus defines the observed state of MicrovmMachine.

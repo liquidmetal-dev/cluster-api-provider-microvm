@@ -28,6 +28,11 @@ spec:
   controlPlaneEndpoint:
     host: "${CONTROL_PLANE_VIP}"
     port: 6443
+  placement:
+    staticPool:
+      hosts:
+      - endpoint: "${HOST_ENDPOINT:=127.0.0.1:9090}"
+        controlplaneAllowed: true
 ---
 kind: KubeadmControlPlane
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1

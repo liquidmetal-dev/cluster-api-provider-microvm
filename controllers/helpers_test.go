@@ -184,7 +184,19 @@ func createMicrovmCluster(name, namespace string) *infrav1.MicrovmCluster {
 				},
 			},
 		},
-		Spec:   infrav1.MicrovmClusterSpec{},
+		Spec: infrav1.MicrovmClusterSpec{
+			Placement: infrav1.Placement{
+				StaticPool: &infrav1.StaticPoolPlacement{
+					Hosts: []infrav1.MicrovmHost{
+						{
+							Name:                "host1",
+							Endpoint:            "127.0.0.1:9090",
+							ControlPlaneAllowed: true,
+						},
+					},
+				},
+			},
+		},
 		Status: infrav1.MicrovmClusterStatus{},
 	}
 }

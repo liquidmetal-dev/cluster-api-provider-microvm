@@ -68,12 +68,6 @@ spec:
                   spec:
                     description: Spec is the specification of the machine.
                     properties:
-                      failureDomain:
-                        description: FailureDomain is the failure domain unique identifier
-                          this Machine should be attached to, as defined in Cluster
-                          API. For this infrastructure provider, the ID is equivalent
-                          to a host machine:port running flintlock.
-                        type: string
                       initrd:
                         description: Initrd is an optional initial ramdisk to use.
                         properties:

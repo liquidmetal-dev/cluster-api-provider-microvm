@@ -152,8 +152,8 @@ func (m *MachineScope) Patch() error {
 // MicrovmServiceAddress will return the address of the microvm service to call. Any precedence
 // logic needs to sit here.
 func (m *MachineScope) MicrovmServiceAddress() string {
-	if m.MvmMachine.Spec.FailureDomain != nil {
-		return *m.MvmMachine.Spec.FailureDomain
+	if m.Machine.Spec.FailureDomain != nil {
+		return *m.Machine.Spec.FailureDomain
 	}
 
 	return ""

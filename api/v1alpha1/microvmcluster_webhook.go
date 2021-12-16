@@ -4,7 +4,10 @@
 package v1alpha1
 
 import (
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -28,7 +31,15 @@ var (
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (r *MicrovmCluster) ValidateCreate() error {
-	return nil
+	var allErrs field.ErrorList
+
+	allErrs = append(allErrs, r.Spec.Placement.Validate()...)
+
+	if len(allErrs) == 0 {
+		return nil
+	}
+
+	return apierrors.NewInvalid(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.

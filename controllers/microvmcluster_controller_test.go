@@ -79,6 +79,7 @@ func TestClusterReconciliationWithClusterEndpoint(t *testing.T) {
 	reconciled, err := getMicrovmCluster(context.TODO(), client, testClusterName, testClusterNamespace)
 	g.Expect(err).NotTo(HaveOccurred())
 	g.Expect(reconciled.Status.Ready).To(BeTrue())
+	g.Expect(reconciled.Status.FailureDomains).To(HaveLen(1))
 
 	c := conditions.Get(reconciled, infrav1.LoadBalancerAvailableCondition)
 	g.Expect(c).ToNot(BeNil())
@@ -124,6 +125,7 @@ func TestClusterReconciliationWithMvmClusterEndpoint(t *testing.T) {
 	reconciled, err := getMicrovmCluster(context.TODO(), client, testClusterName, testClusterNamespace)
 	g.Expect(err).NotTo(HaveOccurred())
 	g.Expect(reconciled.Status.Ready).To(BeTrue())
+	g.Expect(reconciled.Status.FailureDomains).To(HaveLen(1))
 
 	c := conditions.Get(reconciled, infrav1.LoadBalancerAvailableCondition)
 	g.Expect(c).ToNot(BeNil())
@@ -163,6 +165,7 @@ func TestClusterReconciliationWithClusterEndpointAPIServerNotReady(t *testing.T)
 	reconciled, err := getMicrovmCluster(context.TODO(), client, testClusterName, testClusterNamespace)
 	g.Expect(err).NotTo(HaveOccurred())
 	g.Expect(reconciled.Status.Ready).To(BeTrue())
+	g.Expect(reconciled.Status.FailureDomains).To(HaveLen(1))
 
 	c := conditions.Get(reconciled, infrav1.LoadBalancerAvailableCondition)
 	g.Expect(c).ToNot(BeNil())
