@@ -6,7 +6,7 @@ metadata:
 spec:
   clusterNetwork:
     pods:
-      cidrBlocks: 
+      cidrBlocks:
         - ${POD_CIDR:=192.168.0.0/16}
     services:
       cidrBlocks:
@@ -57,7 +57,7 @@ spec:
         kubeletExtraArgs:
           provider-id: "PROVIDER_ID"
     preKubeadmCommands:
-            - mkdir -p /etc/kubernetes/manifests && ctr images pull ghcr.io/kube-vip/kube-vip:v0.4.0 && ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:v0.4.0 vip /kube-vip manifest pod --arp --interface $(ip -4 -j route list default | jq -r .[0].dev) --address ${CONTROL_PLANE_VIP} --controlplane --leaderElection > /etc/kubernetes/manifests/kube-vip.yaml
+    - mkdir -p /etc/kubernetes/manifests && ctr images pull ghcr.io/kube-vip/kube-vip:v0.4.0 && ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:v0.4.0 vip /kube-vip manifest pod --arp --interface $(ip -4 -j route list default | jq -r .[0].dev) --address ${CONTROL_PLANE_VIP} --controlplane --leaderElection > /etc/kubernetes/manifests/kube-vip.yaml
 ---
 kind: MicrovmMachineTemplate
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
@@ -69,8 +69,10 @@ spec:
       vcpu: 2
       memoryMb: 2048
       rootVolume:
+        id: root
         image: ${MVM_ROOT_IMAGE}
-      kernel: 
+      kernel:
+        filename: vmlinux
         image: ${MVM_KERNEL_IMAGE}
       networkInterfaces:
       - guestDeviceName: "eth0"
@@ -109,8 +111,10 @@ spec:
       vcpu: 2
       memoryMb: 2048
       rootVolume:
+        id: root
         image: ${MVM_ROOT_IMAGE}
-      kernel: 
+      kernel:
+        filename: vmlinux
         image: ${MVM_KERNEL_IMAGE}
       networkInterfaces:
       - guestDeviceName: "eth0"
