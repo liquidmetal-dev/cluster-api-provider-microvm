@@ -265,8 +265,73 @@ func TestMachineReconcileNoVmCreateSucceeds(t *testing.T) {
 	_, createReq, _ := fakeAPIClient.CreateMicroVMArgsForCall(0)
 	g.Expect(createReq.Microvm).ToNot(BeNil())
 	g.Expect(createReq.Microvm.Labels).To(HaveLen(1))
+	g.Expect(createReq.Microvm.Metadata).To(HaveLen(3))
 	expectedBootstrapData := base64.StdEncoding.EncodeToString([]byte(testbootStrapData))
 	g.Expect(createReq.Microvm.Metadata).To(HaveKeyWithValue("user-data", expectedBootstrapData))
+}
+
+func TestMachineReconcileNoVmCreateClusterSSHSucceeds(t *testing.T) {
+	t.Parallel()
+	g := NewWithT(t)
+
+	expectedSSHKey := "ClusterSSH"
+
+	apiObjects := defaultClusterObjects()
+	apiObjects.MvmCluster.Spec.SSHPublicKey = expectedSSHKey
+
+	fakeAPIClient := mock_client.FakeClient{}
+	withMissingMicrovm(&fakeAPIClient)
+	withCreateMicrovmSuccess(&fakeAPIClient)
+
+	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
+	result, err := reconcileMachine(client, &fakeAPIClient)
+
+	g.Expect(err).NotTo(HaveOccurred(), "Reconciling when creating microvm should not return error")
+	g.Expect(result.IsZero()).To(BeFalse(), "Expect requeue to be requested after create")
+
+	_, createReq, _ := fakeAPIClient.CreateMicroVMArgsForCall(0)
+	g.Expect(createReq.Microvm).ToNot(BeNil())
+	g.Expect(createReq.Microvm.Labels).To(HaveLen(1))
+	g.Expect(createReq.Microvm.Metadata).To(HaveLen(3))
+
+	expectedBootstrapData := base64.StdEncoding.EncodeToString([]byte(testbootStrapData))
+	g.Expect(createReq.Microvm.Metadata).To(HaveKeyWithValue("user-data", expectedBootstrapData))
+
+	g.Expect(createReq.Microvm.Metadata).To(HaveKey("vendor-data"), "expect cloud-init vendor-data to be created")
+	assertVendorData(g, createReq.Microvm.Metadata["vendor-data"], expectedSSHKey)
+}
+
+func TestMachineReconcileNoVmCreateClusterMachineSSHSucceeds(t *testing.T) {
+	t.Parallel()
+	g := NewWithT(t)
+
+	clusterSSH := "ClusterSSH"
+	machineSSH := "MachineSSH"
+
+	apiObjects := defaultClusterObjects()
+	apiObjects.MvmCluster.Spec.SSHPublicKey = clusterSSH
+	apiObjects.MvmMachine.Spec.SSHPublicKey = machineSSH
+
+	fakeAPIClient := mock_client.FakeClient{}
+	withMissingMicrovm(&fakeAPIClient)
+	withCreateMicrovmSuccess(&fakeAPIClient)
+
+	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
+	result, err := reconcileMachine(client, &fakeAPIClient)
+
+	g.Expect(err).NotTo(HaveOccurred(), "Reconciling when creating microvm should not return error")
+	g.Expect(result.IsZero()).To(BeFalse(), "Expect requeue to be requested after create")
+
+	_, createReq, _ := fakeAPIClient.CreateMicroVMArgsForCall(0)
+	g.Expect(createReq.Microvm).ToNot(BeNil())
+	g.Expect(createReq.Microvm.Labels).To(HaveLen(1))
+	g.Expect(createReq.Microvm.Metadata).To(HaveLen(3))
+
+	expectedBootstrapData := base64.StdEncoding.EncodeToString([]byte(testbootStrapData))
+	g.Expect(createReq.Microvm.Metadata).To(HaveKeyWithValue("user-data", expectedBootstrapData))
+
+	g.Expect(createReq.Microvm.Metadata).To(HaveKey("vendor-data"), "expect cloud-init vendor-data to be created")
+	assertVendorData(g, createReq.Microvm.Metadata["vendor-data"], machineSSH)
 }
 
 func TestMachineReconcileNoVmCreateAdditionReconcile(t *testing.T) {

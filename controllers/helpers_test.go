@@ -5,8 +5,10 @@ package controllers_test
 
 import (
 	"context"
+	"encoding/base64"
 
 	. "github.com/onsi/gomega"
+	"gopkg.in/yaml.v2"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,6 +29,7 @@ import (
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/services/microvm/mock_client"
 	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
 	flintlocktypes "github.com/weaveworks/flintlock/api/types"
+	"github.com/weaveworks/flintlock/client/cloudinit"
 )
 
 const (
@@ -359,4 +362,28 @@ func hasMachineFinalizer(machine *infrav1.MicrovmMachine) bool {
 
 func assertMachineNotReady(g *WithT, machine *infrav1.MicrovmMachine) {
 	g.Expect(machine.Status.Ready).To(BeFalse())
+}
+
+func assertVendorData(g *WithT, vendorDataRaw string, expectedSSHKey string) {
+	g.Expect(vendorDataRaw).ToNot(Equal(""))
+
+	data, err := base64.StdEncoding.DecodeString(vendorDataRaw)
+	g.Expect(err).NotTo(HaveOccurred(), "expect vendor data to be base64 encoded")
+
+	if expectedSSHKey != "" {
+		vendorData := &cloudinit.UserData{}
+
+		unmarshallErr := yaml.Unmarshal(data, vendorData)
+		g.Expect(unmarshallErr).NotTo(HaveOccurred(), "expect vendor data to unmarshall to cloud-init userdata")
+		g.Expect(vendorData.Users).NotTo(BeNil())
+		users := vendorData.Users
+		g.Expect(users).To(HaveLen(1))
+		g.Expect(users[0].SSHAuthorizedKeys).NotTo(BeNil())
+		keys := users[0].SSHAuthorizedKeys
+		g.Expect(keys).To(HaveLen(1))
+		g.Expect(keys[0]).To(Equal(expectedSSHKey))
+
+		vendorDataStr := string(data)
+		g.Expect(vendorDataStr).To(ContainSubstring("#cloud-config\n"))
+	}
 }

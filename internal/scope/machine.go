@@ -199,3 +199,17 @@ func (m *MachineScope) SetNotReady(reason string, severity clusterv1.ConditionSe
 	conditions.MarkFalse(m.MvmMachine, infrav1.MicrovmReadyCondition, reason, severity, message, messageArgs...)
 	m.MvmMachine.Status.Ready = false
 }
+
+// GetSSHPublicKey will return the SSH public key for this machine. It will take into account
+// precedence rules. If there is no key then an empty string will be returned.
+func (m *MachineScope) GetSSHPublicKey() string {
+	if m.MvmMachine.Spec.SSHPublicKey != "" {
+		return m.MvmMachine.Spec.SSHPublicKey
+	}
+
+	if m.MvmCluster.Spec.SSHPublicKey != "" {
+		return m.MvmCluster.Spec.SSHPublicKey
+	}
+
+	return ""
+}

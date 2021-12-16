@@ -8,14 +8,20 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/scope"
 	"github.com/yitsushi/macpot"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"gopkg.in/yaml.v2"
 	"k8s.io/utils/pointer"
 
+	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
+	"github.com/weaveworks/cluster-api-provider-microvm/internal/scope"
 	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
 	flintlocktypes "github.com/weaveworks/flintlock/api/types"
+	"github.com/weaveworks/flintlock/client/cloudinit"
+)
+
+const (
+	cloudInitHeader = "#cloud-config\n"
 )
 
 type ClientFactoryFunc func(address string) (Client, error)
@@ -40,16 +46,11 @@ func New(scope *scope.MachineScope, client Client) *Service {
 func (s *Service) Create(ctx context.Context) error {
 	s.scope.V(defaults.LogLevelDebug).Info("Creating microvm", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
-	apiMicroVM, err := convertToFlintlockAPI(s.scope)
-	if err != nil {
-		return err
-	}
+	apiMicroVM := convertToFlintlockAPI(s.scope)
 
-	bootstrapData, err := s.scope.GetRawBootstrapData()
-	if err != nil {
-		return nil
+	if err := s.addMetadata(apiMicroVM); err != nil {
+		return fmt.Errorf("adding metadata: %w", err)
 	}
-	apiMicroVM.Metadata["user-data"] = base64.StdEncoding.EncodeToString(bootstrapData)
 
 	for i := range apiMicroVM.Interfaces {
 		iface := apiMicroVM.Interfaces[i]
@@ -68,9 +69,8 @@ func (s *Service) Create(ctx context.Context) error {
 		Microvm: apiMicroVM,
 	}
 
-	_, err = s.client.CreateMicroVM(ctx, input)
-	if err != nil {
-		return err
+	if _, err := s.client.CreateMicroVM(ctx, input); err != nil {
+		return fmt.Errorf("creating microvm: %w", err)
 	}
 
 	s.scope.V(defaults.LogLevelDebug).Info("Successfully created microvm", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
@@ -103,4 +103,71 @@ func (s *Service) Delete(ctx context.Context) (*emptypb.Empty, error) {
 	}
 
 	return s.client.DeleteMicroVM(ctx, input)
+}
+
+func (s *Service) addMetadata(apiMicroVM *flintlocktypes.MicroVMSpec) error {
+	bootstrapData, err := s.scope.GetRawBootstrapData()
+	if err != nil {
+		return fmt.Errorf("getting bootstrap data for machine: %w", err)
+	}
+	apiMicroVM.Metadata["user-data"] = base64.StdEncoding.EncodeToString(bootstrapData)
+
+	vendorData, err := s.createVendorData()
+	if err != nil {
+		return fmt.Errorf("creating vendor data for machine: %w", err)
+	}
+	apiMicroVM.Metadata["vendor-data"] = vendorData
+
+	instanceData, err := s.createInstanceData()
+	if err != nil {
+		return fmt.Errorf("creating instance metadata: %w", err)
+	}
+	apiMicroVM.Metadata["meta-data"] = instanceData
+
+	return nil
+}
+
+func (s *Service) createVendorData() (string, error) {
+	defaultUser := cloudinit.User{
+		Name: "default",
+	}
+	machineSSHKey := s.scope.GetSSHPublicKey()
+	if machineSSHKey != "" {
+		defaultUser.SSHAuthorizedKeys = []string{
+			machineSSHKey,
+		}
+	}
+
+	vendorUserdata := &cloudinit.UserData{
+		HostName: s.scope.MvmMachine.Name,
+		Users: []cloudinit.User{
+			defaultUser,
+		},
+		FinalMessage: "The Liquid Metal booted system is good to go after $UPTIME seconds",
+	}
+
+	data, err := yaml.Marshal(vendorUserdata)
+	if err != nil {
+		return "", fmt.Errorf("marshalling bootstrap data: %w", err)
+	}
+
+	dataWithHeader := append([]byte(cloudInitHeader), data...)
+
+	return base64.StdEncoding.EncodeToString(dataWithHeader), nil
+}
+
+func (s *Service) createInstanceData() (string, error) {
+	userMetadata := cloudinit.Metadata{
+		InstanceID:    fmt.Sprintf("%s/%s", s.scope.Namespace(), s.scope.Name()),
+		LocalHostname: s.scope.Name(),
+		Platform:      platformLiquidMetal,
+		ClusterName:   s.scope.ClusterName(),
+	}
+
+	userMeta, err := yaml.Marshal(userMetadata)
+	if err != nil {
+		return "", fmt.Errorf("unable to marshal metadata: %w", err)
+	}
+
+	return base64.StdEncoding.EncodeToString(userMeta), nil
 }
