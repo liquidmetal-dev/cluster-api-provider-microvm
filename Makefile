@@ -6,9 +6,10 @@ SHELL = /usr/bin/env bash -o pipefail
 
 TAG ?= dev
 ARCH ?= amd64
+REGISTRY ?= docker.io
+ORG ?= weaveworks
 CONTROLLER_IMAGE_NAME := cluster-api-microvm-controller
-# Todo add registry prefix
-CONTROLLER_IMAGE ?= $(CONTROLLER_IMAGE_NAME)
+CONTROLLER_IMAGE ?= $(REGISTRY)/$(ORG)/$(CONTROLLER_IMAGE_NAME)
 
 # Directories
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
@@ -83,10 +84,10 @@ managers: ## Build manager binary.
 
 .PHONY: docker-build
 docker-build: docker-pull-prerequisites ## Build docker image with the manager.
-	docker build --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMAGE)-$(ARCH):$(TAG)
+	docker build --build-arg ARCH=$(ARCH) --build-arg LDFLAGS="$(LDFLAGS)" . -t $(CONTROLLER_IMAGE):$(TAG)
 
 docker-push: ## Push docker image with the manager.
-	docker push $(CONTROLLER_IMAGE)-$(ARCH):$(TAG)
+	docker push $(CONTROLLER_IMAGE):$(TAG)
 
 .PHONY: docker-pull-prerequisites
 docker-pull-prerequisites:
