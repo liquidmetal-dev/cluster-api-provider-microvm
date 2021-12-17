@@ -105,7 +105,7 @@ Create the declaration for your cluster. We will use the template in the repo.
     export MVM_ROOT_IMAGE=docker.io/richardcase/ubuntu-bionic-test:cloudimage_v0.0.1
     export MVM_KERNEL_IMAGE=docker.io/richardcase/ubuntu-bionic-kernel:0.0.11
     # NOTE: change 192.168.8.2 to be the IP address from step 2
-    export MICROVM_ENDPOINT=192.168.8.2:9090
+    export HOST_ENDPOINT=192.168.8.2:9090
 
     cat templates/cluster-template.yaml | envsubst > cluster.yaml
     ```
