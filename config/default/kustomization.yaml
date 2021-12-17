@@ -6,7 +6,6 @@ commonLabels:
 
 resources:
 - namespace.yaml
-- credentials.yaml
 
 bases:
 - ../rbac
@@ -17,7 +16,6 @@ bases:
 
 
 patchesStrategicMerge:
-- manager_credentials_patch.yaml
 - manager_pull_policy.yaml
 - manager_webhook_patch.yaml
 - webhookcainjection_patch.yaml
