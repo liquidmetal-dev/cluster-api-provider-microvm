@@ -1,0 +1,53 @@
+name: release
+
+on:
+  push:
+    tags:
+    - "v*.*.*"
+
+jobs:
+  env:
+    TAG: ${{ github.ref_name }}
+  build:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Docker login
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Build docker image
+      run: make docker-build TAG=${{ env.TAG }}
+    - name: Push docker image
+      run: make docker-push TAG=${{ env.TAG }}
+  release:
+    runs-on: ubuntu-latest
+    needs: [test, build]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Update manifests
+      run: |
+        # this is quite naive, but i don't think we need more for now
+        sed -i "s/latest/${TAG}/g" config/default/manager_image_patch.yaml
+        kustomize build config/default/ > infrastructure-components.yaml
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        prerelease: true
+        draft: true
+        fail_on_unmatched_files: true
+        generate_release_notes: true
+        discussion_category_name: Announcements
+        name: ${{ env.TAG }}
+        files: |
+          templates/cluster-template.yaml
+          metadata.yaml
+          infrastructure-components.yaml
