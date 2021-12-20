@@ -71,6 +71,7 @@ spec:
       rootVolume:
         id: root
         image: ${MVM_ROOT_IMAGE}
+        mountPoint: "/"
       kernel:
         filename: vmlinux
         image: ${MVM_KERNEL_IMAGE}
@@ -113,6 +114,7 @@ spec:
       rootVolume:
         id: root
         image: ${MVM_ROOT_IMAGE}
+        mountPoint: "/"
       kernel:
         filename: vmlinux
         image: ${MVM_KERNEL_IMAGE}

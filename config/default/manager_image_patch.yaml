@@ -9,5 +9,5 @@ spec:
       containers:
       # Change the value of image field below to your controller image URL. This will need updating 
       # with the registry
-      - image: cluster-api-microvm-controller:dev
+      - image: docker.io/weaveworks/cluster-api-microvm-controller:v0.1.0
         name: manager
