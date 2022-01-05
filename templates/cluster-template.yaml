@@ -68,6 +68,9 @@ spec:
     spec:
       vcpu: 2
       memoryMb: 2048
+      initrd:
+        filename: initrd-generic
+        image: ${MVM_KERNEL_IMAGE}
       rootVolume:
         id: root
         image: ${MVM_ROOT_IMAGE}
@@ -111,6 +114,9 @@ spec:
     spec:
       vcpu: 2
       memoryMb: 2048
+      initrd:
+        filename: initrd-generic
+        image: ${MVM_KERNEL_IMAGE}
       rootVolume:
         id: root
         image: ${MVM_ROOT_IMAGE}
