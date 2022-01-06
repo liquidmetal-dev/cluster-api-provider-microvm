@@ -11,7 +11,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    needs: [test]
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -28,7 +27,7 @@ jobs:
       run: make docker-push TAG=${{ env.TAG }}
   release:
     runs-on: ubuntu-latest
-    needs: [test, build]
+    needs: [build]
     steps:
     - name: Checkout
       uses: actions/checkout@v2
