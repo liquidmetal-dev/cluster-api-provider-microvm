@@ -138,12 +138,16 @@ func (s *Service) createVendorData() (string, error) {
 		}
 	}
 
+	// TODO: remove the boot command temporary fix after image-builder #6
 	vendorUserdata := &cloudinit.UserData{
 		HostName: s.scope.MvmMachine.Name,
 		Users: []cloudinit.User{
 			defaultUser,
 		},
 		FinalMessage: "The Liquid Metal booted system is good to go after $UPTIME seconds",
+		BootCommands: []string{
+			"ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf",
+		},
 	}
 
 	data, err := yaml.Marshal(vendorUserdata)

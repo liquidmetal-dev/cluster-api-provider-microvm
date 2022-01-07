@@ -7,7 +7,7 @@ require (
 	github.com/onsi/gomega v1.17.0
 	github.com/spf13/pflag v1.0.5
 	github.com/weaveworks/flintlock/api v0.0.0-20211124154423-21a022445576
-	github.com/weaveworks/flintlock/client v0.0.0-20211213135217-19cc344a892b
+	github.com/weaveworks/flintlock/client v0.0.0-20220107100311-6a2445a32861
 	github.com/yitsushi/macpot v1.0.2
 	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
