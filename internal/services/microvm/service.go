@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 
 	"github.com/yitsushi/macpot"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -43,12 +44,12 @@ func New(scope *scope.MachineScope, client Client) *Service {
 	}
 }
 
-func (s *Service) Create(ctx context.Context) error {
+func (s *Service) Create(ctx context.Context, providerID string) error {
 	s.scope.V(defaults.LogLevelDebug).Info("Creating microvm", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
 	apiMicroVM := convertToFlintlockAPI(s.scope)
 
-	if err := s.addMetadata(apiMicroVM); err != nil {
+	if err := s.addMetadata(apiMicroVM, providerID); err != nil {
 		return fmt.Errorf("adding metadata: %w", err)
 	}
 
@@ -56,7 +57,7 @@ func (s *Service) Create(ctx context.Context) error {
 		iface := apiMicroVM.Interfaces[i]
 
 		if iface.GuestMac == nil || *iface.GuestMac == "" {
-			mac, err := macpot.New(macpot.AsLocal())
+			mac, err := macpot.New(macpot.AsLocal(), macpot.AsUnicast())
 			if err != nil {
 				return fmt.Errorf("creating mac address client: %w", err)
 			}
@@ -105,12 +106,13 @@ func (s *Service) Delete(ctx context.Context) (*emptypb.Empty, error) {
 	return s.client.DeleteMicroVM(ctx, input)
 }
 
-func (s *Service) addMetadata(apiMicroVM *flintlocktypes.MicroVMSpec) error {
+func (s *Service) addMetadata(apiMicroVM *flintlocktypes.MicroVMSpec, providerID string) error {
 	bootstrapData, err := s.scope.GetRawBootstrapData()
 	if err != nil {
 		return fmt.Errorf("getting bootstrap data for machine: %w", err)
 	}
-	apiMicroVM.Metadata["user-data"] = base64.StdEncoding.EncodeToString(bootstrapData)
+	userdata := strings.ReplaceAll(string(bootstrapData), "PROVIDER_ID", providerID)
+	apiMicroVM.Metadata["user-data"] = base64.StdEncoding.EncodeToString([]byte(userdata))
 
 	vendorData, err := s.createVendorData()
 	if err != nil {
@@ -128,26 +130,33 @@ func (s *Service) addMetadata(apiMicroVM *flintlocktypes.MicroVMSpec) error {
 }
 
 func (s *Service) createVendorData() (string, error) {
-	defaultUser := cloudinit.User{
-		Name: "default",
-	}
-	machineSSHKey := s.scope.GetSSHPublicKey()
-	if machineSSHKey != "" {
-		defaultUser.SSHAuthorizedKeys = []string{
-			machineSSHKey,
-		}
-	}
-
-	// TODO: remove the boot command temporary fix after image-builder #6
+	// TODO: remove the boot command temporary fix after image-builder change #89
 	vendorUserdata := &cloudinit.UserData{
-		HostName: s.scope.MvmMachine.Name,
-		Users: []cloudinit.User{
-			defaultUser,
-		},
+		HostName:     s.scope.MvmMachine.Name,
 		FinalMessage: "The Liquid Metal booted system is good to go after $UPTIME seconds",
 		BootCommands: []string{
 			"ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf",
 		},
+	}
+
+	// TODO:  allow setting multiple keys #88
+	machineSSHKey := s.scope.GetSSHPublicKey()
+	if machineSSHKey != "" {
+		defaultUser := cloudinit.User{
+			Name: "ubuntu",
+		}
+		rootUser := cloudinit.User{
+			Name: "root",
+		}
+
+		defaultUser.SSHAuthorizedKeys = []string{
+			machineSSHKey,
+		}
+		rootUser.SSHAuthorizedKeys = []string{
+			machineSSHKey,
+		}
+
+		vendorUserdata.Users = []cloudinit.User{defaultUser, rootUser}
 	}
 
 	data, err := yaml.Marshal(vendorUserdata)

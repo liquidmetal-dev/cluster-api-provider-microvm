@@ -66,12 +66,14 @@ func convertToFlintlockAPI(machineScope *scope.MachineScope) *flintlocktypes.Mic
 		iface := mvmSpec.NetworkInterfaces[i]
 
 		apiIface := &flintlocktypes.NetworkInterface{
-			GuestDeviceName: iface.GuestDeviceName,
-			GuestMac:        &iface.GuestMAC,
+			DeviceId: iface.GuestDeviceName,
+			GuestMac: &iface.GuestMAC,
 		}
 
 		if iface.Address != "" {
-			apiIface.Address = &iface.Address
+			apiIface.Address = &flintlocktypes.StaticAddress{
+				Address: iface.Address,
+			}
 		}
 
 		switch iface.Type {

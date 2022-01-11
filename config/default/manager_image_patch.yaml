@@ -7,5 +7,5 @@ spec:
   template:
     spec:
       containers:
-      - image: docker.io/weaveworks/cluster-api-microvm-controller:latest
+      - image: ghcr.io/weaveworks/cluster-api-provider-microvm:dev
         name: manager

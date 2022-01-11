@@ -16,4 +16,6 @@ var (
 
 	errMissingBootstrapDataSecret = errors.New("missing bootstrap data secret")
 	errMissingBootstrapSecretKey  = errors.New("missing bootstrap secrey value key")
+
+	errNoServiceAddress = errors.New("could not get service address")
 )

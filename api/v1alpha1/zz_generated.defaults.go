@@ -15,5 +15,21 @@ import (
 // Public to allow building arbitrary schemes.
 // All generated defaulters are covering - they call all nested defaulters.
 func RegisterDefaults(scheme *runtime.Scheme) error {
+	scheme.AddTypeDefaultingFunc(&MicrovmMachine{}, func(obj interface{}) { SetObjectDefaults_MicrovmMachine(obj.(*MicrovmMachine)) })
+	scheme.AddTypeDefaultingFunc(&MicrovmMachineTemplate{}, func(obj interface{}) { SetObjectDefaults_MicrovmMachineTemplate(obj.(*MicrovmMachineTemplate)) })
 	return nil
+}
+
+func SetObjectDefaults_MicrovmMachine(in *MicrovmMachine) {
+	for i := range in.Spec.MicrovmSpec.NetworkInterfaces {
+		a := &in.Spec.MicrovmSpec.NetworkInterfaces[i]
+		SetDefaults_NetworkInterface(a)
+	}
+}
+
+func SetObjectDefaults_MicrovmMachineTemplate(in *MicrovmMachineTemplate) {
+	for i := range in.Spec.Template.Spec.MicrovmSpec.NetworkInterfaces {
+		a := &in.Spec.Template.Spec.MicrovmSpec.NetworkInterfaces[i]
+		SetDefaults_NetworkInterface(a)
+	}
 }
