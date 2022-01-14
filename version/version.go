@@ -43,7 +43,7 @@ type Info struct {
 	Platform     string `json:"platform,omitempty"`
 }
 
-// Get returns version info initialized from defaults and the runtime environment.
+// Get returns version info initialised from defaults and the runtime environment.
 func Get() Info {
 	return Info{
 		Major:        gitMajor,
