@@ -8,18 +8,16 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/klogr"
-
-	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/collections"
 	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/failuredomains"
 	"sigs.k8s.io/cluster-api/util/patch"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
@@ -42,15 +40,19 @@ func NewMachineScope(params MachineScopeParams, opts ...MachineScopeOption) (*Ma
 	if params.Cluster == nil {
 		return nil, errClusterRequired
 	}
+
 	if params.MicroVMCluster == nil {
 		return nil, errMicrovmClusterRequired
 	}
+
 	if params.Machine == nil {
 		return nil, errMachineRequired
 	}
+
 	if params.MicroVMMachine == nil {
 		return nil, errMicrovmMachineRequied
 	}
+
 	if params.Client == nil {
 		return nil, errClientRequired
 	}
@@ -145,13 +147,18 @@ func (m *MachineScope) Patch() error {
 		conditions.WithStepCounter(),
 	)
 
-	return m.patchHelper.Patch(
+	err := m.patchHelper.Patch(
 		context.TODO(),
 		m.MvmMachine,
 		patch.WithOwnedConditions{Conditions: []clusterv1.ConditionType{
 			clusterv1.ReadyCondition,
 			infrav1.MicrovmReadyCondition,
 		}})
+	if err != nil {
+		return fmt.Errorf("unable to patch machine: %w", err)
+	}
+
+	return nil
 }
 
 // MicrovmServiceAddress will return the address of the microvm service to call. Any precedence
@@ -212,7 +219,12 @@ func (m *MachineScope) SetReady() {
 
 // SetNotReady sets any properties/conditions that are used to indicate that the MicrovmMachine is NOT 'Ready'
 // back to the upstream CAPI machine controllers.
-func (m *MachineScope) SetNotReady(reason string, severity clusterv1.ConditionSeverity, message string, messageArgs ...interface{}) {
+func (m *MachineScope) SetNotReady(
+	reason string,
+	severity clusterv1.ConditionSeverity,
+	message string,
+	messageArgs ...interface{},
+) {
 	conditions.MarkFalse(m.MvmMachine, infrav1.MicrovmReadyCondition, reason, severity, message, messageArgs...)
 	m.MvmMachine.Status.Ready = false
 }

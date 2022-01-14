@@ -9,17 +9,16 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
+	flintlocktypes "github.com/weaveworks/flintlock/api/types"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
-
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/collections"
 	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/predicates"
-
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -29,8 +28,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	flintlocktypes "github.com/weaveworks/flintlock/api/types"
 
 	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
@@ -69,35 +66,40 @@ func (r *MicrovmMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		if apierrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
+
 		log.Error(err, "error getting microvmmachine", "id", req.NamespacedName)
 
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("unable to reconcile: %w", err)
 	}
 
 	machine, err := util.GetOwnerMachine(ctx, r.Client, mvmMachine.ObjectMeta)
 	if err != nil {
 		log.Error(err, "getting owning machine")
 
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("unable to get machine owner: %w", err)
 	}
+
 	if machine == nil {
 		log.Info("Machine controller has not set OwnerRef")
 
 		return ctrl.Result{}, nil
 	}
+
 	log = log.WithValues("machine", machine.Name)
 
 	cluster, err := util.GetClusterFromMetadata(ctx, r.Client, machine.ObjectMeta)
 	if err != nil {
 		log.Info("Machine is missing cluster label or cluster does not exist")
 
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, fmt.Errorf("unable to get cluster from metadata: %w", nil)
 	}
+
 	if annotations.IsPaused(cluster, mvmMachine) {
 		log.Info("MicrovmMachine or linked Cluster is marked as paused. Won't reconcile")
 
 		return ctrl.Result{}, nil
 	}
+
 	log = log.WithValues("cluster", cluster.Name)
 
 	mvmCluster := &infrav1.MicrovmCluster{}
@@ -106,15 +108,16 @@ func (r *MicrovmMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		Name:      cluster.Spec.InfrastructureRef.Name,
 	}
 
-	if err := r.Client.Get(ctx, mvmClusterName, mvmCluster); err != nil {
-		if apierrors.IsNotFound(err) {
+	if getErr := r.Client.Get(ctx, mvmClusterName, mvmCluster); getErr != nil {
+		if apierrors.IsNotFound(getErr) {
 			log.Info("MicrovmCluster is not ready yet")
 
 			return ctrl.Result{}, nil
 		}
-		log.Error(err, "error getting microvmcluster", "id", mvmClusterName)
 
-		return ctrl.Result{}, err
+		log.Error(getErr, "error getting microvmcluster", "id", mvmClusterName)
+
+		return ctrl.Result{}, fmt.Errorf("error getting microvmcluster: %w", getErr)
 	}
 
 	machineScope, err := scope.NewMachineScope(scope.MachineScopeParams{
@@ -127,7 +130,7 @@ func (r *MicrovmMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	if err != nil {
 		log.Error(err, "failed to create machine scope")
 
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed to create machine scope: %w", err)
 	}
 
 	defer func() {
@@ -145,7 +148,10 @@ func (r *MicrovmMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	return r.reconcileNormal(ctx, machineScope)
 }
 
-func (r *MicrovmMachineReconciler) reconcileDelete(ctx context.Context, machineScope *scope.MachineScope) (reconcile.Result, error) {
+func (r *MicrovmMachineReconciler) reconcileDelete(
+	ctx context.Context,
+	machineScope *scope.MachineScope,
+) (reconcile.Result, error) {
 	machineScope.Info("Reconciling MicrovmMachine delete")
 
 	mvmSvc, err := r.getMicrovmService(machineScope)
@@ -159,14 +165,15 @@ func (r *MicrovmMachineReconciler) reconcileDelete(ctx context.Context, machineS
 	if err != nil && !isSpecNotFound(err) {
 		machineScope.Error(err, "failed getting microvm")
 
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed getting microvm: %w", err)
 	}
 
 	if microvm != nil {
 		machineScope.Info("deleting microvm")
 
-		// Mark the machine as no longer ready before we delete
+		// Mark the machine as no longer ready before we delete.
 		machineScope.SetNotReady(infrav1.MicrovmDeletingReason, clusterv1.ConditionSeverityInfo, "")
+
 		if err := machineScope.Patch(); err != nil {
 			machineScope.Error(err, "failed to patch object")
 
@@ -193,19 +200,34 @@ func (r *MicrovmMachineReconciler) reconcileDelete(ctx context.Context, machineS
 	return ctrl.Result{}, nil
 }
 
-func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineScope *scope.MachineScope) (reconcile.Result, error) {
+func (r *MicrovmMachineReconciler) reconcileNormal(
+	ctx context.Context,
+	machineScope *scope.MachineScope,
+) (reconcile.Result, error) {
 	machineScope.Info("Reconciling MicrovmMachine")
 
 	if !machineScope.Cluster.Status.InfrastructureReady {
 		machineScope.Info("Cluster infrastructure is not ready")
-		conditions.MarkFalse(machineScope.MvmMachine, infrav1.MicrovmReadyCondition, infrav1.WaitingForClusterInfraReason, clusterv1.ConditionSeverityInfo, "")
+		conditions.MarkFalse(
+			machineScope.MvmMachine,
+			infrav1.MicrovmReadyCondition,
+			infrav1.WaitingForClusterInfraReason,
+			clusterv1.ConditionSeverityInfo,
+			"",
+		)
 
 		return ctrl.Result{}, nil
 	}
 
 	if machineScope.Machine.Spec.Bootstrap.DataSecretName == nil {
 		machineScope.Info("Bootstrap secret is not ready")
-		conditions.MarkFalse(machineScope.MvmMachine, infrav1.MicrovmReadyCondition, infrav1.WaitingForBootstrapDataReason, clusterv1.ConditionSeverityInfo, "")
+		conditions.MarkFalse(
+			machineScope.MvmMachine,
+			infrav1.MicrovmReadyCondition,
+			infrav1.WaitingForBootstrapDataReason,
+			clusterv1.ConditionSeverityInfo,
+			"",
+		)
 
 		return ctrl.Result{}, nil
 	}
@@ -226,6 +248,7 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 	}
 
 	controllerutil.AddFinalizer(machineScope.MvmMachine, infrav1.MachineFinalizer)
+
 	if err := machineScope.Patch(); err != nil {
 		machineScope.Error(err, "unable to patch microvm machine")
 
@@ -250,7 +273,10 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 	case flintlocktypes.MicroVMStatus_FAILED:
 		// TODO: we need a failure reason from flintlock: Flintlock #299
 		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateFailed
-		machineScope.SetNotReady(infrav1.MicrovmProvisionFailedReason, clusterv1.ConditionSeverityError, errMicrovmFailed.Error())
+		machineScope.SetNotReady(infrav1.MicrovmProvisionFailedReason,
+			clusterv1.ConditionSeverityError,
+			errMicrovmFailed.Error(),
+		)
 
 		return ctrl.Result{}, errMicrovmFailed
 	case flintlocktypes.MicroVMStatus_PENDING:
@@ -267,7 +293,11 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 		return ctrl.Result{RequeueAfter: requeuePeriod}, nil
 	default:
 		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateUnknown
-		machineScope.SetNotReady(infrav1.MicrovmUnknownStateReason, clusterv1.ConditionSeverityError, errMicrovmUnknownState.Error())
+		machineScope.SetNotReady(
+			infrav1.MicrovmUnknownStateReason,
+			clusterv1.ConditionSeverityError,
+			errMicrovmUnknownState.Error(),
+		)
 
 		return ctrl.Result{RequeueAfter: requeuePeriod}, errMicrovmUnknownState
 	}
@@ -298,7 +328,11 @@ func (r *MicrovmMachineReconciler) getMicrovmService(machineScope *scope.Machine
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *MicrovmMachineReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
+func (r *MicrovmMachineReconciler) SetupWithManager(
+	ctx context.Context,
+	mgr ctrl.Manager,
+	options controller.Options,
+) error {
 	log := ctrl.LoggerFrom(ctx)
 
 	clusterToObjectFunc, err := util.ClusterToObjectsMapper(
@@ -338,11 +372,16 @@ func (r *MicrovmMachineReconciler) SetupWithManager(ctx context.Context, mgr ctr
 	return nil
 }
 
-// MicroVMClusterToMicrovmMachine is called when there is a change to a MicrovmCluster (which this controller is watching
-// for changes to, see SetupWithManager). Its job is to identify the MicrovmMachines for the changed MicrovmCluster
-// and queue requests (via controller-runtime) for those machines to be reconciled so that they can take into account any
-// changes that are relevant at the MicrovmCluster level..
-func (r *MicrovmMachineReconciler) MicroVMClusterToMicrovmMachine(ctx context.Context, log logr.Logger) handler.MapFunc {
+// MicroVMClusterToMicrovmMachine is called when there is a change to a
+// MicrovmCluster (which this controller is watching for changes to, see
+// SetupWithManager). Its job is to identify the MicrovmMachines for the changed
+// MicrovmCluster and queue requests (via controller-runtime) for those machines
+// to be reconciled so that they can take into account any changes that are
+// relevant at the MicrovmCluster level.
+func (r *MicrovmMachineReconciler) MicroVMClusterToMicrovmMachine(
+	ctx context.Context,
+	log logr.Logger,
+) handler.MapFunc {
 	return func(o client.Object) []ctrl.Request {
 		mvmCluster, ok := o.(*infrav1.MicrovmCluster)
 		if !ok {

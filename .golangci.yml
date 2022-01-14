@@ -6,17 +6,35 @@ run:
       - "./*/mock"
 
 linters-settings:
-  goimports:
-    local-prefixes: github.com/weaveworks/flintlock
-  govet:
-    check-shadowing: true
+  funlen:
+    lines: 110
+    statements: 60
+  staticcheck:
+    go: "1.17"
+  stylecheck:
+    go: "1.17"
+  cyclop:
+    max-complexity: 15
+    skip-tests: true
+  gosec:
+    exclude-generated: true
+  lll:
+    line-length: 120
   misspell:
     locale: GB
+  goimports:
+    local-prefixes: github.com/weaveworks/cluster-api-provider-microvm
+  govet:
+    check-shadowing: true
   nolintlint:
     allow-leading-space: false
     allow-unused: false
     require-explanation: true
     require-specific: false
+  varnamelen:
+    ignore-names:
+    - err
+    - wg
 
 issues:
   max-same-issues: 0
@@ -28,6 +46,15 @@ issues:
   - text: "local replacement are not allowed: github.com/weaveworks/cluster-api-provider-microvm/"
     linters:
     - gomoddirectives
+  - text: "github.com/weaveworks/"
+    linters:
+    - wrapcheck
+  - source: "https://"
+    linters:
+    - lll
+  - source: "\\+kubebuilder"
+    linters:
+    - lll
   - path: _test\.go
     linters:
     - goerr113
@@ -38,80 +65,27 @@ issues:
     - funlen
     - scopelint
     - testpackage
-  - path: internal/version/
+  - path: version/
+    linters:
+    - gochecknoglobals
+  - path: api/
     linters:
     - gochecknoglobals
   - path: internal/command/
     linters:
     - exhaustivestruct
     - lll
-
-linters-settings:
-  funlen:
-    lines: 110
-    statements: 60
-  staticcheck:
-    go: "1.17"
-  stylecheck:
-    go: "1.17"
-  cyclop:
-    max-complexity: 12
-    skip-tests: true
+    - wrapcheck
+  - source: "// .* #\\d+"
+    linters:
+    - godox
 
 linters:
-  disable-all: true
-  enable:
-  - deadcode
-  - errcheck
-  - gosimple
-  - govet
-  - ineffassign
-  - staticcheck
-  - structcheck
-  - typecheck
-  - unused
-  - varcheck
-  - bodyclose
-  - depguard
-  - dogsled
-  - dupl
-  - exhaustive
-  - exportloopref
-  - funlen
-  - gocognit
-  - goconst
-  - gocritic
-  - gocyclo
-  - godot
-  - goerr113
-  - gofmt
-  - gofumpt
-  - goheader
-  - goimports
-  - revive
-  - gomnd
-  - gomodguard
-  - goprintffuncname
-  - gosec
-  - misspell
-  - nakedret
-  - nestif
-  - nlreturn
-  - noctx
-  - nolintlint
-  - prealloc
-  - rowserrcheck
-  - exportloopref
-  - sqlclosecheck
-  - stylecheck
-  - testpackage
-  - unconvert
-  - unparam
-  - whitespace
-  disabled:
-  - gci
-  - godox
-  - gochecknoglobals
-  - lll
-  - wsl
-  - gochecknoinits
+  enable-all: true
+  disable:
+  - exhaustivestruct
+  - golint
+  - interfacer
+  - maligned
+  - scopelint
+  - tagliatelle

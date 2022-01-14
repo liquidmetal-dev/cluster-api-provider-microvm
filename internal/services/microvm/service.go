@@ -9,6 +9,9 @@ import (
 	"fmt"
 	"strings"
 
+	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
+	flintlocktypes "github.com/weaveworks/flintlock/api/types"
+	"github.com/weaveworks/flintlock/client/cloudinit"
 	"github.com/yitsushi/macpot"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gopkg.in/yaml.v2"
@@ -16,9 +19,6 @@ import (
 
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/scope"
-	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
-	flintlocktypes "github.com/weaveworks/flintlock/api/types"
-	"github.com/weaveworks/flintlock/client/cloudinit"
 )
 
 const (
@@ -45,7 +45,9 @@ func New(scope *scope.MachineScope, client Client) *Service {
 }
 
 func (s *Service) Create(ctx context.Context, providerID string) (*flintlocktypes.MicroVM, error) {
-	s.scope.V(defaults.LogLevelDebug).Info("Creating microvm", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
+	s.scope.
+		V(defaults.LogLevelDebug).
+		Info("Creating microvm", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
 	apiMicroVM := convertToFlintlockAPI(s.scope)
 
@@ -75,13 +77,17 @@ func (s *Service) Create(ctx context.Context, providerID string) (*flintlocktype
 		return nil, fmt.Errorf("creating microvm: %w", err)
 	}
 
-	s.scope.V(defaults.LogLevelDebug).Info("Successfully created microvm", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
+	s.scope.
+		V(defaults.LogLevelDebug).
+		Info("Successfully created microvm", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
 	return resp.Microvm, nil
 }
 
 func (s *Service) Get(ctx context.Context) (*flintlocktypes.MicroVM, error) {
-	s.scope.V(defaults.LogLevelDebug).Info("Getting microvm for machine", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
+	s.scope.
+		V(defaults.LogLevelDebug).
+		Info("Getting microvm for machine", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
 	input := &flintlockv1.GetMicroVMRequest{
 		Id:        s.scope.Name(),
@@ -97,7 +103,9 @@ func (s *Service) Get(ctx context.Context) (*flintlocktypes.MicroVM, error) {
 }
 
 func (s *Service) Delete(ctx context.Context) (*emptypb.Empty, error) {
-	s.scope.V(defaults.LogLevelDebug).Info("Deleting microvm for machine", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
+	s.scope.
+		V(defaults.LogLevelDebug).
+		Info("Deleting microvm for machine", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
 	input := &flintlockv1.DeleteMicroVMRequest{
 		Id:        s.scope.Name(),
@@ -112,6 +120,7 @@ func (s *Service) addMetadata(apiMicroVM *flintlocktypes.MicroVMSpec, providerID
 	if err != nil {
 		return fmt.Errorf("getting bootstrap data for machine: %w", err)
 	}
+
 	userdata := strings.ReplaceAll(string(bootstrapData), "PROVIDER_ID", providerID)
 	apiMicroVM.Metadata["user-data"] = base64.StdEncoding.EncodeToString([]byte(userdata))
 
@@ -119,12 +128,14 @@ func (s *Service) addMetadata(apiMicroVM *flintlocktypes.MicroVMSpec, providerID
 	if err != nil {
 		return fmt.Errorf("creating vendor data for machine: %w", err)
 	}
+
 	apiMicroVM.Metadata["vendor-data"] = vendorData
 
 	instanceData, err := s.createInstanceData()
 	if err != nil {
 		return fmt.Errorf("creating instance metadata: %w", err)
 	}
+
 	apiMicroVM.Metadata["meta-data"] = instanceData
 
 	return nil

@@ -34,6 +34,7 @@ type MicrovmMachineTemplateList struct {
 	Items           []MicrovmMachineTemplate `json:"items"`
 }
 
+//nolint:gochecknoinits // Maybe we can remove it, now just ignore.
 func init() {
 	SchemeBuilder.Register(&MicrovmMachineTemplate{}, &MicrovmMachineTemplateList{})
 }

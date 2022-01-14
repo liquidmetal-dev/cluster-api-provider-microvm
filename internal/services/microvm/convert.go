@@ -48,6 +48,7 @@ func convertToFlintlockAPI(machineScope *scope.MachineScope) *flintlocktypes.Mic
 	}
 
 	apiVM.AdditionalVolumes = []*flintlocktypes.Volume{}
+
 	for i := range mvmSpec.AdditionalVolumes {
 		volume := mvmSpec.AdditionalVolumes[i]
 
@@ -62,6 +63,7 @@ func convertToFlintlockAPI(machineScope *scope.MachineScope) *flintlocktypes.Mic
 	}
 
 	apiVM.Interfaces = []*flintlocktypes.NetworkInterface{}
+
 	for i := range mvmSpec.NetworkInterfaces {
 		iface := mvmSpec.NetworkInterfaces[i]
 

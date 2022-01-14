@@ -81,6 +81,7 @@ type MicrovmClusterList struct {
 	Items           []MicrovmCluster `json:"items"`
 }
 
+//nolint:gochecknoinits // Maybe we can remove it, now just ignore.
 func init() {
 	SchemeBuilder.Register(&MicrovmCluster{}, &MicrovmClusterList{})
 }
