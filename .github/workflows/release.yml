@@ -36,7 +36,7 @@ jobs:
     - name: Update manifests
       run: |
         # this is quite naive, but i don't think we need more for now
-        sed -i "s/latest/${TAG}/g" config/default/manager_image_patch.yaml
+        sed -i "s/dev/${TAG}/g" config/default/manager_image_patch.yaml
         kustomize build config/default/ > infrastructure-components.yaml
     - name: Release
       uses: softprops/action-gh-release@v1
@@ -49,5 +49,6 @@ jobs:
         name: ${{ env.TAG }}
         files: |
           templates/cluster-template.yaml
+          templates/cluster-template-cilium.yaml
           metadata.yaml
           infrastructure-components.yaml
