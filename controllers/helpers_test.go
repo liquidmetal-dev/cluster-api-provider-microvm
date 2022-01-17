@@ -37,7 +37,7 @@ const (
 	testClusterNamespace    = "ns1"
 	testMachineName         = "machine1"
 	testBootstrapSecretName = "bootstrap"
-	testVMID                = "id1234567890"
+	testVMID                = "microvm://machine1"
 	testbootStrapData       = "somesamplebootstrapsdata"
 )
 
@@ -262,6 +262,7 @@ func createMicrovmMachine(name, namespace string) *infrav1.MicrovmMachine {
 }
 
 func createMachine(name, namespace string) *clusterv1.Machine {
+	testFailureDomain := "127.0.0.1:9090"
 	return &clusterv1.Machine{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -271,7 +272,8 @@ func createMachine(name, namespace string) *clusterv1.Machine {
 			},
 		},
 		Spec: clusterv1.MachineSpec{
-			ClusterName: testClusterName,
+			ClusterName:   testClusterName,
+			FailureDomain: &testFailureDomain,
 			InfrastructureRef: corev1.ObjectReference{
 				Name: name,
 			},
@@ -389,11 +391,15 @@ func assertVendorData(g *WithT, vendorDataRaw string, expectedSSHKey string) {
 		g.Expect(unmarshallErr).NotTo(HaveOccurred(), "expect vendor data to unmarshall to cloud-init userdata")
 		g.Expect(vendorData.Users).NotTo(BeNil())
 		users := vendorData.Users
-		g.Expect(users).To(HaveLen(1))
-		g.Expect(users[0].SSHAuthorizedKeys).NotTo(BeNil())
-		keys := users[0].SSHAuthorizedKeys
-		g.Expect(keys).To(HaveLen(1))
-		g.Expect(keys[0]).To(Equal(expectedSSHKey))
+		g.Expect(users).To(HaveLen(2))
+		for i := range users {
+			user := users[i]
+
+			g.Expect(user.SSHAuthorizedKeys).NotTo(BeNil())
+			keys := user.SSHAuthorizedKeys
+			g.Expect(keys).To(HaveLen(1))
+			g.Expect(keys[0]).To(Equal(expectedSSHKey))
+		}
 
 		vendorDataStr := string(data)
 		g.Expect(vendorDataStr).To(ContainSubstring("#cloud-config\n"))

@@ -2,7 +2,7 @@
     {
       "name": "microvm",
       "config": {
-        "image": "cluster-api-microvm-controller",
+        "image": "ghcr.io/weaveworks/cluster-api-provider-microvm:dev",
         "live_reload_deps": [
           "main.go",
           "go.mod",
@@ -11,8 +11,7 @@
           "controllers",
           "pkg"
         ],
-        "label": "CAPMVM",
-        "manager_name": "capmvm-controller-manager"
+        "label": "CAPMVM"
       }
     }
   ]

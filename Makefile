@@ -6,9 +6,9 @@ SHELL = /usr/bin/env bash -o pipefail
 
 TAG ?= dev
 ARCH ?= amd64
-REGISTRY ?= docker.io
+REGISTRY ?= ghcr.io
 ORG ?= weaveworks
-CONTROLLER_IMAGE_NAME := cluster-api-microvm-controller
+CONTROLLER_IMAGE_NAME := cluster-api-provider-microvm
 CONTROLLER_IMAGE ?= $(REGISTRY)/$(ORG)/$(CONTROLLER_IMAGE_NAME)
 
 # Directories

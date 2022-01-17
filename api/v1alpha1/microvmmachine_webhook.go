@@ -4,10 +4,8 @@
 package v1alpha1
 
 import (
-	"fmt"
 	"reflect"
 
-	"github.com/yitsushi/macpot"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -15,7 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
-var _ = logf.Log.WithName("microvmmachine-resource")
+var machineLog = logf.Log.WithName("microvmmachine-resource")
 
 func (r *MicrovmMachine) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
@@ -33,19 +31,6 @@ var (
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (r *MicrovmMachine) ValidateCreate() error {
-	for i := range r.Spec.NetworkInterfaces {
-		iface := r.Spec.NetworkInterfaces[i]
-
-		if iface.GuestMAC == "" {
-			mac, err := macpot.New(macpot.AsLocal())
-			if err != nil {
-				return fmt.Errorf("creating mac address client: %w", err)
-			}
-
-			iface.GuestMAC = mac.ToString()
-		}
-	}
-
 	return nil
 }
 
@@ -56,6 +41,7 @@ func (r *MicrovmMachine) ValidateDelete() error {
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (r *MicrovmMachine) ValidateUpdate(old runtime.Object) error {
+	machineLog.Info("validate upadate", "name", r.Name)
 	var allErrs field.ErrorList
 
 	previous, _ := old.(*MicrovmMachine)
@@ -69,4 +55,5 @@ func (r *MicrovmMachine) ValidateUpdate(old runtime.Object) error {
 
 // Default satisfies the defaulting webhook interface.
 func (r *MicrovmMachine) Default() {
+	SetObjectDefaults_MicrovmMachine(r)
 }

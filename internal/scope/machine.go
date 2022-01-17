@@ -16,7 +16,9 @@ import (
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
+	"sigs.k8s.io/cluster-api/util/collections"
 	"sigs.k8s.io/cluster-api/util/conditions"
+	"sigs.k8s.io/cluster-api/util/failuredomains"
 	"sigs.k8s.io/cluster-api/util/patch"
 
 	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
@@ -32,7 +34,8 @@ type MachineScopeParams struct {
 	Machine        *clusterv1.Machine
 	MicroVMMachine *infrav1.MicrovmMachine
 
-	Client client.Client
+	Client  client.Client
+	Context context.Context
 }
 
 func NewMachineScope(params MachineScopeParams, opts ...MachineScopeOption) (*MachineScope, error) {
@@ -66,6 +69,7 @@ func NewMachineScope(params MachineScopeParams, opts ...MachineScopeOption) (*Ma
 		controllerName: defaults.ManagerName,
 		Logger:         klogr.New(),
 		patchHelper:    patchHelper,
+		ctx:            params.Context,
 	}
 
 	for _, opt := range opts {
@@ -101,6 +105,7 @@ type MachineScope struct {
 	client         client.Client
 	patchHelper    *patch.Helper
 	controllerName string
+	ctx            context.Context
 }
 
 // Name returns the MicrovmMachine name.
@@ -151,12 +156,24 @@ func (m *MachineScope) Patch() error {
 
 // MicrovmServiceAddress will return the address of the microvm service to call. Any precedence
 // logic needs to sit here.
-func (m *MachineScope) MicrovmServiceAddress() string {
-	if m.Machine.Spec.FailureDomain != nil {
-		return *m.Machine.Spec.FailureDomain
+func (m *MachineScope) MicrovmServiceAddress() (string, error) {
+	if m.Machine.Spec.FailureDomain != nil && *m.Machine.Spec.FailureDomain != "" {
+		return *m.Machine.Spec.FailureDomain, nil
 	}
 
-	return ""
+	machinesList, err := m.getMachinesInCluster()
+	if err != nil {
+		return "", fmt.Errorf("getting machines in cluster: %w", err)
+	}
+
+	machines := collections.FromMachineList(machinesList)
+
+	failureDomain := failuredomains.PickFewest(m.Cluster.Status.FailureDomains, machines)
+	if failureDomain != nil {
+		return *failureDomain, nil
+	}
+
+	return "", errNoServiceAddress
 }
 
 // GetRawBootstrapData will return the contents of the secret that has been created by the
@@ -212,4 +229,19 @@ func (m *MachineScope) GetSSHPublicKey() string {
 	}
 
 	return ""
+}
+
+func (m *MachineScope) ProviderID() string {
+	return fmt.Sprintf("microvm://%s", m.MvmMachine.Name)
+}
+
+func (m *MachineScope) getMachinesInCluster() (*clusterv1.MachineList, error) {
+	list := &clusterv1.MachineList{}
+	labels := map[string]string{clusterv1.ClusterLabelName: m.ClusterName()}
+
+	if err := m.client.List(m.ctx, list, client.InNamespace(m.Cluster.Namespace), client.MatchingLabels(labels)); err != nil {
+		return nil, err
+	}
+
+	return list, nil
 }

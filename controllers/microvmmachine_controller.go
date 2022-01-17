@@ -173,12 +173,12 @@ func (r *MicrovmMachineReconciler) reconcileDelete(ctx context.Context, machineS
 			return ctrl.Result{}, err
 		}
 
-		// TODO: we should check the state returned from the above Get and only
-		// call Delete if not "deleting". Flintlock #310
-		if _, err := mvmSvc.Delete(ctx); err != nil {
-			machineScope.SetNotReady(infrav1.MicrovmDeleteFailedReason, clusterv1.ConditionSeverityError, "")
+		if microvm.Status.State != flintlocktypes.MicroVMStatus_DELETING {
+			if _, err := mvmSvc.Delete(ctx); err != nil {
+				machineScope.SetNotReady(infrav1.MicrovmDeleteFailedReason, clusterv1.ConditionSeverityError, "")
 
-			return ctrl.Result{}, err
+				return ctrl.Result{}, err
+			}
 		}
 
 		return ctrl.Result{RequeueAfter: requeuePeriod}, nil
@@ -209,12 +209,13 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 
 		return ctrl.Result{}, nil
 	}
+	machineScope.V(defaults.LogLevelDebug).Info("Bootstrap secret is ready", "machine", machineScope.MvmMachine.Name, "secret", machineScope.Machine.Spec.Bootstrap.DataSecretName)
 
 	mvmSvc, err := r.getMicrovmService(machineScope)
 	if err != nil {
 		machineScope.Error(err, "failed to get microvm machine")
 
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, err
 	}
 
 	microvm, err := mvmSvc.Get(ctx)
@@ -231,9 +232,11 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 		return ctrl.Result{}, err
 	}
 
+	providerID := machineScope.ProviderID()
+
 	if microvm == nil {
 		machineScope.Info("creating microvm")
-		if createErr := mvmSvc.Create(ctx); createErr != nil {
+		if createErr := mvmSvc.Create(ctx, providerID); createErr != nil {
 			return ctrl.Result{}, createErr
 		}
 
@@ -255,6 +258,10 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 	case flintlocktypes.MicroVMStatus_CREATED:
 		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateRunning
 		machineScope.V(defaults.LogLevelDebug).Info("microvm is in created state")
+	case flintlocktypes.MicroVMStatus_DELETING:
+		machineScope.V(defaults.LogLevelDebug).Info("microvm is deleting")
+
+		return ctrl.Result{RequeueAfter: requeuePeriod}, nil
 	default:
 		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateUnknown
 		machineScope.SetNotReady(infrav1.MicrovmUnknownStateReason, clusterv1.ConditionSeverityError, errMicrovmUnknownState.Error())
@@ -262,8 +269,9 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 		return ctrl.Result{RequeueAfter: requeuePeriod}, errMicrovmUnknownState
 	}
 
-	machineScope.Info("microvm created")
-	machineScope.MvmMachine.Spec.ProviderID = &microvm.Spec.Id
+	machineScope.Info("microvm created", "providerID", providerID)
+
+	machineScope.MvmMachine.Spec.ProviderID = &providerID
 	machineScope.SetReady()
 
 	return reconcile.Result{}, nil
@@ -274,7 +282,12 @@ func (r *MicrovmMachineReconciler) getMicrovmService(machineScope *scope.Machine
 		return nil, errClientFactoryFuncRequired
 	}
 
-	client, err := r.MvmClientFunc(machineScope.MicrovmServiceAddress())
+	addr, err := machineScope.MicrovmServiceAddress()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := r.MvmClientFunc(addr)
 	if err != nil {
 		return nil, fmt.Errorf("creating microvm client: %w", err)
 	}
