@@ -28,7 +28,6 @@ spec:
   controlPlaneEndpoint:
     host: "${CONTROL_PLANE_VIP}"
     port: 6443
-  sshPublicKey: "${USER_SSH_KEY:=}"
   placement:
     staticPool:
       hosts:

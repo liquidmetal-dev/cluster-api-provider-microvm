@@ -32,7 +32,6 @@ spec:
   controlPlaneEndpoint:
     host: "${CONTROL_PLANE_VIP}"
     port: 6443
-  sshPublicKey: "${USER_SSH_KEY:=}"
   placement:
     staticPool:
       hosts:
@@ -702,7 +701,7 @@ data:
               # distros installed on the underlying host. Copy the binary to the
               # same directory where we install cilium cni plugin so that exec permissions
               # are available.
-              - 'cp /usr/bin/cilium-mount /hostbin/cilium-mount && nsenter --cgroup=/hostproc/1/ns/cgroup --mount=/hostproc/1/ns/mnt "${BIN_PATH}/cilium-mount" $CGROUP_ROOT; rm /hostbin/cilium-mount'
+              - 'cp /usr/bin/cilium-mount /hostbin/cilium-mount && nsenter --cgroup=/hostproc/1/ns/cgroup --mount=/hostproc/1/ns/mnt "/opt/cni/bin/cilium-mount" $CGROUP_ROOT; rm /hostbin/cilium-mount'
             image: "quay.io/cilium/cilium:v1.9.11@sha256:47f923325069a697d5baf5314c7fe936bdf34e7c8154666e6762a78be1ddc3ec"
             imagePullPolicy: IfNotPresent
             volumeMounts:
