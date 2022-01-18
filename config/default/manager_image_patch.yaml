@@ -6,6 +6,8 @@ metadata:
 spec:
   template:
     spec:
+      imagePullSecrets:
+      - name: capmvm-private-image-cred
       containers:
       - image: ghcr.io/weaveworks/cluster-api-provider-microvm:dev
         name: manager
