@@ -1,6 +1,5 @@
 # Releasing CAPMVM
 
-
 ## Determine release version
 
 The projects follows [semantic versioning](https://semver.org/#semantic-versioning-200)
@@ -38,13 +37,15 @@ git push origin "${RELEASE_VERSION}"
 ```
 
 * Check the [release](https://github.com/weaveworks/cluster-api-provider-microvm/actions/workflows/release.yml) GitHub Actions workflow completes successfully.
-* Check that the [docker image](https://hub.docker.com/repository/docker/weaveworks/cluster-api-microvm-controller) for that tag was created successfully
+* Check that the [docker image](https://github.com/orgs/weaveworks/packages?repo_name=cluster-api-provider-microvm) for that tag was created successfully. (This
+won't actually be visible while the repo is private for... reasons.)
 
 ## Edit & Publish GitHub Release
 
 * Go to the draft release in GitHub.
 * Check that the assets were attached correctly
 * Make any edits to generated release notes
+  * Note which versions of Flintlock are compatible with this release
   * If there are any breaking changes then manually add a note at the beginning
     of the release notes informing the user what they need to be aware of/do.
   * Sometimes you may want to combine changes into 1 line
@@ -56,3 +57,9 @@ git push origin "${RELEASE_VERSION}"
 ## Announce release
 
 When the release is available announce it in the #liquid-metal slack channel.
+
+## Update the version compatibility table
+
+Once the release is published, edit [docs/compatibility.md](docs/compatibility.md)
+and update the table to contain the new version and any compatible Flintlock versions.
+Open a PR and merge the changes.
