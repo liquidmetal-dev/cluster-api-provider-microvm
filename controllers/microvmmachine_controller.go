@@ -244,6 +244,8 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 		}
 	}
 
+	machineScope.MvmMachine.Spec.ProviderID = &providerID
+
 	switch microvm.Status.State {
 	case flintlocktypes.MicroVMStatus_FAILED:
 		// TODO: we need a failure reason from flintlock: Flintlock #299
@@ -272,7 +274,6 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 
 	machineScope.Info("microvm created", "providerID", providerID)
 
-	machineScope.MvmMachine.Spec.ProviderID = &providerID
 	machineScope.SetReady()
 
 	return reconcile.Result{}, nil
