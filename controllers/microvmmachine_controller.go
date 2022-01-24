@@ -242,8 +242,6 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 		if createErr != nil {
 			return ctrl.Result{}, createErr
 		}
-
-		return ctrl.Result{Requeue: true}, nil
 	}
 
 	switch microvm.Status.State {
