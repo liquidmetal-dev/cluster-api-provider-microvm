@@ -254,7 +254,7 @@ func TestMachineReconcileNoVmCreateSucceeds(t *testing.T) {
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
-	withCreateMicrovmSuccess(&fakeAPIClient)
+	withCreateMicrovmSuccess(&fakeAPIClient, testMachineName)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
 	result, err := reconcileMachine(client, &fakeAPIClient)
@@ -268,6 +268,12 @@ func TestMachineReconcileNoVmCreateSucceeds(t *testing.T) {
 	g.Expect(createReq.Microvm.Metadata).To(HaveLen(3))
 	expectedBootstrapData := base64.StdEncoding.EncodeToString([]byte(testbootStrapData))
 	g.Expect(createReq.Microvm.Metadata).To(HaveKeyWithValue("user-data", expectedBootstrapData))
+
+	reconciled, err := getMicrovmMachine(client, testMachineName, testClusterNamespace)
+	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
+	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmPendingReason)
+	assertMachineVMState(g, reconciled, infrav1.VMStatePending)
+	assertMachineFinalizer(g, reconciled)
 }
 
 func TestMachineReconcileNoVmCreateClusterSSHSucceeds(t *testing.T) {
@@ -281,7 +287,7 @@ func TestMachineReconcileNoVmCreateClusterSSHSucceeds(t *testing.T) {
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
-	withCreateMicrovmSuccess(&fakeAPIClient)
+	withCreateMicrovmSuccess(&fakeAPIClient, testMachineName)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
 	result, err := reconcileMachine(client, &fakeAPIClient)
@@ -314,7 +320,7 @@ func TestMachineReconcileNoVmCreateClusterMachineSSHSucceeds(t *testing.T) {
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
-	withCreateMicrovmSuccess(&fakeAPIClient)
+	withCreateMicrovmSuccess(&fakeAPIClient, testMachineName)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
 	result, err := reconcileMachine(client, &fakeAPIClient)
@@ -341,7 +347,7 @@ func TestMachineReconcileNoVmCreateAdditionReconcile(t *testing.T) {
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
-	withCreateMicrovmSuccess(&fakeAPIClient)
+	withCreateMicrovmSuccess(&fakeAPIClient, testMachineName)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
 	result, err := reconcileMachine(client, &fakeAPIClient)

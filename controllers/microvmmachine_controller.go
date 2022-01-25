@@ -236,12 +236,15 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 
 	if microvm == nil {
 		machineScope.Info("creating microvm")
-		if createErr := mvmSvc.Create(ctx, providerID); createErr != nil {
+
+		var createErr error
+		microvm, createErr = mvmSvc.Create(ctx, providerID)
+		if createErr != nil {
 			return ctrl.Result{}, createErr
 		}
-
-		return ctrl.Result{Requeue: true}, nil
 	}
+
+	machineScope.MvmMachine.Spec.ProviderID = &providerID
 
 	switch microvm.Status.State {
 	case flintlocktypes.MicroVMStatus_FAILED:
@@ -271,7 +274,6 @@ func (r *MicrovmMachineReconciler) reconcileNormal(ctx context.Context, machineS
 
 	machineScope.Info("microvm created", "providerID", providerID)
 
-	machineScope.MvmMachine.Spec.ProviderID = &providerID
 	machineScope.SetReady()
 
 	return reconcile.Result{}, nil

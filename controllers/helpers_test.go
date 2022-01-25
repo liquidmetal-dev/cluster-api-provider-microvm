@@ -320,8 +320,17 @@ func withMissingMicrovm(fc *mock_client.FakeClient) {
 	fc.GetMicroVMReturns(&flintlockv1.GetMicroVMResponse{}, nil)
 }
 
-func withCreateMicrovmSuccess(fc *mock_client.FakeClient) {
-	fc.CreateMicroVMReturns(&flintlockv1.CreateMicroVMResponse{}, nil)
+func withCreateMicrovmSuccess(fc *mock_client.FakeClient, mvmName string) {
+	fc.CreateMicroVMReturns(&flintlockv1.CreateMicroVMResponse{
+		Microvm: &flintlocktypes.MicroVM{
+			Spec: &flintlocktypes.MicroVMSpec{
+				Id: mvmName,
+			},
+			Status: &flintlocktypes.MicroVMStatus{
+				State: flintlocktypes.MicroVMStatus_PENDING,
+			},
+		},
+	}, nil)
 }
 
 func assertConditionTrue(g *WithT, from conditions.Getter, conditionType clusterv1.ConditionType) {

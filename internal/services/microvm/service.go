@@ -44,13 +44,13 @@ func New(scope *scope.MachineScope, client Client) *Service {
 	}
 }
 
-func (s *Service) Create(ctx context.Context, providerID string) error {
+func (s *Service) Create(ctx context.Context, providerID string) (*flintlocktypes.MicroVM, error) {
 	s.scope.V(defaults.LogLevelDebug).Info("Creating microvm", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
 	apiMicroVM := convertToFlintlockAPI(s.scope)
 
 	if err := s.addMetadata(apiMicroVM, providerID); err != nil {
-		return fmt.Errorf("adding metadata: %w", err)
+		return nil, fmt.Errorf("adding metadata: %w", err)
 	}
 
 	for i := range apiMicroVM.Interfaces {
@@ -59,7 +59,7 @@ func (s *Service) Create(ctx context.Context, providerID string) error {
 		if iface.GuestMac == nil || *iface.GuestMac == "" {
 			mac, err := macpot.New(macpot.AsLocal(), macpot.AsUnicast())
 			if err != nil {
-				return fmt.Errorf("creating mac address client: %w", err)
+				return nil, fmt.Errorf("creating mac address client: %w", err)
 			}
 
 			iface.GuestMac = pointer.String(mac.ToString())
@@ -70,13 +70,14 @@ func (s *Service) Create(ctx context.Context, providerID string) error {
 		Microvm: apiMicroVM,
 	}
 
-	if _, err := s.client.CreateMicroVM(ctx, input); err != nil {
-		return fmt.Errorf("creating microvm: %w", err)
+	resp, err := s.client.CreateMicroVM(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("creating microvm: %w", err)
 	}
 
 	s.scope.V(defaults.LogLevelDebug).Info("Successfully created microvm", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
-	return nil
+	return resp.Microvm, nil
 }
 
 func (s *Service) Get(ctx context.Context) (*flintlocktypes.MicroVM, error) {
