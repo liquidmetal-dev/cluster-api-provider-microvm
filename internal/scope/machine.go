@@ -251,8 +251,9 @@ func (m *MachineScope) getMachinesInCluster() (*clusterv1.MachineList, error) {
 	list := &clusterv1.MachineList{}
 	labels := map[string]string{clusterv1.ClusterLabelName: m.ClusterName()}
 
-	if err := m.client.List(m.ctx, list, client.InNamespace(m.Cluster.Namespace), client.MatchingLabels(labels)); err != nil {
-		return nil, err
+	err := m.client.List(m.ctx, list, client.InNamespace(m.Cluster.Namespace), client.MatchingLabels(labels))
+	if err != nil {
+		return nil, fmt.Errorf("unable to list resources: %w", err)
 	}
 
 	return list, nil

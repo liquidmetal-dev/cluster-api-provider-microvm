@@ -231,7 +231,12 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 
 		return ctrl.Result{}, nil
 	}
-	machineScope.V(defaults.LogLevelDebug).Info("Bootstrap secret is ready", "machine", machineScope.MvmMachine.Name, "secret", machineScope.Machine.Spec.Bootstrap.DataSecretName)
+
+	machineScope.
+		V(defaults.LogLevelDebug).
+		Info(
+			"Bootstrap secret is ready", "machine", machineScope.MvmMachine.Name, "secret",
+			machineScope.Machine.Spec.Bootstrap.DataSecretName)
 
 	mvmSvc, err := r.getMicrovmService(machineScope)
 	if err != nil {
@@ -261,6 +266,7 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 		machineScope.Info("creating microvm")
 
 		var createErr error
+
 		microvm, createErr = mvmSvc.Create(ctx, providerID)
 		if createErr != nil {
 			return ctrl.Result{}, createErr

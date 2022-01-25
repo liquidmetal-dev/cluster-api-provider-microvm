@@ -45,6 +45,7 @@ func (r *MicrovmMachine) ValidateDelete() error {
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (r *MicrovmMachine) ValidateUpdate(old runtime.Object) error {
 	machineLog.Info("validate upadate", "name", r.Name)
+
 	var allErrs field.ErrorList
 
 	previous, _ := old.(*MicrovmMachine)
