@@ -150,7 +150,7 @@ func (r *MicrovmClusterReconciler) reconcileNormal(ctx context.Context, clusterS
 }
 
 func (r *MicrovmClusterReconciler) isAPIServerAvailable(ctx context.Context, clusterScope *scope.ClusterScope) bool {
-	var endpoint = &infrav1.ExternalLoadBalancer{}
+	endpoint := &infrav1.ExternalLoadBalancer{}
 	eprnn := types.NamespacedName{
 		Namespace: clusterScope.MvmCluster.ObjectMeta.Namespace,
 		Name:      clusterScope.MvmCluster.Spec.EndpointRef.Name,
