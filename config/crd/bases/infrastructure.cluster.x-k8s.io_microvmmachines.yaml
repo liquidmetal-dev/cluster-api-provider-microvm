@@ -62,10 +62,12 @@ spec:
                 - image
                 type: object
               kernelCmdline:
+                additionalProperties:
+                  type: string
                 description: KernelCmdLine are the additional args to use for the
                   kernel cmdline. Each MicroVM provider has its own recommended list,
                   they will be used automatically. This field is for additional values.
-                type: string
+                type: object
               memoryMb:
                 description: MemoryMb is the amount of memory in megabytes that the
                   microvm will be allocated.
