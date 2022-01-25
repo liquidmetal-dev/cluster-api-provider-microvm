@@ -91,7 +91,7 @@ func (r *MicrovmMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	if err != nil {
 		log.Info("Machine is missing cluster label or cluster does not exist")
 
-		return ctrl.Result{}, fmt.Errorf("unable to get cluster from metadata: %w", err)
+		return ctrl.Result{}, nil //nolint:nilerr // We ignore it intentionally.
 	}
 
 	if annotations.IsPaused(cluster, mvmMachine) {
