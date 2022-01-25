@@ -28,6 +28,12 @@ type ExternalLoadBalancerReconciler struct {
 	WatchFilterValue string
 }
 
+const (
+	httpErrorStatusCode = 500
+	warningLogVerbosity = 2
+	defaultHTTPTimeout  = 5 * time.Second
+)
+
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=externalloadbalancers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=externalloadbalancers/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=secrets;,verbs=get;list;watch
@@ -64,10 +70,15 @@ func (r *ExternalLoadBalancerReconciler) Reconcile(ctx context.Context, req ctrl
 	}
 
 	client := &http.Client{
-		Timeout: 5 * time.Second,
+		Timeout: defaultHTTPTimeout,
 	}
 
-	resp, err := client.Get(loadbalancer.Spec.Endpoint.String())
+	epReq, err := http.NewRequestWithContext(ctx, http.MethodGet, loadbalancer.Spec.Endpoint.String(), nil)
+	if err != nil {
+		log.Error(err, "creating endpoint request", "id", req.NamespacedName)
+	}
+
+	resp, err := client.Do(epReq)
 	if err != nil {
 		if os.IsTimeout(err) {
 			log.Error(err, "request timed out attempting to contact endpoint", "endpoint", loadbalancer.Spec.Endpoint.String())
@@ -79,9 +90,9 @@ func (r *ExternalLoadBalancerReconciler) Reconcile(ctx context.Context, req ctrl
 		return ctrl.Result{}, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode >= 500 {
+	if resp.StatusCode >= httpErrorStatusCode {
 		// Do we requeue here? How do we track retries, or will this be handled automatically (CrashLoopBackoff)
-		log.V(2).Info("endpoint returned a 5XX status code", "endpoint", loadbalancer.Spec.Endpoint.String())
+		log.V(warningLogVerbosity).Info("endpoint returned a 5XX status code", "endpoint", loadbalancer.Spec.Endpoint.String())
 
 		return ctrl.Result{}, nil
 	}
