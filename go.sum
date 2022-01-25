@@ -546,10 +546,14 @@ github.com/weaveworks/flintlock/api v0.0.0-20211124154423-21a022445576 h1:f5QFSz
 github.com/weaveworks/flintlock/api v0.0.0-20211124154423-21a022445576/go.mod h1:RFgQ7RSa7zGNxxR+dS6NRDCQ/IAN23WCfXg4+L6fclI=
 github.com/weaveworks/flintlock/api v0.0.0-20220110105514-c0ec7b5054ee h1:MbRMHRZT3k1zU/QF3Q6QYcZyA+yq+ghBJnuUm2hXzAM=
 github.com/weaveworks/flintlock/api v0.0.0-20220110105514-c0ec7b5054ee/go.mod h1:RFgQ7RSa7zGNxxR+dS6NRDCQ/IAN23WCfXg4+L6fclI=
+github.com/weaveworks/flintlock/api v0.0.0-20220125102832-37e5343a008e h1:s2+3pEL4cR7y6llBZdNYFzBBq2pXYsg/UbwtgyXIkSU=
+github.com/weaveworks/flintlock/api v0.0.0-20220125102832-37e5343a008e/go.mod h1:RFgQ7RSa7zGNxxR+dS6NRDCQ/IAN23WCfXg4+L6fclI=
 github.com/weaveworks/flintlock/client v0.0.0-20211213135217-19cc344a892b h1:CerxjKG6oiUPfEDlJA8SwzR/5cCybzg8sQJ/999KXJ0=
 github.com/weaveworks/flintlock/client v0.0.0-20211213135217-19cc344a892b/go.mod h1:1jiepUOR2kxAdoxXXyNQ0LnOeT2gOUSnWGuXh9akjDw=
 github.com/weaveworks/flintlock/client v0.0.0-20220107100311-6a2445a32861 h1:UH27IkZjwbcNDJLXX83p8BQHxploHG55X6vzLlsBilg=
 github.com/weaveworks/flintlock/client v0.0.0-20220107100311-6a2445a32861/go.mod h1:1jiepUOR2kxAdoxXXyNQ0LnOeT2gOUSnWGuXh9akjDw=
+github.com/weaveworks/flintlock/client v0.0.0-20220125102832-37e5343a008e h1:P8WJg8wYrGFAvL77vsQL3tyQwNT1eL6F815hhgkynYg=
+github.com/weaveworks/flintlock/client v0.0.0-20220125102832-37e5343a008e/go.mod h1:1jiepUOR2kxAdoxXXyNQ0LnOeT2gOUSnWGuXh9akjDw=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca/go.mod h1:ce1O1j6UtZfjr22oyGxGLbauSBp2YVXpARAosm7dHBg=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
