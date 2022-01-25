@@ -4,15 +4,34 @@
 package v1alpha1
 
 import (
+	"strconv"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
+type ExternalLoadBalancerEndpoint struct {
+	// The hostname on which the API server is serving.
+	// +required
+	Host string `json:"host"`
+
+	// The port on which the API server is serving.
+	// +optional
+	// +kubebuilder:default=6443
+	Port int32 `json:"port"`
+}
+
+func (ep *ExternalLoadBalancerEndpoint) String() string {
+	port := strconv.Itoa(int(ep.Port))
+
+	return ep.Host + ":" + port
+}
+
 // ExternalLoadBalancerSpec defines the desired state for a ExternalLoadBalancer.
 type ExternalLoadBalancerSpec struct {
 	// Endpoint represents the endpoint for the load balancer. This endpoint will
-	// best tested to see if its available.
-	Endpoint clusterv1.APIEndpoint `json:"endpoint"`
+	// be tested to see if its available.
+	Endpoint ExternalLoadBalancerEndpoint `json:"endpoint"`
 }
 
 type ExternalLoadBalancerStatus struct {

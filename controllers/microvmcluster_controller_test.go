@@ -44,75 +44,35 @@ func TestClusterReconciliationNoEndpoint(t *testing.T) {
 	g.Expect(c).To(BeNil())
 }
 
-func TestClusterReconciliationWithClusterEndpoint(t *testing.T) {
-	g := NewWithT(t)
-
-	cluster := createCluster(testClusterName, testClusterNamespace)
-	cluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
-		Host: "192.168.8.15",
-		Port: 6443,
-	}
-
-	tenantClusterNodes := &corev1.NodeList{
-		Items: []corev1.Node{
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "node1",
-				},
-			},
-		},
-	}
-
-	objects := []runtime.Object{
-		cluster,
-		createMicrovmCluster(testClusterName, testClusterNamespace),
-		tenantClusterNodes,
-	}
-
-	client := createFakeClient(g, objects)
-	result, err := reconcileCluster(client)
-
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(result.Requeue).To(BeFalse())
-	g.Expect(result.RequeueAfter).To(Equal(time.Duration(0)))
-
-	reconciled, err := getMicrovmCluster(context.TODO(), client, testClusterName, testClusterNamespace)
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(reconciled.Status.Ready).To(BeTrue())
-	g.Expect(reconciled.Status.FailureDomains).To(HaveLen(1))
-
-	c := conditions.Get(reconciled, infrav1.LoadBalancerAvailableCondition)
-	g.Expect(c).ToNot(BeNil())
-	g.Expect(c.Status).To(Equal(corev1.ConditionTrue))
-
-	c = conditions.Get(reconciled, clusterv1.ReadyCondition)
-	g.Expect(c).ToNot(BeNil())
-	g.Expect(c.Status).To(Equal(corev1.ConditionTrue))
-}
-
 func TestClusterReconciliationWithMvmClusterEndpoint(t *testing.T) {
 	g := NewWithT(t)
 
 	mvmCluster := createMicrovmCluster(testClusterName, testClusterNamespace)
-	mvmCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
-		Host: "192.168.8.15",
-		Port: 6443,
+	mvmCluster.Spec.EndpointRef = &corev1.ObjectReference{
+		Kind: "ExternalLoadBalancerEndpoint",
+		Name: "tenant1-elb-endpoint",
 	}
 
-	tenantClusterNodes := &corev1.NodeList{
-		Items: []corev1.Node{
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "node1",
-				},
+	endpoint := &infrav1.ExternalLoadBalancer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "tenant1-elb-endpoint",
+			Namespace: "ns1",
+		},
+		Spec: infrav1.ExternalLoadBalancerSpec{
+			Endpoint: infrav1.ExternalLoadBalancerEndpoint{
+				Host: "localhost",
+				Port: 6443,
 			},
+		},
+		Status: infrav1.ExternalLoadBalancerStatus{
+			Ready: true,
 		},
 	}
 
 	objects := []runtime.Object{
 		createCluster(testClusterName, testClusterNamespace),
 		mvmCluster,
-		tenantClusterNodes,
+		endpoint,
 	}
 
 	client := createFakeClient(g, objects)
@@ -140,19 +100,32 @@ func TestClusterReconciliationWithClusterEndpointAPIServerNotReady(t *testing.T)
 	g := NewWithT(t)
 
 	cluster := createCluster(testClusterName, testClusterNamespace)
-	cluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
-		Host: "192.168.8.15",
-		Port: 6443,
+	mvmCluster := createMicrovmCluster(testClusterName, testClusterNamespace)
+	mvmCluster.Spec.EndpointRef = &corev1.ObjectReference{
+		Kind: "ExternalLoadBalancerEndpoint",
+		Name: "tenant1-elb-endpoint",
 	}
 
-	tenantClusterNodes := &corev1.NodeList{
-		Items: []corev1.Node{},
+	endpoint := &infrav1.ExternalLoadBalancer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "tenant1-elb-endpoint",
+			Namespace: "ns1",
+		},
+		Spec: infrav1.ExternalLoadBalancerSpec{
+			Endpoint: infrav1.ExternalLoadBalancerEndpoint{
+				Host: "localhost",
+				Port: 6443,
+			},
+		},
+		Status: infrav1.ExternalLoadBalancerStatus{
+			Ready: false,
+		},
 	}
 
 	objects := []runtime.Object{
 		cluster,
-		createMicrovmCluster(testClusterName, testClusterNamespace),
-		tenantClusterNodes,
+		mvmCluster,
+		endpoint,
 	}
 
 	client := createFakeClient(g, objects)

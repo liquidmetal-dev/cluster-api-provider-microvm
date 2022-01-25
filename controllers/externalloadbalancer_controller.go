@@ -5,11 +5,15 @@ package controllers
 
 import (
 	"context"
+	"net/http"
+	"os"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 
+	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -48,4 +52,59 @@ func (r *ExternalLoadBalancerReconciler) Reconcile(ctx context.Context, req ctrl
 		return ctrl.Result{}, err
 	}
 
+	if ownerRef := loadbalancer.GetOwnerReferences(); len(ownerRef) == 0 {
+		// What should we do here if the OwnerReference is empty, simply requeue??
+		return ctrl.Result{RequeueAfter: requeuePeriod}, nil
+	}
+
+	if !loadbalancer.ObjectMeta.DeletionTimestamp.IsZero() {
+		log.Info("loadbalancer being deleted, nothing to do")
+
+		return ctrl.Result{}, nil
+	}
+
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	resp, err := client.Get(loadbalancer.Spec.Endpoint.String())
+	if err != nil {
+		if os.IsTimeout(err) {
+			log.Error(err, "request timed out attempting to contact endpoint", "endpoint", loadbalancer.Spec.Endpoint.String())
+
+			return ctrl.Result{}, err
+		}
+		log.Error(err, "attempting to contact specified endpoint", "endpoint", loadbalancer.Spec.Endpoint.String())
+
+		return ctrl.Result{}, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 500 {
+		// Do we requeue here? How do we track retries, or will this be handled automatically (CrashLoopBackoff)
+		log.V(2).Info("endpoint returned a 5XX status code", "endpoint", loadbalancer.Spec.Endpoint.String())
+
+		return ctrl.Result{}, nil
+	}
+
+	loadbalancer.Status.Ready = true
+
+	defer func() {
+		if err := r.Patch(loadbalancer); err != nil {
+			log.Error(err, "attempting to patch loadbalancer object")
+		}
+	}()
+
+	return ctrl.Result{}, nil
+}
+
+func (r *ExternalLoadBalancerReconciler) Patch(lb *infrav1.ExternalLoadBalancer) error {
+	patchHelper, err := patch.NewHelper(lb, r.Client)
+	if err != nil {
+		return err
+	}
+	if patchErr := patchHelper.Patch(context.TODO(), lb); patchErr != nil {
+		return err
+	}
+
+	return nil
 }

@@ -4,19 +4,13 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 // MicrovmClusterSpec defines the desired state of MicrovmCluster.
 type MicrovmClusterSpec struct {
-	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
-	//
-	// See https://cluster-api.sigs.k8s.io/developer/architecture/controllers/cluster.html
-	// for more details.
-	//
-	// +optional
-	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
 	// SSHPublicKey is an SSH public key that will be used with the default user. If specified
 	// this will apply to all machine created unless you specify a different key at the
 	// machine level.
@@ -25,6 +19,8 @@ type MicrovmClusterSpec struct {
 	// Placement specifies how machines for the cluster should be placed onto hosts (i.e. where the microvms are created).
 	// +kubebuilder:validation:Required
 	Placement Placement `json:"placement"`
+	// EndpointRef
+	EndpointRef *corev1.ObjectReference `json:"endpointRef,omitempty"`
 }
 
 // MicrovmClusterStatus defines the observed state of MicrovmCluster.

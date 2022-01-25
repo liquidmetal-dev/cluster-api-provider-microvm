@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -51,6 +51,7 @@ type MicrovmClusterReconciler struct {
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=microvmclusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=microvmclusters/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=microvmclusters/finalizers,verbs=update
+// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=externalloadbalancerendpoint,verbs=get;list;watch
 // +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;clusters/status,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -127,8 +128,8 @@ func (r *MicrovmClusterReconciler) reconcileDelete(_ context.Context, clusterSco
 func (r *MicrovmClusterReconciler) reconcileNormal(ctx context.Context, clusterScope *scope.ClusterScope) (reconcile.Result, error) {
 	clusterScope.Info("Reconciling MicrovmCluster")
 
-	if clusterScope.Cluster.Spec.ControlPlaneEndpoint.IsZero() && clusterScope.MvmCluster.Spec.ControlPlaneEndpoint.IsZero() {
-		return reconcile.Result{}, errControlplaneEndpointRequired
+	if clusterScope.MvmCluster.Spec.EndpointRef == nil {
+		return reconcile.Result{}, errExternalLoadBalancerEndpointRefRequired
 	}
 
 	clusterScope.MvmCluster.Status.Ready = true
@@ -149,25 +150,18 @@ func (r *MicrovmClusterReconciler) reconcileNormal(ctx context.Context, clusterS
 }
 
 func (r *MicrovmClusterReconciler) isAPIServerAvailable(ctx context.Context, clusterScope *scope.ClusterScope) bool {
-	clusterScope.V(defaults.LogLevelDebug).Info("checking if api server is available", "cluster", clusterScope.ClusterName())
-
-	clusterKey := client.ObjectKey{
-		Name:      clusterScope.Cluster.Name,
-		Namespace: clusterScope.Cluster.Namespace,
+	var endpoint = &infrav1.ExternalLoadBalancer{}
+	eprnn := types.NamespacedName{
+		Namespace: clusterScope.MvmCluster.ObjectMeta.Namespace,
+		Name:      clusterScope.MvmCluster.Spec.EndpointRef.Name,
 	}
-
-	remoteClient, err := r.RemoteClientGetter(ctx, clusterScope.ClusterName(), r.Client, clusterKey)
-	if err != nil {
-		clusterScope.Error(err, "creating remote cluster client")
+	if err := r.Get(ctx, eprnn, endpoint); err != nil {
+		clusterScope.Error(err, "get referenced ExternalLoadBalancerEndpoint")
 
 		return false
 	}
 
-	nodes := &corev1.NodeList{}
-	if err = remoteClient.List(ctx, nodes); err != nil {
-		return false
-	}
-	if len(nodes.Items) == 0 {
+	if !endpoint.Status.Ready {
 		return false
 	}
 

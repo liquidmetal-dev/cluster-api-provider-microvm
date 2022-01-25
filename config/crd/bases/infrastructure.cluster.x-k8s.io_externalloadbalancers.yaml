@@ -52,18 +52,18 @@ spec:
             properties:
               endpoint:
                 description: Endpoint represents the endpoint for the load balancer.
-                  This endpoint will best tested to see if its available.
+                  This endpoint will be tested to see if its available.
                 properties:
                   host:
                     description: The hostname on which the API server is serving.
                     type: string
                   port:
+                    default: 6443
                     description: The port on which the API server is serving.
                     format: int32
                     type: integer
                 required:
                 - host
-                - port
                 type: object
             required:
             - endpoint
