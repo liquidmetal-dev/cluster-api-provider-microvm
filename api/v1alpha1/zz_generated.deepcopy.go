@@ -372,6 +372,13 @@ func (in *MicrovmSpec) DeepCopyInto(out *MicrovmSpec) {
 		copy(*out, *in)
 	}
 	out.Kernel = in.Kernel
+	if in.KernelCmdLine != nil {
+		in, out := &in.KernelCmdLine, &out.KernelCmdLine
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.Initrd != nil {
 		in, out := &in.Initrd, &out.Initrd
 		*out = new(ContainerFileSource)
