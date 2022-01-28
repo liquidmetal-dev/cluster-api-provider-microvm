@@ -241,11 +241,16 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 		return ctrl.Result{}, err
 	}
 
-	microvm, err := mvmSvc.Get(ctx)
-	if err != nil && !isSpecNotFound(err) {
-		machineScope.Error(err, "failed checking if microvm exists")
+	var microvm *flintlocktypes.MicroVM
 
-		return ctrl.Result{}, err
+	if machineScope.MvmMachine.Spec.ProviderID != nil {
+		var err error
+		microvm, err = mvmSvc.Get(ctx)
+		if err != nil && !isSpecNotFound(err) {
+			machineScope.Error(err, "failed checking if microvm exists")
+
+			return ctrl.Result{}, err
+		}
 	}
 
 	controllerutil.AddFinalizer(machineScope.MvmMachine, infrav1.MachineFinalizer)
@@ -256,20 +261,22 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 		return ctrl.Result{}, err
 	}
 
-	providerID := machineScope.ProviderID()
-
 	if microvm == nil {
 		machineScope.Info("creating microvm")
 
 		var createErr error
-
-		microvm, createErr = mvmSvc.Create(ctx, providerID)
+		microvm, createErr = mvmSvc.Create(ctx)
 		if createErr != nil {
 			return ctrl.Result{}, createErr
 		}
 	}
 
-	machineScope.MvmMachine.Spec.ProviderID = &providerID
+	machineScope.SetProviderID(microvm.Spec.Uid)
+	if err := machineScope.Patch(); err != nil {
+		machineScope.Error(err, "unable to patch microvm machine")
+
+		return ctrl.Result{}, err
+	}
 
 	switch microvm.Status.State {
 	case flintlocktypes.MicroVMStatus_FAILED:
@@ -304,7 +311,7 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 		return ctrl.Result{RequeueAfter: requeuePeriod}, errMicrovmUnknownState
 	}
 
-	machineScope.Info("microvm created", "providerID", providerID)
+	machineScope.Info("microvm created", "name", machineScope.Name(), "UID", machineScope.UID())
 
 	machineScope.SetReady()
 

@@ -110,6 +110,15 @@ type MachineScope struct {
 	ctx            context.Context
 }
 
+// UID returns the MicrovmMachine UID/ProviderID.
+func (m *MachineScope) UID() string {
+	if m.MvmMachine.Spec.ProviderID != nil {
+		return *m.MvmMachine.Spec.ProviderID
+	}
+
+	return ""
+}
+
 // Name returns the MicrovmMachine name.
 func (m *MachineScope) Name() string {
 	return m.MvmMachine.Name
@@ -229,6 +238,11 @@ func (m *MachineScope) SetNotReady(
 	m.MvmMachine.Status.Ready = false
 }
 
+// SetProviderID saves the unique microvm and object ID to the MvmMachine spec.
+func (m *MachineScope) SetProviderID(mvmUID *string) {
+	m.MvmMachine.Spec.ProviderID = mvmUID
+}
+
 // GetSSHPublicKey will return the SSH public key for this machine. It will take into account
 // precedence rules. If there is no key then an empty string will be returned.
 func (m *MachineScope) GetSSHPublicKey() string {
@@ -241,10 +255,6 @@ func (m *MachineScope) GetSSHPublicKey() string {
 	}
 
 	return ""
-}
-
-func (m *MachineScope) ProviderID() string {
-	return fmt.Sprintf("microvm://%s", m.MvmMachine.Name)
 }
 
 func (m *MachineScope) getMachinesInCluster() (*clusterv1.MachineList, error) {

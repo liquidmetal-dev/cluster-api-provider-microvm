@@ -36,6 +36,7 @@ const (
 	testClusterName         = "tenant1"
 	testClusterNamespace    = "ns1"
 	testMachineName         = "machine1"
+	testMachineUID          = "ABCDEF123456"
 	testBootstrapSecretName = "bootstrap"
 	testVMID                = "microvm://machine1"
 	testbootStrapData       = "somesamplebootstrapsdata"
@@ -233,6 +234,7 @@ func createMicrovmMachine(name, namespace string) *infrav1.MicrovmMachine {
 			},
 		},
 		Spec: infrav1.MicrovmMachineSpec{
+			ProviderID: pointer.String(testMachineUID),
 			MicrovmSpec: infrav1.MicrovmSpec{
 				VCPU:     2,
 				MemoryMb: 2048,
@@ -307,7 +309,7 @@ func withExistingMicrovm(fc *mock_client.FakeClient, mvmState flintlocktypes.Mic
 	fc.GetMicroVMReturns(&flintlockv1.GetMicroVMResponse{
 		Microvm: &flintlocktypes.MicroVM{
 			Spec: &flintlocktypes.MicroVMSpec{
-				Id: testVMID,
+				Uid: pointer.String(testMachineUID),
 			},
 			Status: &flintlocktypes.MicroVMStatus{
 				State: mvmState,
@@ -320,11 +322,11 @@ func withMissingMicrovm(fc *mock_client.FakeClient) {
 	fc.GetMicroVMReturns(&flintlockv1.GetMicroVMResponse{}, nil)
 }
 
-func withCreateMicrovmSuccess(fc *mock_client.FakeClient, mvmName string) {
+func withCreateMicrovmSuccess(fc *mock_client.FakeClient) {
 	fc.CreateMicroVMReturns(&flintlockv1.CreateMicroVMResponse{
 		Microvm: &flintlocktypes.MicroVM{
 			Spec: &flintlocktypes.MicroVMSpec{
-				Id: mvmName,
+				Uid: pointer.String(testMachineUID),
 			},
 			Status: &flintlocktypes.MicroVMStatus{
 				State: flintlocktypes.MicroVMStatus_PENDING,
@@ -356,7 +358,7 @@ func assertMachineReconciled(g *WithT, reconciled *infrav1.MicrovmMachine) {
 	assertMachineVMState(g, reconciled, infrav1.VMStateRunning)
 	assertMachineFinalizer(g, reconciled)
 	g.Expect(reconciled.Spec.ProviderID).ToNot(BeNil())
-	g.Expect(*reconciled.Spec.ProviderID).To(Equal(testVMID))
+	g.Expect(*reconciled.Spec.ProviderID).To(Equal(testMachineUID))
 	g.Expect(reconciled.Status.Ready).To(BeTrue(), "The Ready property must be true when the machine has been reconciled")
 }
 
