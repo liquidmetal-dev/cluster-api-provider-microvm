@@ -275,7 +275,33 @@ func TestMachineReconcileNoVmCreateSucceeds(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
 
 	g.Expect(reconciled.Spec.ProviderID).To(Equal(pointer.String(testMachineUID)))
+	g.Expect(reconciled.Spec.FailureDomain).To(Equal(pointer.String("127.0.0.1:9090")))
 
+	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmPendingReason)
+	assertMachineVMState(g, reconciled, infrav1.VMStatePending)
+	assertMachineFinalizer(g, reconciled)
+}
+
+func TestMachineReconcileNoMachineFailureDomainCreateSucceeds(t *testing.T) {
+	g := NewWithT(t)
+
+	apiObjects := defaultClusterObjects()
+	apiObjects.MvmMachine.Spec.ProviderID = nil
+	apiObjects.Machine.Spec.FailureDomain = nil
+
+	fakeAPIClient := mock_client.FakeClient{}
+	withMissingMicrovm(&fakeAPIClient)
+	withCreateMicrovmSuccess(&fakeAPIClient)
+
+	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
+	result, err := reconcileMachine(client, &fakeAPIClient)
+
+	g.Expect(err).NotTo(HaveOccurred(), "Reconciling when creating microvm should not return error")
+	g.Expect(result.IsZero()).To(BeFalse(), "Expect requeue to be requested after create")
+
+	reconciled, err := getMicrovmMachine(client, testMachineName, testClusterNamespace)
+	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
+	g.Expect(reconciled.Spec.FailureDomain).To(Equal(pointer.String("127.0.0.1:9090")))
 	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmPendingReason)
 	assertMachineVMState(g, reconciled, infrav1.VMStatePending)
 	assertMachineFinalizer(g, reconciled)

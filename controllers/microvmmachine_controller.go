@@ -13,6 +13,8 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/pointer"
+
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
@@ -236,7 +238,7 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 
 	mvmSvc, err := r.getMicrovmService(machineScope)
 	if err != nil {
-		machineScope.Error(err, "failed to get microvm machine")
+		machineScope.Error(err, "failed to get microvm service")
 
 		return ctrl.Result{}, err
 	}
@@ -325,6 +327,13 @@ func (r *MicrovmMachineReconciler) getMicrovmService(machineScope *scope.Machine
 
 	addr, err := machineScope.MicrovmServiceAddress()
 	if err != nil {
+		return nil, err
+	}
+
+	machineScope.SetFailureDomain(pointer.String(addr))
+	if err := machineScope.Patch(); err != nil {
+		machineScope.Error(err, "unable to patch microvm machine")
+
 		return nil, err
 	}
 

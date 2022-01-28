@@ -173,6 +173,10 @@ func (m *MachineScope) Patch() error {
 // MicrovmServiceAddress will return the address of the microvm service to call. Any precedence
 // logic needs to sit here.
 func (m *MachineScope) MicrovmServiceAddress() (string, error) {
+	if m.MvmMachine.Spec.FailureDomain != nil && *m.MvmMachine.Spec.FailureDomain != "" {
+		return *m.MvmMachine.Spec.FailureDomain, nil
+	}
+
 	if m.Machine.Spec.FailureDomain != nil && *m.Machine.Spec.FailureDomain != "" {
 		return *m.Machine.Spec.FailureDomain, nil
 	}
@@ -185,11 +189,11 @@ func (m *MachineScope) MicrovmServiceAddress() (string, error) {
 	machines := collections.FromMachineList(machinesList)
 
 	failureDomain := failuredomains.PickFewest(m.Cluster.Status.FailureDomains, machines)
-	if failureDomain != nil {
-		return *failureDomain, nil
+	if failureDomain == nil {
+		return "", errNoServiceAddress
 	}
 
-	return "", errNoServiceAddress
+	return *failureDomain, nil
 }
 
 // GetRawBootstrapData will return the contents of the secret that has been created by the
@@ -241,6 +245,11 @@ func (m *MachineScope) SetNotReady(
 // SetProviderID saves the unique microvm and object ID to the MvmMachine spec.
 func (m *MachineScope) SetProviderID(mvmUID *string) {
 	m.MvmMachine.Spec.ProviderID = mvmUID
+}
+
+// SetFailureDomain saves the microvm host address to the MvmMachine spec.
+func (m *MachineScope) SetFailureDomain(hostAddress *string) {
+	m.MvmMachine.Spec.FailureDomain = hostAddress
 }
 
 // GetSSHPublicKey will return the SSH public key for this machine. It will take into account
