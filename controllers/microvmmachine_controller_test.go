@@ -256,7 +256,7 @@ func TestMachineReconcileNoVmCreateSucceeds(t *testing.T) {
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
-	withCreateMicrovmSuccess(&fakeAPIClient, testMachineName)
+	withCreateMicrovmSuccess(&fakeAPIClient)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
 	result, err := reconcileMachine(client, &fakeAPIClient)
@@ -293,7 +293,7 @@ func TestMachineReconcileNoVmCreateClusterSSHSucceeds(t *testing.T) {
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
-	withCreateMicrovmSuccess(&fakeAPIClient, testMachineName)
+	withCreateMicrovmSuccess(&fakeAPIClient)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
 	result, err := reconcileMachine(client, &fakeAPIClient)
@@ -327,7 +327,7 @@ func TestMachineReconcileNoVmCreateClusterMachineSSHSucceeds(t *testing.T) {
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
-	withCreateMicrovmSuccess(&fakeAPIClient, testMachineName)
+	withCreateMicrovmSuccess(&fakeAPIClient)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
 	result, err := reconcileMachine(client, &fakeAPIClient)
@@ -354,7 +354,7 @@ func TestMachineReconcileNoVmCreateAdditionReconcile(t *testing.T) {
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
-	withCreateMicrovmSuccess(&fakeAPIClient, testMachineName)
+	withCreateMicrovmSuccess(&fakeAPIClient)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
 	result, err := reconcileMachine(client, &fakeAPIClient)
