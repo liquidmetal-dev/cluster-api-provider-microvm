@@ -209,10 +209,8 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 	if !machineScope.Cluster.Status.InfrastructureReady {
 		machineScope.Info("Cluster infrastructure is not ready")
 		conditions.MarkFalse(
-			machineScope.MvmMachine,
-			infrav1.MicrovmReadyCondition,
-			infrav1.WaitingForClusterInfraReason,
-			clusterv1.ConditionSeverityInfo,
+			machineScope.MvmMachine, infrav1.MicrovmReadyCondition,
+			infrav1.WaitingForClusterInfraReason, clusterv1.ConditionSeverityInfo,
 			"",
 		)
 
@@ -222,10 +220,8 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 	if machineScope.Machine.Spec.Bootstrap.DataSecretName == nil {
 		machineScope.Info("Bootstrap secret is not ready")
 		conditions.MarkFalse(
-			machineScope.MvmMachine,
-			infrav1.MicrovmReadyCondition,
-			infrav1.WaitingForBootstrapDataReason,
-			clusterv1.ConditionSeverityInfo,
+			machineScope.MvmMachine, infrav1.MicrovmReadyCondition,
+			infrav1.WaitingForBootstrapDataReason, clusterv1.ConditionSeverityInfo,
 			"",
 		)
 
