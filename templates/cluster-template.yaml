@@ -49,13 +49,11 @@ spec:
   kubeadmConfigSpec:
     initConfiguration:
       nodeRegistration:
-        kubeletExtraArgs:
-          provider-id: "PROVIDER_ID"
+        name: '{{ ds.meta_data.local_hostname }}'
     clusterConfiguration: {}
     joinConfiguration:
       nodeRegistration:
-        kubeletExtraArgs:
-          provider-id: "PROVIDER_ID"
+        name: '{{ ds.meta_data.local_hostname }}'
         ignorePreflightErrors:
          - DirAvailable--etc-kubernetes-manifests
     preKubeadmCommands:
@@ -135,5 +133,4 @@ spec:
     spec:
       joinConfiguration:
         nodeRegistration:
-          kubeletExtraArgs:
-            provider-id: "PROVIDER_ID"
+          name: '{{ ds.meta_data.local_hostname }}'
