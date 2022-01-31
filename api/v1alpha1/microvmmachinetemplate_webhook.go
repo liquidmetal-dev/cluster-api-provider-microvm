@@ -4,6 +4,8 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -13,9 +15,11 @@ import (
 var _ = logf.Log.WithName("microvmmachinetemplate-resource")
 
 func (r *MicrovmMachineTemplate) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
-		Complete()
+	if err := ctrl.NewWebhookManagedBy(mgr).For(r).Complete(); err != nil {
+		return fmt.Errorf("unable to setup webhook with manager: %w", err)
+	}
+
+	return nil
 }
 
 // +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1alpha1-microvmmachinetemplate,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=microvmmachinetemplates,versions=v1alpha1,name=validation.microvmmachinetemplate.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1

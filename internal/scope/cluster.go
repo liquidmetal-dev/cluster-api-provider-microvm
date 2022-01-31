@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"k8s.io/klog/klogr"
-
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
@@ -23,13 +22,16 @@ var _ Scoper = &ClusterScope{}
 
 func NewClusterScope(cluster *clusterv1.Cluster,
 	microvmCluster *infrav1.MicrovmCluster,
-	client client.Client, opts ...ClusterScopeOption) (*ClusterScope, error) {
+	client client.Client, opts ...ClusterScopeOption,
+) (*ClusterScope, error) {
 	if cluster == nil {
 		return nil, errClusterRequired
 	}
+
 	if microvmCluster == nil {
 		return nil, errMicrovmClusterRequired
 	}
+
 	if client == nil {
 		return nil, errClientRequired
 	}
@@ -113,13 +115,18 @@ func (cs *ClusterScope) Patch() error {
 		conditions.WithStepCounter(),
 	)
 
-	return cs.patchHelper.Patch(
+	err := cs.patchHelper.Patch(
 		context.TODO(),
 		cs.MvmCluster,
 		patch.WithOwnedConditions{Conditions: []clusterv1.ConditionType{
 			clusterv1.ReadyCondition,
 			infrav1.LoadBalancerAvailableCondition,
 		}})
+	if err != nil {
+		return fmt.Errorf("unable to patch cluster: %w", err)
+	}
+
+	return nil
 }
 
 // Close closes the current scope persisting the resource and status.

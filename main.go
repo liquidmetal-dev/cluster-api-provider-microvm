@@ -25,45 +25,44 @@ import (
 	"time"
 
 	"github.com/spf13/pflag"
+	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
 	"google.golang.org/grpc"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/klog/klogr"
-	"k8s.io/klog/v2"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	cgrecord "k8s.io/client-go/tools/record"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-
+	"k8s.io/klog/klogr"
+	"k8s.io/klog/v2"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	expclusterv1 "sigs.k8s.io/cluster-api/exp/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/record"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 
-	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
-
+	//+kubebuilder:scaffold:imports
 	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks/cluster-api-provider-microvm/controllers"
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/services/microvm"
 	"github.com/weaveworks/cluster-api-provider-microvm/version"
-	//+kubebuilder:scaffold:imports
 )
 
-var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
-)
-
+//nolint:gochecknoinits // Maybe we can remove it, now just ignore.
 func init() {
 	_ = infrav1.AddToScheme(scheme)
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = clusterv1.AddToScheme(scheme)
 	_ = expclusterv1.AddToScheme(scheme)
 	//+kubebuilder:scaffold:scheme
+
+	_ = "comment can't be at the end of the function"
 }
 
+//nolint:gochecknoglobals // Maybe we can remove them, now just ignore.
 var (
+	scheme   = runtime.NewScheme()
+	setupLog = ctrl.Log.WithName("setup")
+
 	enableLeaderElection        bool
 	metricsAddr                 string
 	leaderElectionNamespace     string
@@ -79,7 +78,9 @@ var (
 	leaderElectionLeaseDuration time.Duration
 	leaderElectionRenewDeadline time.Duration
 	leaderElectionRetryPeriod   time.Duration
+)
 
+const (
 	defaultLeaderElectionDur   = 15 * time.Second
 	defaultLeaderElectRenew    = 10 * time.Second
 	defaultLeaderElectionRetry = 2 * time.Second
@@ -100,7 +101,8 @@ func initFlags(fs *pflag.FlagSet) {
 		&enableLeaderElection,
 		"leader-elect",
 		false,
-		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.", //nolint:lll
+		"Enable leader election for controller manager. "+
+			"Enabling this will ensure there is only one active controller manager.",
 	)
 
 	fs.DurationVar(
@@ -128,14 +130,16 @@ func initFlags(fs *pflag.FlagSet) {
 		&watchNamespace,
 		"namespace",
 		"",
-		"Namespace that the controller watches to reconcile cluster-api objects. If unspecified, the controller watches for cluster-api objects across all namespaces.", //nolint:lll
+		"Namespace that the controller watches to reconcile cluster-api objects. "+
+			"If unspecified, the controller watches for cluster-api objects across all namespaces.",
 	)
 
 	fs.StringVar(
 		&leaderElectionNamespace,
 		"leader-election-namespace",
 		"",
-		"Namespace that the controller performs leader election in. If unspecified, the controller will discover which namespace it is running in.", //nolint:lll
+		"Namespace that the controller performs leader election in. "+
+			"If unspecified, the controller will discover which namespace it is running in.",
 	)
 
 	fs.StringVar(
@@ -149,7 +153,11 @@ func initFlags(fs *pflag.FlagSet) {
 		&watchFilterValue,
 		"watch-filter",
 		"",
-		fmt.Sprintf("Label value that the controller watches to reconcile cluster-api objects. Label key is always %s. If unspecified, the controller watches for all cluster-api objects.", clusterv1.WatchLabel), //nolint:lll
+		fmt.Sprintf(
+			"Label value that the controller watches to reconcile cluster-api objects. Label key is always %s. "+
+				"If unspecified, the controller watches for all cluster-api objects.",
+			clusterv1.WatchLabel,
+		),
 	)
 
 	fs.IntVar(&microvmClusterConcurrency,
@@ -235,7 +243,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Initialize event recorder.
+	// Initialise event recorder.
 	record.InitFromRecorder(mgr.GetEventRecorderFor("microvm-controller"))
 
 	// Setup the context that's going to be used in controllers and for the manager.
@@ -267,12 +275,17 @@ func main() {
 }
 
 func setupReconcilers(ctx context.Context, mgr ctrl.Manager) error {
+	managerOptions := controller.Options{
+		MaxConcurrentReconciles: microvmClusterConcurrency,
+		RecoverPanic:            true,
+	}
+
 	if err := (&controllers.MicrovmClusterReconciler{
 		Client:           mgr.GetClient(),
 		Scheme:           mgr.GetScheme(),
 		Recorder:         mgr.GetEventRecorderFor("microvmcluster-controller"),
 		WatchFilterValue: watchFilterValue,
-	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: microvmClusterConcurrency, RecoverPanic: true}); err != nil {
+	}).SetupWithManager(ctx, mgr, managerOptions); err != nil {
 		return fmt.Errorf("unable to create microvm cluster controller: %w", err)
 	}
 
@@ -282,7 +295,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager) error {
 		Recorder:         mgr.GetEventRecorderFor("microvmmachine-controller"),
 		WatchFilterValue: watchFilterValue,
 		MvmClientFunc:    createFlintlockClient,
-	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: microvmMachineConcurrency, RecoverPanic: true}); err != nil {
+	}).SetupWithManager(ctx, mgr, managerOptions); err != nil {
 		return fmt.Errorf("unable to create microvm machine controller: %w", err)
 	}
 

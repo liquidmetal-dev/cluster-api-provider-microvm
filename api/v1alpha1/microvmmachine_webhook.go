@@ -4,6 +4,7 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"reflect"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -16,9 +17,11 @@ import (
 var machineLog = logf.Log.WithName("microvmmachine-resource")
 
 func (r *MicrovmMachine) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
-		Complete()
+	if err := ctrl.NewWebhookManagedBy(mgr).For(r).Complete(); err != nil {
+		return fmt.Errorf("unable to setup webhook: %w", err)
+	}
+
+	return nil
 }
 
 // +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1alpha1-microvmmachine,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=microvmmachine,versions=v1alpha1,name=validation.microvmmachine.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
@@ -42,6 +45,7 @@ func (r *MicrovmMachine) ValidateDelete() error {
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (r *MicrovmMachine) ValidateUpdate(old runtime.Object) error {
 	machineLog.Info("validate upadate", "name", r.Name)
+
 	var allErrs field.ErrorList
 
 	previous, _ := old.(*MicrovmMachine)

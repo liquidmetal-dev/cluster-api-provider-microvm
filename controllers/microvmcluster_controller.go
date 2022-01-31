@@ -12,14 +12,12 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
-
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/controllers/remote"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/predicates"
-
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,23 +58,24 @@ type MicrovmClusterReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *MicrovmClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
-
 	mvmCluster := &infrav1.MicrovmCluster{}
+
 	err := r.Get(ctx, req.NamespacedName, mvmCluster)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
+
 		log.Error(err, "error getting microvmcluster", "id", req.NamespacedName)
 
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("error getting microvmcluster: %w", err)
 	}
 
 	cluster, err := util.GetOwnerCluster(ctx, r.Client, mvmCluster.ObjectMeta)
 	if err != nil {
 		log.Error(err, "getting owning cluster")
 
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("error getting owning cluster: %w", err)
 	}
 
 	if cluster == nil {
@@ -116,7 +115,10 @@ func (r *MicrovmClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	return r.reconcileNormal(ctx, scope)
 }
 
-func (r *MicrovmClusterReconciler) reconcileDelete(_ context.Context, clusterScope *scope.ClusterScope) (reconcile.Result, error) {
+func (r *MicrovmClusterReconciler) reconcileDelete(
+	_ context.Context,
+	clusterScope *scope.ClusterScope,
+) (reconcile.Result, error) {
 	clusterScope.Info("Reconciling MicrovmCluster delete")
 
 	// We currently do not do any Cluster creation so there is nothing to delete.
@@ -124,32 +126,44 @@ func (r *MicrovmClusterReconciler) reconcileDelete(_ context.Context, clusterSco
 	return reconcile.Result{}, nil
 }
 
-func (r *MicrovmClusterReconciler) reconcileNormal(ctx context.Context, clusterScope *scope.ClusterScope) (reconcile.Result, error) {
-	clusterScope.Info("Reconciling MicrovmCluster")
+func (r *MicrovmClusterReconciler) reconcileNormal(
+	ctx context.Context,
+	cScope *scope.ClusterScope,
+) (reconcile.Result, error) {
+	cScope.Info("Reconciling MicrovmCluster")
 
-	if clusterScope.Cluster.Spec.ControlPlaneEndpoint.IsZero() && clusterScope.MvmCluster.Spec.ControlPlaneEndpoint.IsZero() {
+	if cScope.Cluster.Spec.ControlPlaneEndpoint.IsZero() && cScope.MvmCluster.Spec.ControlPlaneEndpoint.IsZero() {
 		return reconcile.Result{}, errControlplaneEndpointRequired
 	}
 
-	clusterScope.MvmCluster.Status.Ready = true
+	cScope.MvmCluster.Status.Ready = true
 
-	if err := r.setFailureDomains(clusterScope); err != nil {
+	if err := r.setFailureDomains(cScope); err != nil {
 		return reconcile.Result{}, fmt.Errorf("setting failuredomains: %w", err)
 	}
 
-	available := r.isAPIServerAvailable(ctx, clusterScope)
+	available := r.isAPIServerAvailable(ctx, cScope)
 	if !available {
-		conditions.MarkFalse(clusterScope.MvmCluster, infrav1.LoadBalancerAvailableCondition, infrav1.LoadBalancerNotAvailableReason, clusterv1.ConditionSeverityInfo, "control plane load balancer isn't available")
+		conditions.MarkFalse(
+			cScope.MvmCluster,
+			infrav1.LoadBalancerAvailableCondition,
+			infrav1.LoadBalancerNotAvailableReason,
+			clusterv1.ConditionSeverityInfo,
+			"control plane load balancer isn't available",
+		)
 
 		return reconcile.Result{RequeueAfter: requeuePeriod}, nil
 	}
-	conditions.MarkTrue(clusterScope.MvmCluster, infrav1.LoadBalancerAvailableCondition)
+
+	conditions.MarkTrue(cScope.MvmCluster, infrav1.LoadBalancerAvailableCondition)
 
 	return reconcile.Result{}, nil
 }
 
 func (r *MicrovmClusterReconciler) isAPIServerAvailable(ctx context.Context, clusterScope *scope.ClusterScope) bool {
-	clusterScope.V(defaults.LogLevelDebug).Info("checking if api server is available", "cluster", clusterScope.ClusterName())
+	clusterScope.
+		V(defaults.LogLevelDebug).
+		Info("checking if api server is available", "cluster", clusterScope.ClusterName())
 
 	clusterKey := client.ObjectKey{
 		Name:      clusterScope.Cluster.Name,
@@ -167,6 +181,7 @@ func (r *MicrovmClusterReconciler) isAPIServerAvailable(ctx context.Context, clu
 	if err = remoteClient.List(ctx, nodes); err != nil {
 		return false
 	}
+
 	if len(nodes.Items) == 0 {
 		return false
 	}
@@ -187,8 +202,17 @@ func (r *MicrovmClusterReconciler) setFailureDomains(clusterScope *scope.Cluster
 		clusterScope.Info("using static pool placement")
 
 		failureDomains := clusterv1.FailureDomains{}
+
 		for _, host := range placement.StaticPool.Hosts {
-			clusterScope.V(defaults.LogLevelTrace).Info("adding failure domain", "endpoint", host.Endpoint, "name", host.Name, "controlplane", host.ControlPlaneAllowed)
+			clusterScope.
+				V(defaults.LogLevelTrace).
+				Info(
+					"adding failure domain",
+					"endpoint", host.Endpoint,
+					"name", host.Name,
+					"controlplane", host.ControlPlaneAllowed,
+				)
+
 			failureDomains[host.Endpoint] = clusterv1.FailureDomainSpec{
 				ControlPlane: host.ControlPlaneAllowed,
 			}
@@ -202,7 +226,11 @@ func (r *MicrovmClusterReconciler) setFailureDomains(clusterScope *scope.Cluster
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *MicrovmClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
+func (r *MicrovmClusterReconciler) SetupWithManager(
+	ctx context.Context,
+	mgr ctrl.Manager,
+	options controller.Options,
+) error {
 	log := ctrl.LoggerFrom(ctx)
 
 	if r.RemoteClientGetter == nil {
