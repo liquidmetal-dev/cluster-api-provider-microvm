@@ -44,7 +44,9 @@ func New(scope *scope.MachineScope, client Client) *Service {
 }
 
 func (s *Service) Create(ctx context.Context) (*flintlocktypes.MicroVM, error) {
-	s.scope.V(defaults.LogLevelDebug).Info("Creating microvm", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
+	s.scope.V(defaults.LogLevelDebug).Info("Creating microvm",
+		"machine-name", s.scope.Name(),
+		"cluster-name", s.scope.ClusterName())
 
 	apiMicroVM := convertToFlintlockAPI(s.scope)
 
@@ -117,6 +119,7 @@ func (s *Service) addMetadata(apiMicroVM *flintlocktypes.MicroVMSpec) error {
 	}
 
 	apiMicroVM.Metadata["user-data"] = base64.StdEncoding.EncodeToString(bootstrapData)
+
 	vendorData, err := s.createVendorData()
 	if err != nil {
 		return fmt.Errorf("creating vendor data for machine: %w", err)
