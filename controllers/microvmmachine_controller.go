@@ -13,6 +13,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
@@ -228,24 +229,29 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 		return ctrl.Result{}, nil
 	}
 
-	machineScope.
-		V(defaults.LogLevelDebug).
-		Info(
-			"Bootstrap secret is ready", "machine", machineScope.MvmMachine.Name, "secret",
-			machineScope.Machine.Spec.Bootstrap.DataSecretName)
+	machineScope.V(defaults.LogLevelDebug).Info(
+		"Bootstrap secret is ready",
+		"machine", machineScope.MvmMachine.Name,
+		"secret", machineScope.Machine.Spec.Bootstrap.DataSecretName)
 
 	mvmSvc, err := r.getMicrovmService(machineScope)
 	if err != nil {
-		machineScope.Error(err, "failed to get microvm machine")
+		machineScope.Error(err, "failed to get microvm service")
 
 		return ctrl.Result{}, err
 	}
 
-	microvm, err := mvmSvc.Get(ctx)
-	if err != nil && !isSpecNotFound(err) {
-		machineScope.Error(err, "failed checking if microvm exists")
+	var microvm *flintlocktypes.MicroVM
 
-		return ctrl.Result{}, err
+	if machineScope.MvmMachine.Spec.ProviderID != nil {
+		var err error
+
+		microvm, err = mvmSvc.Get(ctx)
+		if err != nil && !isSpecNotFound(err) {
+			machineScope.Error(err, "failed checking if microvm exists")
+
+			return ctrl.Result{}, err
+		}
 	}
 
 	controllerutil.AddFinalizer(machineScope.MvmMachine, infrav1.MachineFinalizer)
@@ -256,59 +262,26 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 		return ctrl.Result{}, err
 	}
 
-	providerID := machineScope.ProviderID()
-
 	if microvm == nil {
 		machineScope.Info("creating microvm")
 
 		var createErr error
 
-		microvm, createErr = mvmSvc.Create(ctx, providerID)
+		microvm, createErr = mvmSvc.Create(ctx)
 		if createErr != nil {
 			return ctrl.Result{}, createErr
 		}
 	}
 
-	machineScope.MvmMachine.Spec.ProviderID = &providerID
+	machineScope.SetProviderID(microvm.Spec.Uid)
 
-	switch microvm.Status.State {
-	case flintlocktypes.MicroVMStatus_FAILED:
-		// TODO: we need a failure reason from flintlock: Flintlock #299
-		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateFailed
-		machineScope.SetNotReady(infrav1.MicrovmProvisionFailedReason,
-			clusterv1.ConditionSeverityError,
-			errMicrovmFailed.Error(),
-		)
+	if err := machineScope.Patch(); err != nil {
+		machineScope.Error(err, "unable to patch microvm machine")
 
-		return ctrl.Result{}, errMicrovmFailed
-	case flintlocktypes.MicroVMStatus_PENDING:
-		machineScope.MvmMachine.Status.VMState = &infrav1.VMStatePending
-		machineScope.SetNotReady(infrav1.MicrovmPendingReason, clusterv1.ConditionSeverityInfo, "")
-
-		return ctrl.Result{RequeueAfter: requeuePeriod}, nil
-	case flintlocktypes.MicroVMStatus_CREATED:
-		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateRunning
-		machineScope.V(defaults.LogLevelDebug).Info("microvm is in created state")
-	case flintlocktypes.MicroVMStatus_DELETING:
-		machineScope.V(defaults.LogLevelDebug).Info("microvm is deleting")
-
-		return ctrl.Result{RequeueAfter: requeuePeriod}, nil
-	default:
-		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateUnknown
-		machineScope.SetNotReady(
-			infrav1.MicrovmUnknownStateReason,
-			clusterv1.ConditionSeverityError,
-			errMicrovmUnknownState.Error(),
-		)
-
-		return ctrl.Result{RequeueAfter: requeuePeriod}, errMicrovmUnknownState
+		return ctrl.Result{}, err
 	}
 
-	machineScope.Info("microvm created", "providerID", providerID)
-
-	machineScope.SetReady()
-
-	return reconcile.Result{}, nil
+	return r.parseMicroVMState(machineScope, microvm.Status.State)
 }
 
 func (r *MicrovmMachineReconciler) getMicrovmService(machineScope *scope.MachineScope) (*microvm.Service, error) {
@@ -321,12 +294,67 @@ func (r *MicrovmMachineReconciler) getMicrovmService(machineScope *scope.Machine
 		return nil, err
 	}
 
+	machineScope.SetFailureDomain(pointer.String(addr))
+
+	if err := machineScope.Patch(); err != nil {
+		machineScope.Error(err, "unable to patch microvm machine")
+
+		return nil, err
+	}
+
 	client, err := r.MvmClientFunc(addr)
 	if err != nil {
 		return nil, fmt.Errorf("creating microvm client: %w", err)
 	}
 
 	return microvm.New(machineScope, client), nil
+}
+
+func (r *MicrovmMachineReconciler) parseMicroVMState(
+	machineScope *scope.MachineScope,
+	state flintlocktypes.MicroVMStatus_MicroVMState,
+) (ctrl.Result, error) {
+	switch state {
+	// ALL DONE \o/
+	case flintlocktypes.MicroVMStatus_CREATED:
+		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateRunning
+		machineScope.V(defaults.LogLevelDebug).Info("microvm is in created state")
+		machineScope.Info("microvm created", "name", machineScope.Name(), "UID", machineScope.UID())
+		machineScope.SetReady()
+
+		return reconcile.Result{}, nil
+	// MVM IS PENDING
+	case flintlocktypes.MicroVMStatus_PENDING:
+		machineScope.MvmMachine.Status.VMState = &infrav1.VMStatePending
+		machineScope.SetNotReady(infrav1.MicrovmPendingReason, clusterv1.ConditionSeverityInfo, "")
+
+		return ctrl.Result{RequeueAfter: requeuePeriod}, nil
+	// MVM IS FAILING
+	case flintlocktypes.MicroVMStatus_FAILED:
+		// TODO: we need a failure reason from flintlock: Flintlock #299
+		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateFailed
+		machineScope.SetNotReady(infrav1.MicrovmProvisionFailedReason,
+			clusterv1.ConditionSeverityError,
+			errMicrovmFailed.Error(),
+		)
+
+		return ctrl.Result{}, errMicrovmFailed
+	// MVM RECEIVED A DELETE CALL IN A PREVIOUS RESYNC
+	case flintlocktypes.MicroVMStatus_DELETING:
+		machineScope.V(defaults.LogLevelDebug).Info("microvm is deleting")
+
+		return ctrl.Result{RequeueAfter: requeuePeriod}, nil
+		// NO IDEA WHAT IS GOING ON WITH THIS MVM
+	default:
+		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateUnknown
+		machineScope.SetNotReady(
+			infrav1.MicrovmUnknownStateReason,
+			clusterv1.ConditionSeverityError,
+			errMicrovmUnknownState.Error(),
+		)
+
+		return ctrl.Result{RequeueAfter: requeuePeriod}, errMicrovmUnknownState
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.

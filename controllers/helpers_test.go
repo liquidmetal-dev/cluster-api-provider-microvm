@@ -36,18 +36,18 @@ const (
 	testClusterName         = "tenant1"
 	testClusterNamespace    = "ns1"
 	testMachineName         = "machine1"
+	testMachineUID          = "ABCDEF123456"
 	testBootstrapSecretName = "bootstrap"
-	testVMID                = "microvm://machine1"
 	testbootStrapData       = "somesamplebootstrapsdata"
 )
 
 func defaultClusterObjects() clusterObjects {
 	return clusterObjects{
-		Cluster:         createCluster(testClusterName, testClusterNamespace),
-		MvmCluster:      createMicrovmCluster(testClusterName, testClusterNamespace),
-		Machine:         createMachine(testMachineName, testClusterNamespace),
-		MvmMachine:      createMicrovmMachine(testMachineName, testClusterNamespace),
-		BootstrapSecret: createBootsrapSecret(testBootstrapSecretName, testClusterNamespace),
+		Cluster:         createCluster(),
+		MvmCluster:      createMicrovmCluster(),
+		Machine:         createMachine(),
+		MvmMachine:      createMicrovmMachine(),
+		BootstrapSecret: createBootsrapSecret(),
 	}
 }
 
@@ -171,16 +171,16 @@ func createFakeClient(g *WithT, objects []runtime.Object) client.Client {
 	return fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(objects...).Build()
 }
 
-func createMicrovmCluster(name, namespace string) *infrav1.MicrovmCluster {
+func createMicrovmCluster() *infrav1.MicrovmCluster {
 	return &infrav1.MicrovmCluster{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name:      testClusterName,
+			Namespace: testClusterNamespace,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: "cluster.x-k8s.io/v1beta1",
 					Kind:       "Cluster",
-					Name:       name,
+					Name:       testClusterName,
 				},
 			},
 		},
@@ -201,38 +201,45 @@ func createMicrovmCluster(name, namespace string) *infrav1.MicrovmCluster {
 	}
 }
 
-func createCluster(name, namespace string) *clusterv1.Cluster {
+func createCluster() *clusterv1.Cluster {
 	return &clusterv1.Cluster{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name:        testClusterName,
+			Namespace:   testClusterNamespace,
+			ClusterName: testClusterName,
 		},
 		Spec: clusterv1.ClusterSpec{
 			InfrastructureRef: &corev1.ObjectReference{
-				Name:      name,
-				Namespace: namespace,
+				Name:      testClusterName,
+				Namespace: testClusterNamespace,
 			},
 		},
 		Status: clusterv1.ClusterStatus{
 			InfrastructureReady: true,
+			FailureDomains: clusterv1.FailureDomains{
+				"127.0.0.1:9090": clusterv1.FailureDomainSpec{
+					ControlPlane: true,
+				},
+			},
 		},
 	}
 }
 
-func createMicrovmMachine(name, namespace string) *infrav1.MicrovmMachine {
+func createMicrovmMachine() *infrav1.MicrovmMachine {
 	return &infrav1.MicrovmMachine{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name:      testMachineName,
+			Namespace: testClusterNamespace,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: "cluster.x-k8s.io/v1beta1",
 					Kind:       "Machine",
-					Name:       name,
+					Name:       testMachineName,
 				},
 			},
 		},
 		Spec: infrav1.MicrovmMachineSpec{
+			ProviderID: pointer.String(testMachineUID),
 			MicrovmSpec: infrav1.MicrovmSpec{
 				VCPU:     2,
 				MemoryMb: 2048,
@@ -261,12 +268,12 @@ func createMicrovmMachine(name, namespace string) *infrav1.MicrovmMachine {
 	}
 }
 
-func createMachine(name, namespace string) *clusterv1.Machine {
+func createMachine() *clusterv1.Machine {
 	testFailureDomain := "127.0.0.1:9090"
 	return &clusterv1.Machine{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name:      testMachineName,
+			Namespace: testClusterNamespace,
 			Labels: map[string]string{
 				clusterv1.ClusterLabelName: testClusterName,
 			},
@@ -275,7 +282,7 @@ func createMachine(name, namespace string) *clusterv1.Machine {
 			ClusterName:   testClusterName,
 			FailureDomain: &testFailureDomain,
 			InfrastructureRef: corev1.ObjectReference{
-				Name: name,
+				Name: testMachineName,
 			},
 			Bootstrap: clusterv1.Bootstrap{
 				DataSecretName: pointer.String(testBootstrapSecretName),
@@ -284,16 +291,16 @@ func createMachine(name, namespace string) *clusterv1.Machine {
 	}
 }
 
-func createBootsrapSecret(name, namespace string) *corev1.Secret {
+func createBootsrapSecret() *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name:      testBootstrapSecretName,
+			Namespace: testClusterNamespace,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: clusterv1.GroupVersion.String(),
 					Kind:       "Cluster",
-					Name:       name,
+					Name:       testBootstrapSecretName,
 				},
 			},
 		},
@@ -307,7 +314,7 @@ func withExistingMicrovm(fc *mock_client.FakeClient, mvmState flintlocktypes.Mic
 	fc.GetMicroVMReturns(&flintlockv1.GetMicroVMResponse{
 		Microvm: &flintlocktypes.MicroVM{
 			Spec: &flintlocktypes.MicroVMSpec{
-				Id: testVMID,
+				Uid: pointer.String(testMachineUID),
 			},
 			Status: &flintlocktypes.MicroVMStatus{
 				State: mvmState,
@@ -320,11 +327,11 @@ func withMissingMicrovm(fc *mock_client.FakeClient) {
 	fc.GetMicroVMReturns(&flintlockv1.GetMicroVMResponse{}, nil)
 }
 
-func withCreateMicrovmSuccess(fc *mock_client.FakeClient, mvmName string) {
+func withCreateMicrovmSuccess(fc *mock_client.FakeClient) {
 	fc.CreateMicroVMReturns(&flintlockv1.CreateMicroVMResponse{
 		Microvm: &flintlocktypes.MicroVM{
 			Spec: &flintlocktypes.MicroVMSpec{
-				Id: mvmName,
+				Uid: pointer.String(testMachineUID),
 			},
 			Status: &flintlocktypes.MicroVMStatus{
 				State: flintlocktypes.MicroVMStatus_PENDING,
@@ -356,7 +363,7 @@ func assertMachineReconciled(g *WithT, reconciled *infrav1.MicrovmMachine) {
 	assertMachineVMState(g, reconciled, infrav1.VMStateRunning)
 	assertMachineFinalizer(g, reconciled)
 	g.Expect(reconciled.Spec.ProviderID).ToNot(BeNil())
-	g.Expect(*reconciled.Spec.ProviderID).To(Equal(testVMID))
+	g.Expect(*reconciled.Spec.ProviderID).To(Equal(testMachineUID))
 	g.Expect(reconciled.Status.Ready).To(BeTrue(), "The Ready property must be true when the machine has been reconciled")
 }
 
