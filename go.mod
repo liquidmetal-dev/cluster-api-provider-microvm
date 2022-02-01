@@ -9,7 +9,7 @@ require (
 	github.com/weaveworks/flintlock/api v0.0.0-20220126090930-054c6c3be154
 	github.com/weaveworks/flintlock/client v0.0.0-20220126090930-054c6c3be154
 	github.com/yitsushi/macpot v1.0.2
-	google.golang.org/grpc v1.42.0
+	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.22.4
