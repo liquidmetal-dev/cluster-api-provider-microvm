@@ -27,6 +27,9 @@ type MicrovmMachineSpec struct {
 
 	// ProviderID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
+
+	// FailureDomain is the address of the flintlock host assigned to this MvmMachine.
+	FailureDomain *string `json:"failureDomain,omitempty"`
 }
 
 // MicrovmMachineStatus defines the observed state of MicrovmMachine.

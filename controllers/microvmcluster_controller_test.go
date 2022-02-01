@@ -25,8 +25,8 @@ func TestClusterReconciliationNoEndpoint(t *testing.T) {
 	g := NewWithT(t)
 
 	objects := []runtime.Object{
-		createCluster(testClusterName, testClusterNamespace),
-		createMicrovmCluster(testClusterName, testClusterNamespace),
+		createCluster(),
+		createMicrovmCluster(),
 	}
 
 	client := createFakeClient(g, objects)
@@ -47,7 +47,7 @@ func TestClusterReconciliationNoEndpoint(t *testing.T) {
 func TestClusterReconciliationWithClusterEndpoint(t *testing.T) {
 	g := NewWithT(t)
 
-	cluster := createCluster(testClusterName, testClusterNamespace)
+	cluster := createCluster()
 	cluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
 		Host: "192.168.8.15",
 		Port: 6443,
@@ -65,7 +65,7 @@ func TestClusterReconciliationWithClusterEndpoint(t *testing.T) {
 
 	objects := []runtime.Object{
 		cluster,
-		createMicrovmCluster(testClusterName, testClusterNamespace),
+		createMicrovmCluster(),
 		tenantClusterNodes,
 	}
 
@@ -93,7 +93,7 @@ func TestClusterReconciliationWithClusterEndpoint(t *testing.T) {
 func TestClusterReconciliationWithMvmClusterEndpoint(t *testing.T) {
 	g := NewWithT(t)
 
-	mvmCluster := createMicrovmCluster(testClusterName, testClusterNamespace)
+	mvmCluster := createMicrovmCluster()
 	mvmCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
 		Host: "192.168.8.15",
 		Port: 6443,
@@ -110,7 +110,7 @@ func TestClusterReconciliationWithMvmClusterEndpoint(t *testing.T) {
 	}
 
 	objects := []runtime.Object{
-		createCluster(testClusterName, testClusterNamespace),
+		createCluster(),
 		mvmCluster,
 		tenantClusterNodes,
 	}
@@ -139,7 +139,7 @@ func TestClusterReconciliationWithMvmClusterEndpoint(t *testing.T) {
 func TestClusterReconciliationWithClusterEndpointAPIServerNotReady(t *testing.T) {
 	g := NewWithT(t)
 
-	cluster := createCluster(testClusterName, testClusterNamespace)
+	cluster := createCluster()
 	cluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
 		Host: "192.168.8.15",
 		Port: 6443,
@@ -151,7 +151,7 @@ func TestClusterReconciliationWithClusterEndpointAPIServerNotReady(t *testing.T)
 
 	objects := []runtime.Object{
 		cluster,
-		createMicrovmCluster(testClusterName, testClusterNamespace),
+		createMicrovmCluster(),
 		tenantClusterNodes,
 	}
 
@@ -195,11 +195,11 @@ func TestClusterReconciliationMicrovmAlreadyDeleted(t *testing.T) {
 func TestClusterReconciliationNotOwner(t *testing.T) {
 	g := NewWithT(t)
 
-	mvmCluster := createMicrovmCluster(testClusterName, testClusterNamespace)
+	mvmCluster := createMicrovmCluster()
 	mvmCluster.ObjectMeta.OwnerReferences = nil
 
 	objects := []runtime.Object{
-		createCluster(testClusterName, testClusterNamespace),
+		createCluster(),
 		mvmCluster,
 	}
 
@@ -221,13 +221,13 @@ func TestClusterReconciliationNotOwner(t *testing.T) {
 func TestClusterReconciliationWhenPaused(t *testing.T) {
 	g := NewWithT(t)
 
-	mvmCluster := createMicrovmCluster(testClusterName, testClusterNamespace)
+	mvmCluster := createMicrovmCluster()
 	mvmCluster.ObjectMeta.Annotations = map[string]string{
 		clusterv1.PausedAnnotation: "true",
 	}
 
 	objects := []runtime.Object{
-		createCluster(testClusterName, testClusterNamespace),
+		createCluster(),
 		mvmCluster,
 	}
 
@@ -249,13 +249,13 @@ func TestClusterReconciliationWhenPaused(t *testing.T) {
 func TestClusterReconciliationDelete(t *testing.T) {
 	g := NewWithT(t)
 
-	mvmCluster := createMicrovmCluster(testClusterName, testClusterNamespace)
+	mvmCluster := createMicrovmCluster()
 	mvmCluster.ObjectMeta.DeletionTimestamp = &metav1.Time{
 		Time: time.Now(),
 	}
 
 	objects := []runtime.Object{
-		createCluster(testClusterName, testClusterNamespace),
+		createCluster(),
 		mvmCluster,
 	}
 

@@ -12,6 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/utils/pointer"
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
@@ -251,10 +252,11 @@ func TestMachineReconcileNoVmCreateSucceeds(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
+	apiObjects.MvmMachine.Spec.ProviderID = nil
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
-	withCreateMicrovmSuccess(&fakeAPIClient, testMachineName)
+	withCreateMicrovmSuccess(&fakeAPIClient)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
 	result, err := reconcileMachine(client, &fakeAPIClient)
@@ -271,6 +273,35 @@ func TestMachineReconcileNoVmCreateSucceeds(t *testing.T) {
 
 	reconciled, err := getMicrovmMachine(client, testMachineName, testClusterNamespace)
 	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
+
+	g.Expect(reconciled.Spec.ProviderID).To(Equal(pointer.String(testMachineUID)))
+	g.Expect(reconciled.Spec.FailureDomain).To(Equal(pointer.String("127.0.0.1:9090")))
+
+	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmPendingReason)
+	assertMachineVMState(g, reconciled, infrav1.VMStatePending)
+	assertMachineFinalizer(g, reconciled)
+}
+
+func TestMachineReconcileNoMachineFailureDomainCreateSucceeds(t *testing.T) {
+	g := NewWithT(t)
+
+	apiObjects := defaultClusterObjects()
+	apiObjects.MvmMachine.Spec.ProviderID = nil
+	apiObjects.Machine.Spec.FailureDomain = nil
+
+	fakeAPIClient := mock_client.FakeClient{}
+	withMissingMicrovm(&fakeAPIClient)
+	withCreateMicrovmSuccess(&fakeAPIClient)
+
+	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
+	result, err := reconcileMachine(client, &fakeAPIClient)
+
+	g.Expect(err).NotTo(HaveOccurred(), "Reconciling when creating microvm should not return error")
+	g.Expect(result.IsZero()).To(BeFalse(), "Expect requeue to be requested after create")
+
+	reconciled, err := getMicrovmMachine(client, testMachineName, testClusterNamespace)
+	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
+	g.Expect(reconciled.Spec.FailureDomain).To(Equal(pointer.String("127.0.0.1:9090")))
 	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmPendingReason)
 	assertMachineVMState(g, reconciled, infrav1.VMStatePending)
 	assertMachineFinalizer(g, reconciled)
@@ -283,11 +314,12 @@ func TestMachineReconcileNoVmCreateClusterSSHSucceeds(t *testing.T) {
 	expectedSSHKey := "ClusterSSH"
 
 	apiObjects := defaultClusterObjects()
+	apiObjects.MvmMachine.Spec.ProviderID = nil
 	apiObjects.MvmCluster.Spec.SSHPublicKey = expectedSSHKey
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
-	withCreateMicrovmSuccess(&fakeAPIClient, testMachineName)
+	withCreateMicrovmSuccess(&fakeAPIClient)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
 	result, err := reconcileMachine(client, &fakeAPIClient)
@@ -315,16 +347,16 @@ func TestMachineReconcileNoVmCreateClusterMachineSSHSucceeds(t *testing.T) {
 	machineSSH := "MachineSSH"
 
 	apiObjects := defaultClusterObjects()
+	apiObjects.MvmMachine.Spec.ProviderID = nil
 	apiObjects.MvmCluster.Spec.SSHPublicKey = clusterSSH
 	apiObjects.MvmMachine.Spec.SSHPublicKey = machineSSH
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
-	withCreateMicrovmSuccess(&fakeAPIClient, testMachineName)
+	withCreateMicrovmSuccess(&fakeAPIClient)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
 	result, err := reconcileMachine(client, &fakeAPIClient)
-
 	g.Expect(err).NotTo(HaveOccurred(), "Reconciling when creating microvm should not return error")
 	g.Expect(result.IsZero()).To(BeFalse(), "Expect requeue to be requested after create")
 
@@ -344,10 +376,11 @@ func TestMachineReconcileNoVmCreateAdditionReconcile(t *testing.T) {
 	g := NewWithT(t)
 
 	apiObjects := defaultClusterObjects()
+	apiObjects.MvmMachine.Spec.ProviderID = nil
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
-	withCreateMicrovmSuccess(&fakeAPIClient, testMachineName)
+	withCreateMicrovmSuccess(&fakeAPIClient)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
 	result, err := reconcileMachine(client, &fakeAPIClient)
@@ -384,8 +417,7 @@ func TestMachineReconcileDeleteVmSucceeds(t *testing.T) {
 
 	g.Expect(fakeAPIClient.DeleteMicroVMCallCount()).To(Equal(1))
 	_, deleteReq, _ := fakeAPIClient.DeleteMicroVMArgsForCall(0)
-	g.Expect(deleteReq.Id).To(Equal(testMachineName))
-	g.Expect(deleteReq.Namespace).To(Equal(testClusterNamespace))
+	g.Expect(deleteReq.Uid).To(Equal(testMachineUID))
 
 	_, err = getMicrovmMachine(client, testMachineName, testClusterNamespace)
 	g.Expect(apierrors.IsNotFound(err)).To(BeFalse())

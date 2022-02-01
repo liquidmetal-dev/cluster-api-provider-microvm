@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"strings"
 
 	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
 	flintlocktypes "github.com/weaveworks/flintlock/api/types"
@@ -44,14 +43,14 @@ func New(scope *scope.MachineScope, client Client) *Service {
 	}
 }
 
-func (s *Service) Create(ctx context.Context, providerID string) (*flintlocktypes.MicroVM, error) {
-	s.scope.
-		V(defaults.LogLevelDebug).
-		Info("Creating microvm", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
+func (s *Service) Create(ctx context.Context) (*flintlocktypes.MicroVM, error) {
+	s.scope.V(defaults.LogLevelDebug).Info("Creating microvm",
+		"machine-name", s.scope.Name(),
+		"cluster-name", s.scope.ClusterName())
 
 	apiMicroVM := convertToFlintlockAPI(s.scope)
 
-	if err := s.addMetadata(apiMicroVM, providerID); err != nil {
+	if err := s.addMetadata(apiMicroVM); err != nil {
 		return nil, fmt.Errorf("adding metadata: %w", err)
 	}
 
@@ -90,8 +89,7 @@ func (s *Service) Get(ctx context.Context) (*flintlocktypes.MicroVM, error) {
 		Info("Getting microvm for machine", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
 	input := &flintlockv1.GetMicroVMRequest{
-		Id:        s.scope.Name(),
-		Namespace: s.scope.Namespace(),
+		Uid: s.scope.UID(),
 	}
 
 	resp, err := s.client.GetMicroVM(ctx, input)
@@ -108,21 +106,19 @@ func (s *Service) Delete(ctx context.Context) (*emptypb.Empty, error) {
 		Info("Deleting microvm for machine", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
 	input := &flintlockv1.DeleteMicroVMRequest{
-		Id:        s.scope.Name(),
-		Namespace: s.scope.Namespace(),
+		Uid: s.scope.UID(),
 	}
 
 	return s.client.DeleteMicroVM(ctx, input)
 }
 
-func (s *Service) addMetadata(apiMicroVM *flintlocktypes.MicroVMSpec, providerID string) error {
+func (s *Service) addMetadata(apiMicroVM *flintlocktypes.MicroVMSpec) error {
 	bootstrapData, err := s.scope.GetRawBootstrapData()
 	if err != nil {
 		return fmt.Errorf("getting bootstrap data for machine: %w", err)
 	}
 
-	userdata := strings.ReplaceAll(string(bootstrapData), "PROVIDER_ID", providerID)
-	apiMicroVM.Metadata["user-data"] = base64.StdEncoding.EncodeToString([]byte(userdata))
+	apiMicroVM.Metadata["user-data"] = base64.StdEncoding.EncodeToString(bootstrapData)
 
 	vendorData, err := s.createVendorData()
 	if err != nil {

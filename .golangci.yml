@@ -40,6 +40,9 @@ issues:
   max-same-issues: 0
   max-issues-per-linter: 0
   exclude-rules:
+  - text: "shadow: declaration of \"err\" shadows declaration"
+    linters:
+    - govet
   - text: "should not use dot imports|don't use an underscore in package name"
     linters:
     - golint
