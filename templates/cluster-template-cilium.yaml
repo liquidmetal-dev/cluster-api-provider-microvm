@@ -74,7 +74,7 @@ spec:
       memoryMb: 2048
       rootVolume:
         id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks/capmvm-kubernetes:${KUBERNETES_VERSION#v}}"
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks/capmvm-kubernetes:1.21.8}"
         mountPoint: "/"
       kernel:
         filename: "boot/vmlinux"
@@ -118,7 +118,7 @@ spec:
       memoryMb: 2048
       rootVolume:
         id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks/capmvm-kubernetes:${KUBERNETES_VERSION#v}}"
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks/capmvm-kubernetes:1.21.8}"
         mountPoint: "/"
       kernel:
         filename: "boot/vmlinux"
