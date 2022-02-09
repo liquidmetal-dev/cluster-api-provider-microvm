@@ -286,6 +286,15 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager) error {
 		return fmt.Errorf("unable to create microvm machine controller: %w", err)
 	}
 
+	if err := (&controllers.ExternalLoadBalancerReconciler{
+		Client:           mgr.GetClient(),
+		Scheme:           mgr.GetScheme(),
+		Recorder:         mgr.GetEventRecorderFor("externalloadbalancer-controller"),
+		WatchFilterValue: watchFilterValue,
+	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: microvmMachineConcurrency, RecoverPanic: true}); err != nil {
+		return fmt.Errorf("unable to create external loadbalancer controller: %w", err)
+	}
+
 	return nil
 }
 

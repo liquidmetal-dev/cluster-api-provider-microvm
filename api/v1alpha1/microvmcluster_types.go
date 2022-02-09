@@ -19,8 +19,8 @@ type MicrovmClusterSpec struct {
 	// Placement specifies how machines for the cluster should be placed onto hosts (i.e. where the microvms are created).
 	// +kubebuilder:validation:Required
 	Placement Placement `json:"placement"`
-	// EndpointRef
-	EndpointRef *corev1.ObjectReference `json:"endpointRef,omitempty"`
+	// LoadBalancerRef
+	LoadBalancerRef *corev1.ObjectReference `json:"loadBalancerRef,omitempty"`
 }
 
 // MicrovmClusterStatus defines the observed state of MicrovmCluster.

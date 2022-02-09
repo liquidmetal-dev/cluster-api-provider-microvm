@@ -26,6 +26,7 @@ kind: ExternalLoadBalancer
 metadata:
   name: "${CLUSTER_NAME}-api-server"
 spec:
+  clusterName: ${CLUSTER_NAME}
   endpoint:
     host: ${CONTROL_PLANE_VIP}
     port: 6443

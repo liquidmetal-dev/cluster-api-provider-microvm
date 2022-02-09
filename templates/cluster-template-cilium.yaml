@@ -25,18 +25,29 @@ spec:
     name: "${CLUSTER_NAME}-control-plane"
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: ExternalLoadBalancer
+metadata:
+  name: "${CLUSTER_NAME}-api-server"
+spec:
+  clusterName: ${CLUSTER_NAME}
+  endpoint:
+    host: ${CONTROL_PLANE_VIP}
+    port: 6443
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
 kind: MicrovmCluster
 metadata:
   name: "${CLUSTER_NAME}"
 spec:
-  controlPlaneEndpoint:
-    host: "${CONTROL_PLANE_VIP}"
-    port: 6443
   placement:
     staticPool:
       hosts:
       - endpoint: "${HOST_ENDPOINT:=127.0.0.1:9090}"
         controlplaneAllowed: true
+  loadBalancerRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+    kind: ExternalLoadBalancer
+    name: "${CLUSTER_NAME}-api-server"
 ---
 kind: KubeadmControlPlane
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1

@@ -51,7 +51,7 @@ type MicrovmClusterReconciler struct {
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=microvmclusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=microvmclusters/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=microvmclusters/finalizers,verbs=update
-// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=externalloadbalancerendpoint,verbs=get;list;watch
+// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=externalloadbalancers,verbs=get;list;watch
 // +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;clusters/status,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -128,7 +128,7 @@ func (r *MicrovmClusterReconciler) reconcileDelete(_ context.Context, clusterSco
 func (r *MicrovmClusterReconciler) reconcileNormal(ctx context.Context, clusterScope *scope.ClusterScope) (reconcile.Result, error) {
 	clusterScope.Info("Reconciling MicrovmCluster")
 
-	if clusterScope.MvmCluster.Spec.EndpointRef == nil {
+	if clusterScope.MvmCluster.Spec.LoadBalancerRef == nil {
 		return reconcile.Result{}, errExternalLoadBalancerEndpointRefRequired
 	}
 
@@ -153,7 +153,7 @@ func (r *MicrovmClusterReconciler) isAPIServerAvailable(ctx context.Context, clu
 	endpoint := &infrav1.ExternalLoadBalancer{}
 	eprnn := types.NamespacedName{
 		Namespace: clusterScope.MvmCluster.ObjectMeta.Namespace,
-		Name:      clusterScope.MvmCluster.Spec.EndpointRef.Name,
+		Name:      clusterScope.MvmCluster.Spec.LoadBalancerRef.Name,
 	}
 	if err := r.Get(ctx, eprnn, endpoint); err != nil {
 		clusterScope.Error(err, "get referenced ExternalLoadBalancerEndpoint")

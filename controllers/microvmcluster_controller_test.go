@@ -48,7 +48,7 @@ func TestClusterReconciliationWithMvmClusterEndpoint(t *testing.T) {
 	g := NewWithT(t)
 
 	mvmCluster := createMicrovmCluster(testClusterName, testClusterNamespace)
-	mvmCluster.Spec.EndpointRef = &corev1.ObjectReference{
+	mvmCluster.Spec.LoadBalancerRef = &corev1.ObjectReference{
 		Kind: "ExternalLoadBalancerEndpoint",
 		Name: "tenant1-elb-endpoint",
 	}
@@ -101,7 +101,7 @@ func TestClusterReconciliationWithClusterEndpointAPIServerNotReady(t *testing.T)
 
 	cluster := createCluster(testClusterName, testClusterNamespace)
 	mvmCluster := createMicrovmCluster(testClusterName, testClusterNamespace)
-	mvmCluster.Spec.EndpointRef = &corev1.ObjectReference{
+	mvmCluster.Spec.LoadBalancerRef = &corev1.ObjectReference{
 		Kind: "ExternalLoadBalancerEndpoint",
 		Name: "tenant1-elb-endpoint",
 	}

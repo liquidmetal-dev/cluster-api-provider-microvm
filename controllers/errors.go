@@ -12,4 +12,5 @@ var (
 	errMicrovmUnknownState                     = errors.New("microvm is in an unknown/unsupported state")
 	errExpectedMicrovmCluster                  = errors.New("expected microvm cluster")
 	errNoPlacement                             = errors.New("no placement specified")
+	errInvalidLoadBalancerResponseStatusCode   = errors.New("endpoint returned a 5XX status code")
 )

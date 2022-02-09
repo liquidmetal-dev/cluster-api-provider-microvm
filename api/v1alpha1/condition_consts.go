@@ -48,3 +48,15 @@ const (
 	// to be available before proceeding.
 	WaitingForBootstrapDataReason = "WaitingForBoostrapData"
 )
+
+const (
+	// ExternalLoadBalancerEndpointAvailableCondition is a condition that indicates that the API server Load Balancer is available.
+	ExternalLoadBalancerEndpointAvailableCondition clusterv1.ConditionType = "ExternalLoadBalancerEndpointAvailable"
+
+	// ExternalLoadBalancerEndpointNotAvailableReason is used to indicate any error with the
+	// availability of the load balancer.
+	ExternalLoadBalancerEndpointFailedReason = "ExternalLoadBalancerEndpointFailed"
+
+	// ExternalLoadBalancerEndpointNotAvailableReason is used to indicate that the load balancer isn't available.
+	ExternalLoadBalancerEndpointNotAvailableReason = "ExternalLoadBalancerEndpointNotAvailable"
+)

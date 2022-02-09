@@ -50,6 +50,8 @@ spec:
             description: ExternalLoadBalancerSpec defines the desired state for a
               ExternalLoadBalancer.
             properties:
+              clusterName:
+                type: string
               endpoint:
                 description: Endpoint represents the endpoint for the load balancer.
                   This endpoint will be tested to see if its available.
@@ -66,6 +68,7 @@ spec:
                 - host
                 type: object
             required:
+            - clusterName
             - endpoint
             type: object
           status:

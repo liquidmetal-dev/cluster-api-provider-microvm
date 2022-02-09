@@ -31,7 +31,8 @@ func (ep *ExternalLoadBalancerEndpoint) String() string {
 type ExternalLoadBalancerSpec struct {
 	// Endpoint represents the endpoint for the load balancer. This endpoint will
 	// be tested to see if its available.
-	Endpoint ExternalLoadBalancerEndpoint `json:"endpoint"`
+	Endpoint    ExternalLoadBalancerEndpoint `json:"endpoint"`
+	ClusterName string                       `json:"clusterName"`
 }
 
 type ExternalLoadBalancerStatus struct {

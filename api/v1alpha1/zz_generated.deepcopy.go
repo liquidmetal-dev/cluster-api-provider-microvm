@@ -205,8 +205,8 @@ func (in *MicrovmClusterList) DeepCopyObject() runtime.Object {
 func (in *MicrovmClusterSpec) DeepCopyInto(out *MicrovmClusterSpec) {
 	*out = *in
 	in.Placement.DeepCopyInto(&out.Placement)
-	if in.EndpointRef != nil {
-		in, out := &in.EndpointRef, &out.EndpointRef
+	if in.LoadBalancerRef != nil {
+		in, out := &in.LoadBalancerRef, &out.LoadBalancerRef
 		*out = new(v1.ObjectReference)
 		**out = **in
 	}
