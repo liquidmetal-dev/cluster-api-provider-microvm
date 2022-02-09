@@ -8,6 +8,7 @@ resources:
 - bases/infrastructure.cluster.x-k8s.io_microvmclusters.yaml
 - bases/infrastructure.cluster.x-k8s.io_microvmmachines.yaml
 - bases/infrastructure.cluster.x-k8s.io_microvmmachinetemplates.yaml
+- bases/infrastructure.cluster.x-k8s.io_externalloadbalancers.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

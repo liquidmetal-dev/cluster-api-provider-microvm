@@ -167,7 +167,7 @@ func (r *ExternalLoadBalancerReconciler) Patch(ctx context.Context, lb *infrav1.
 // sendTestRequest makes an HTTP call to ${KUBE_VIP_HOST}:${KUBE_VIP_PORT}/livez, which, if the loadbalancer is live,
 // should reach the /livez endpoint on the Kubernetes API server.
 func (r *ExternalLoadBalancerReconciler) sendTestRequest(ctx context.Context, lb *infrav1.ExternalLoadBalancer) error {
-	endpoint := lb.Spec.Endpoint.String() + "/livez"
+	endpoint := fmt.Sprintf("https://%s/livez", lb.Spec.Endpoint.String())
 	epReq, err := http.NewRequestWithContext(ctx, http.MethodGet, lb.Spec.Endpoint.String()+"/livez", nil) // use livez endpoint
 	if err != nil {
 		return fmt.Errorf("creating endpoint request: %w", err)
@@ -190,7 +190,7 @@ func (r *ExternalLoadBalancerReconciler) sendTestRequest(ctx context.Context, lb
 func (r *ExternalLoadBalancerReconciler) ensureClusterOwnerRef(ctx context.Context, req ctrl.Request, lb *infrav1.ExternalLoadBalancer) error {
 	clusterNamespaceName := types.NamespacedName{
 		Namespace: req.NamespacedName.Namespace,
-		Name:      lb.ClusterName,
+		Name:      lb.Spec.ClusterName,
 	}
 
 	cluster := &clusterv1.Cluster{}
