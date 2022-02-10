@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -44,6 +45,7 @@ import (
 	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks/cluster-api-provider-microvm/controllers"
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/services/microvm"
+	mvmgrpc "github.com/weaveworks/cluster-api-provider-microvm/pkg/grpc"
 	"github.com/weaveworks/cluster-api-provider-microvm/version"
 )
 
@@ -78,6 +80,7 @@ var (
 	leaderElectionLeaseDuration time.Duration
 	leaderElectionRenewDeadline time.Duration
 	leaderElectionRetryPeriod   time.Duration
+	flintlockProxy              string
 )
 
 const (
@@ -195,6 +198,12 @@ func initFlags(fs *pflag.FlagSet) {
 		":9440",
 		"The address the health endpoint binds to.",
 	)
+
+	fs.StringVar(&flintlockProxy,
+		"flintlock-proxy",
+		"",
+		"The URL of a proxy to use when calling flintlock.",
+	)
 }
 
 func main() {
@@ -206,6 +215,14 @@ func main() {
 
 	if watchNamespace != "" {
 		setupLog.Info("Watching cluster-api objects only in namespace for reconciliation", "namespace", watchNamespace)
+	}
+
+	if flintlockProxy != "" {
+		setupLog.Info("Using flintlock proxy", "address", flintlockProxy)
+		if _, parseErr := url.Parse(flintlockProxy); parseErr != nil {
+			setupLog.Error(parseErr, "unable to parse flintlock proxy url")
+			os.Exit(1)
+		}
 	}
 
 	if profilerAddress != "" {
@@ -333,6 +350,14 @@ func addHealthChecks(mgr ctrl.Manager) error {
 func createFlintlockClient(address string) (microvm.Client, error) {
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
+	}
+
+	if flintlockProxy != "" {
+		url, err := url.Parse(flintlockProxy)
+		if err != nil {
+			return nil, fmt.Errorf("parsing proxy url %s: %w", flintlockProxy, err)
+		}
+		opts = append(opts, mvmgrpc.WithProxy(url))
 	}
 
 	conn, err := grpc.Dial(address, opts...)
