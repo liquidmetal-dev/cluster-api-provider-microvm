@@ -23,12 +23,9 @@ import (
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
@@ -168,7 +165,7 @@ func (r *ExternalLoadBalancerReconciler) Patch(ctx context.Context, lb *infrav1.
 // should reach the /livez endpoint on the Kubernetes API server.
 func (r *ExternalLoadBalancerReconciler) sendTestRequest(ctx context.Context, lb *infrav1.ExternalLoadBalancer) error {
 	endpoint := fmt.Sprintf("https://%s/livez", lb.Spec.Endpoint.String())
-	epReq, err := http.NewRequestWithContext(ctx, http.MethodGet, lb.Spec.Endpoint.String()+"/livez", nil) // use livez endpoint
+	epReq, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil) // use livez endpoint
 	if err != nil {
 		return fmt.Errorf("creating endpoint request: %w", err)
 	}
@@ -219,16 +216,16 @@ func (r *ExternalLoadBalancerReconciler) SetupWithManager(ctx context.Context, m
 		WithOptions(options).
 		For(&infrav1.ExternalLoadBalancer{}).
 		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(log, r.WatchFilterValue)).
-		WithEventFilter(predicates.ResourceIsNotExternallyManaged(log)).
-		Watches(
-			&source.Kind{Type: &clusterv1.Cluster{}},
-			handler.EnqueueRequestsFromMapFunc(
-				util.ClusterToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("ExternalLoadBalancer")),
-			),
-			builder.WithPredicates(
-				predicates.ClusterUnpaused(log),
-			),
-		)
+		WithEventFilter(predicates.ResourceIsNotExternallyManaged(log)) //.
+		// Watches(
+		// 	&source.Kind{Type: &clusterv1.Cluster{}},
+		// 	handler.EnqueueRequestsFromMapFunc(
+		// 		util.ClusterToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("ExternalLoadBalancer")),
+		// 	),
+		// 	builder.WithPredicates(
+		// 		predicates.ClusterUnpaused(log),
+		// 	),
+		// )
 
 	if err := builder.Complete(r); err != nil {
 		return fmt.Errorf("creating external loadbalancer controller: %w", err)
