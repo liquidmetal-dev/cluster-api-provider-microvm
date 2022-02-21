@@ -6,6 +6,7 @@ package controllers_test
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 
 	. "github.com/onsi/gomega"
 	"gopkg.in/yaml.v2"
@@ -29,7 +30,7 @@ import (
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/services/microvm/mock_client"
 	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
 	flintlocktypes "github.com/weaveworks/flintlock/api/types"
-	"github.com/weaveworks/flintlock/client/cloudinit"
+	"github.com/weaveworks/flintlock/client/cloudinit/userdata"
 )
 
 const (
@@ -86,7 +87,7 @@ func (co clusterObjects) AsRuntimeObjects() []runtime.Object {
 func reconcileMachine(client client.Client, mockAPIClient microvm.Client) (ctrl.Result, error) {
 	machineController := &controllers.MicrovmMachineReconciler{
 		Client: client,
-		MvmClientFunc: func(address string) (microvm.Client, error) {
+		MvmClientFunc: func(address string, proxy *infrav1.Proxy) (microvm.Client, error) {
 			return mockAPIClient, nil
 		},
 	}
@@ -363,7 +364,8 @@ func assertMachineReconciled(g *WithT, reconciled *infrav1.MicrovmMachine) {
 	assertMachineVMState(g, reconciled, infrav1.VMStateRunning)
 	assertMachineFinalizer(g, reconciled)
 	g.Expect(reconciled.Spec.ProviderID).ToNot(BeNil())
-	g.Expect(*reconciled.Spec.ProviderID).To(Equal(testMachineUID))
+	expectedProviderID := fmt.Sprintf("microvm://%s", testMachineUID)
+	g.Expect(*reconciled.Spec.ProviderID).To(Equal(expectedProviderID))
 	g.Expect(reconciled.Status.Ready).To(BeTrue(), "The Ready property must be true when the machine has been reconciled")
 }
 
@@ -401,7 +403,7 @@ func assertVendorData(g *WithT, vendorDataRaw string, expectedSSHKey string) {
 	g.Expect(err).NotTo(HaveOccurred(), "expect vendor data to be base64 encoded")
 
 	if expectedSSHKey != "" {
-		vendorData := &cloudinit.UserData{}
+		vendorData := &userdata.UserData{}
 
 		unmarshallErr := yaml.Unmarshal(data, vendorData)
 		g.Expect(unmarshallErr).NotTo(HaveOccurred(), "expect vendor data to unmarshall to cloud-init userdata")

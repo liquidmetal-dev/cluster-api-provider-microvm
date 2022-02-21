@@ -6,6 +6,7 @@ package controllers_test
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -274,7 +275,8 @@ func TestMachineReconcileNoVmCreateSucceeds(t *testing.T) {
 	reconciled, err := getMicrovmMachine(client, testMachineName, testClusterNamespace)
 	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
 
-	g.Expect(reconciled.Spec.ProviderID).To(Equal(pointer.String(testMachineUID)))
+	expectedProviderID := fmt.Sprintf("microvm://%s", testMachineUID)
+	g.Expect(reconciled.Spec.ProviderID).To(Equal(pointer.String(expectedProviderID)))
 	g.Expect(reconciled.Spec.FailureDomain).To(Equal(pointer.String("127.0.0.1:9090")))
 
 	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmPendingReason)

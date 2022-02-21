@@ -4,12 +4,12 @@ go 1.17
 
 require (
 	github.com/go-logr/logr v0.4.0
-	github.com/onsi/gomega v1.17.0
+	github.com/onsi/gomega v1.18.1
 	github.com/spf13/pflag v1.0.5
 	github.com/weaveworks/flintlock/api v0.0.0-20220126090930-054c6c3be154
-	github.com/weaveworks/flintlock/client v0.0.0-20220126090930-054c6c3be154
+	github.com/weaveworks/flintlock/client v0.0.0-20220221140503-8032d3ff7d2c
 	github.com/yitsushi/macpot v1.0.2
-	google.golang.org/grpc v1.42.0
+	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.22.4
@@ -63,7 +63,7 @@ require (
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/net v0.0.0-20210520170846-37e1c6afe023 // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
-	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect

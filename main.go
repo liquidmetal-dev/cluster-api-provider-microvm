@@ -21,12 +21,15 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
 	"github.com/spf13/pflag"
 	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
+	flgrpc "github.com/weaveworks/flintlock/client/grpc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -330,9 +333,18 @@ func addHealthChecks(mgr ctrl.Manager) error {
 	return nil
 }
 
-func createFlintlockClient(address string) (microvm.Client, error) {
+func createFlintlockClient(address string, proxy *infrav1.Proxy) (microvm.Client, error) {
 	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+
+	if proxy != nil {
+		url, err := url.Parse(proxy.Endpoint)
+		if err != nil {
+			return nil, fmt.Errorf("parsing proxy server url %s: %w", proxy.Endpoint, err)
+		}
+
+		opts = append(opts, flgrpc.WithProxy(url))
 	}
 
 	conn, err := grpc.Dial(address, opts...)

@@ -10,12 +10,14 @@ import (
 
 	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
 	flintlocktypes "github.com/weaveworks/flintlock/api/types"
-	"github.com/weaveworks/flintlock/client/cloudinit"
+	"github.com/weaveworks/flintlock/client/cloudinit/instance"
+	"github.com/weaveworks/flintlock/client/cloudinit/userdata"
 	"github.com/yitsushi/macpot"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gopkg.in/yaml.v2"
 	"k8s.io/utils/pointer"
 
+	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
 	"github.com/weaveworks/cluster-api-provider-microvm/internal/scope"
 )
@@ -24,7 +26,7 @@ const (
 	cloudInitHeader = "#cloud-config\n"
 )
 
-type ClientFactoryFunc func(address string) (Client, error)
+type ClientFactoryFunc func(address string, proxy *infrav1.Proxy) (Client, error)
 
 type Client interface {
 	flintlockv1.MicroVMClient
@@ -89,7 +91,7 @@ func (s *Service) Get(ctx context.Context) (*flintlocktypes.MicroVM, error) {
 		Info("Getting microvm for machine", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
 	input := &flintlockv1.GetMicroVMRequest{
-		Uid: s.scope.UID(),
+		Uid: s.scope.GetInstanceID(),
 	}
 
 	resp, err := s.client.GetMicroVM(ctx, input)
@@ -139,7 +141,7 @@ func (s *Service) addMetadata(apiMicroVM *flintlocktypes.MicroVMSpec) error {
 
 func (s *Service) createVendorData() (string, error) {
 	// TODO: remove the boot command temporary fix after image-builder change #89
-	vendorUserdata := &cloudinit.UserData{
+	vendorUserdata := &userdata.UserData{
 		HostName:     s.scope.MvmMachine.Name,
 		FinalMessage: "The Liquid Metal booted system is good to go after $UPTIME seconds",
 		BootCommands: []string{
@@ -150,10 +152,10 @@ func (s *Service) createVendorData() (string, error) {
 	// TODO:  allow setting multiple keys #88
 	machineSSHKey := s.scope.GetSSHPublicKey()
 	if machineSSHKey != "" {
-		defaultUser := cloudinit.User{
+		defaultUser := userdata.User{
 			Name: "ubuntu",
 		}
-		rootUser := cloudinit.User{
+		rootUser := userdata.User{
 			Name: "root",
 		}
 
@@ -164,7 +166,7 @@ func (s *Service) createVendorData() (string, error) {
 			machineSSHKey,
 		}
 
-		vendorUserdata.Users = []cloudinit.User{defaultUser, rootUser}
+		vendorUserdata.Users = []userdata.User{defaultUser, rootUser}
 	}
 
 	data, err := yaml.Marshal(vendorUserdata)
@@ -178,12 +180,11 @@ func (s *Service) createVendorData() (string, error) {
 }
 
 func (s *Service) createInstanceData() (string, error) {
-	userMetadata := cloudinit.Metadata{
-		InstanceID:    fmt.Sprintf("%s/%s", s.scope.Namespace(), s.scope.Name()),
-		LocalHostname: s.scope.Name(),
-		Platform:      platformLiquidMetal,
-		ClusterName:   s.scope.ClusterName(),
-	}
+	userMetadata := instance.New(
+		instance.WithLocalHostname(s.scope.Name()),
+		instance.WithPlatform(platformLiquidMetal),
+		instance.WithClusterName(s.scope.ClusterName()),
+	)
 
 	userMeta, err := yaml.Marshal(userMetadata)
 	if err != nil {

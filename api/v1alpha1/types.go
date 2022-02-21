@@ -163,3 +163,9 @@ type MicrovmHost struct {
 	// +kubebuilder:default=true
 	ControlPlaneAllowed bool `json:"controlplaneAllowed"`
 }
+
+// Proxy represents a proxy server.
+type Proxy struct {
+	// Endpoint is the address of the proxy.
+	Endpoint string `json:"endpoint"`
+}

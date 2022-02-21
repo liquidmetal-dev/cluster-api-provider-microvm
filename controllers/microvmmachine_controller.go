@@ -243,7 +243,9 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 
 	var microvm *flintlocktypes.MicroVM
 
-	if machineScope.MvmMachine.Spec.ProviderID != nil {
+	providerID := machineScope.GetProviderID()
+
+	if providerID != "" {
 		var err error
 
 		microvm, err = mvmSvc.Get(ctx)
@@ -302,7 +304,7 @@ func (r *MicrovmMachineReconciler) getMicrovmService(machineScope *scope.Machine
 		return nil, err
 	}
 
-	client, err := r.MvmClientFunc(addr)
+	client, err := r.MvmClientFunc(addr, machineScope.MvmCluster.Spec.MicrovmProxy)
 	if err != nil {
 		return nil, fmt.Errorf("creating microvm client: %w", err)
 	}
