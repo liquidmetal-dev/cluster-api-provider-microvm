@@ -3,7 +3,7 @@ module github.com/weaveworks/cluster-api-provider-microvm
 go 1.17
 
 require (
-	github.com/go-logr/logr v0.4.0
+	github.com/go-logr/logr v1.2.2
 	github.com/onsi/gomega v1.18.1
 	github.com/spf13/pflag v1.0.5
 	github.com/weaveworks/flintlock/api v0.0.0-20220126090930-054c6c3be154
