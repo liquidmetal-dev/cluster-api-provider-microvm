@@ -25,6 +25,9 @@ type MicrovmClusterSpec struct {
 	// Placement specifies how machines for the cluster should be placed onto hosts (i.e. where the microvms are created).
 	// +kubebuilder:validation:Required
 	Placement Placement `json:"placement"`
+	// MicrovmProxy is the proxy server details to use when calling the microvm service. This is an
+	// alteranative to using the http proxy environment variables and applied purely to the grpc service.
+	MicrovmProxy *Proxy `json:"microvmProxy,omitempty"`
 }
 
 // MicrovmClusterStatus defines the observed state of MicrovmCluster.

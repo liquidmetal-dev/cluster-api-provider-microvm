@@ -6,12 +6,14 @@ package scope
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/klogr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/collections"
 	"sigs.k8s.io/cluster-api/util/conditions"
@@ -24,6 +26,8 @@ import (
 )
 
 var _ Scoper = &MachineScope{}
+
+const ProviderPrefix = "microvm://"
 
 type MachineScopeParams struct {
 	Cluster        *clusterv1.Cluster
@@ -113,7 +117,7 @@ type MachineScope struct {
 // UID returns the MicrovmMachine UID/ProviderID.
 func (m *MachineScope) UID() string {
 	if m.MvmMachine.Spec.ProviderID != nil {
-		return *m.MvmMachine.Spec.ProviderID
+		return strings.ReplaceAll(*m.MvmMachine.Spec.ProviderID, ProviderPrefix, "")
 	}
 
 	return ""
@@ -131,7 +135,7 @@ func (m *MachineScope) Namespace() string {
 
 // ClusterName returns the name of the cluster.
 func (m *MachineScope) ClusterName() string {
-	return m.Cluster.ClusterName
+	return m.Cluster.Name
 }
 
 // ControllerName returns the name of the controller that created the scope.
@@ -244,7 +248,28 @@ func (m *MachineScope) SetNotReady(
 
 // SetProviderID saves the unique microvm and object ID to the MvmMachine spec.
 func (m *MachineScope) SetProviderID(mvmUID *string) {
-	m.MvmMachine.Spec.ProviderID = mvmUID
+	providerID := fmt.Sprintf("%s%s", ProviderPrefix, *mvmUID)
+	m.MvmMachine.Spec.ProviderID = &providerID
+}
+
+// GetProviderID returns the provider if for the machine. If there is no provider id
+// then an empty string will be returned.
+func (m *MachineScope) GetProviderID() string {
+	if m.MvmMachine.Spec.ProviderID != nil {
+		return *m.MvmMachine.Spec.ProviderID
+	}
+
+	return ""
+}
+
+// GetInstanceID gets the instance ID (i.e. UID) of the machine.
+func (m *MachineScope) GetInstanceID() string {
+	parsed, err := noderefutil.NewProviderID(m.GetProviderID())
+	if err != nil {
+		return ""
+	}
+
+	return parsed.ID()
 }
 
 // SetFailureDomain saves the microvm host address to the MvmMachine spec.
