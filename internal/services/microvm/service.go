@@ -36,12 +36,14 @@ type Service struct {
 	scope *scope.MachineScope
 
 	client Client
+	hostID string
 }
 
-func New(scope *scope.MachineScope, client Client) *Service {
+func New(scope *scope.MachineScope, client Client, hostID string) *Service {
 	return &Service{
 		scope:  scope,
 		client: client,
+		hostID: hostID,
 	}
 }
 
@@ -108,7 +110,7 @@ func (s *Service) Delete(ctx context.Context) (*emptypb.Empty, error) {
 		Info("Deleting microvm for machine", "machine-name", s.scope.Name(), "cluster-name", s.scope.ClusterName())
 
 	input := &flintlockv1.DeleteMicroVMRequest{
-		Uid: s.scope.UID(),
+		Uid: s.scope.GetInstanceID(),
 	}
 
 	return s.client.DeleteMicroVM(ctx, input)
@@ -184,6 +186,7 @@ func (s *Service) createInstanceData() (string, error) {
 		instance.WithLocalHostname(s.scope.Name()),
 		instance.WithPlatform(platformLiquidMetal),
 		instance.WithClusterName(s.scope.ClusterName()),
+		instance.WithKeyValue("vm_host", s.hostID),
 	)
 
 	userMeta, err := yaml.Marshal(userMetadata)

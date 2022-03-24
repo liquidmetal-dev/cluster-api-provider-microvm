@@ -13,7 +13,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
@@ -155,7 +154,14 @@ func (r *MicrovmMachineReconciler) reconcileDelete(
 ) (reconcile.Result, error) {
 	machineScope.Info("Reconciling MicrovmMachine delete")
 
-	mvmSvc, err := r.getMicrovmService(machineScope)
+	failureDomain, err := machineScope.GetFailureDomain()
+	if err != nil {
+		machineScope.Error(err, "failed to get the failure domain")
+
+		return ctrl.Result{}, err
+	}
+
+	mvmSvc, err := r.getMicrovmService(failureDomain, machineScope)
 	if err != nil {
 		machineScope.Error(err, "failed to get microvm service")
 
@@ -234,7 +240,14 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 		"machine", machineScope.MvmMachine.Name,
 		"secret", machineScope.Machine.Spec.Bootstrap.DataSecretName)
 
-	mvmSvc, err := r.getMicrovmService(machineScope)
+	failureDomain, err := machineScope.GetFailureDomain()
+	if err != nil {
+		machineScope.Error(err, "failed to get the failure domain")
+
+		return ctrl.Result{}, err
+	}
+
+	mvmSvc, err := r.getMicrovmService(failureDomain, machineScope)
 	if err != nil {
 		machineScope.Error(err, "failed to get microvm service")
 
@@ -244,7 +257,6 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 	var microvm *flintlocktypes.MicroVM
 
 	providerID := machineScope.GetProviderID()
-
 	if providerID != "" {
 		var err error
 
@@ -275,7 +287,7 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 		}
 	}
 
-	machineScope.SetProviderID(microvm.Spec.Uid)
+	machineScope.SetProviderID(failureDomain, *microvm.Spec.Uid)
 
 	if err := machineScope.Patch(); err != nil {
 		machineScope.Error(err, "unable to patch microvm machine")
@@ -286,22 +298,10 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 	return r.parseMicroVMState(machineScope, microvm.Status.State)
 }
 
-func (r *MicrovmMachineReconciler) getMicrovmService(machineScope *scope.MachineScope) (*microvm.Service, error) {
+func (r *MicrovmMachineReconciler) getMicrovmService(addr string,
+	machineScope *scope.MachineScope) (*microvm.Service, error) {
 	if r.MvmClientFunc == nil {
 		return nil, errClientFactoryFuncRequired
-	}
-
-	addr, err := machineScope.MicrovmServiceAddress()
-	if err != nil {
-		return nil, err
-	}
-
-	machineScope.SetFailureDomain(pointer.String(addr))
-
-	if err := machineScope.Patch(); err != nil {
-		machineScope.Error(err, "unable to patch microvm machine")
-
-		return nil, err
 	}
 
 	client, err := r.MvmClientFunc(addr, machineScope.MvmCluster.Spec.MicrovmProxy)
@@ -309,7 +309,7 @@ func (r *MicrovmMachineReconciler) getMicrovmService(machineScope *scope.Machine
 		return nil, fmt.Errorf("creating microvm client: %w", err)
 	}
 
-	return microvm.New(machineScope, client), nil
+	return microvm.New(machineScope, client, addr), nil
 }
 
 func (r *MicrovmMachineReconciler) parseMicroVMState(
@@ -321,7 +321,7 @@ func (r *MicrovmMachineReconciler) parseMicroVMState(
 	case flintlocktypes.MicroVMStatus_CREATED:
 		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateRunning
 		machineScope.V(defaults.LogLevelDebug).Info("microvm is in created state")
-		machineScope.Info("microvm created", "name", machineScope.Name(), "UID", machineScope.UID())
+		machineScope.Info("microvm created", "name", machineScope.Name(), "UID", machineScope.GetInstanceID())
 		machineScope.SetReady()
 
 		return reconcile.Result{}, nil

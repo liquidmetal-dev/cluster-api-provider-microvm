@@ -364,7 +364,7 @@ func assertMachineReconciled(g *WithT, reconciled *infrav1.MicrovmMachine) {
 	assertMachineVMState(g, reconciled, infrav1.VMStateRunning)
 	assertMachineFinalizer(g, reconciled)
 	g.Expect(reconciled.Spec.ProviderID).ToNot(BeNil())
-	expectedProviderID := fmt.Sprintf("microvm://%s", testMachineUID)
+	expectedProviderID := fmt.Sprintf("microvm://127.0.0.1:9090/%s", testMachineUID)
 	g.Expect(*reconciled.Spec.ProviderID).To(Equal(expectedProviderID))
 	g.Expect(reconciled.Status.Ready).To(BeTrue(), "The Ready property must be true when the machine has been reconciled")
 }

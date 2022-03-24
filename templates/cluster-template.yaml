@@ -50,12 +50,12 @@ spec:
     initConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
-          provider-id: "microvm://{{ ds.meta_data.instance_id }}"
+          provider-id: "microvm://{{ ds.meta_data.vm_host }}/{{ ds.meta_data.instance_id }}"
     clusterConfiguration: {}
     joinConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
-          provider-id: "microvm://{{ ds.meta_data.instance_id }}"
+          provider-id: "microvm://{{ ds.meta_data.vm_host }}/{{ ds.meta_data.instance_id }}"
         ignorePreflightErrors:
          - DirAvailable--etc-kubernetes-manifests
     preKubeadmCommands:
@@ -136,4 +136,4 @@ spec:
       joinConfiguration:
         nodeRegistration:
           kubeletExtraArgs:
-            provider-id: "microvm://{{ ds.meta_data.instance_id }}"
+            provider-id: "microvm://{{ ds.meta_data.vm_host }}/{{ ds.meta_data.instance_id }}"

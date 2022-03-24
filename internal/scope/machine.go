@@ -6,6 +6,8 @@ package scope
 import (
 	"context"
 	"fmt"
+	"hash/crc32"
+	"sort"
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -15,9 +17,7 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/cluster-api/util"
-	"sigs.k8s.io/cluster-api/util/collections"
 	"sigs.k8s.io/cluster-api/util/conditions"
-	"sigs.k8s.io/cluster-api/util/failuredomains"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -114,15 +114,6 @@ type MachineScope struct {
 	ctx            context.Context
 }
 
-// UID returns the MicrovmMachine UID/ProviderID.
-func (m *MachineScope) UID() string {
-	if m.MvmMachine.Spec.ProviderID != nil {
-		return strings.ReplaceAll(*m.MvmMachine.Spec.ProviderID, ProviderPrefix, "")
-	}
-
-	return ""
-}
-
 // Name returns the MicrovmMachine name.
 func (m *MachineScope) Name() string {
 	return m.MvmMachine.Name
@@ -174,30 +165,37 @@ func (m *MachineScope) Patch() error {
 	return nil
 }
 
-// MicrovmServiceAddress will return the address of the microvm service to call. Any precedence
-// logic needs to sit here.
-func (m *MachineScope) MicrovmServiceAddress() (string, error) {
-	if m.MvmMachine.Spec.FailureDomain != nil && *m.MvmMachine.Spec.FailureDomain != "" {
-		return *m.MvmMachine.Spec.FailureDomain, nil
-	}
-
+func (m *MachineScope) GetFailureDomain() (string, error) {
 	if m.Machine.Spec.FailureDomain != nil && *m.Machine.Spec.FailureDomain != "" {
 		return *m.Machine.Spec.FailureDomain, nil
 	}
 
-	machinesList, err := m.getMachinesInCluster()
-	if err != nil {
-		return "", fmt.Errorf("getting machines in cluster: %w", err)
+	providerID := m.GetProviderID()
+	if providerID != "" {
+		failureDomain := m.getFailureDomainFromProviderID(providerID)
+
+		return failureDomain, nil
 	}
 
-	machines := collections.FromMachineList(machinesList)
-
-	failureDomain := failuredomains.PickFewest(m.Cluster.Status.FailureDomains, machines)
-	if failureDomain == nil {
-		return "", errNoServiceAddress
+	// If we've got this far then we need to work out how to get a failure domain. In the future we will make
+	// the strategy configurable for static placement and also add support for the scheduler.
+	failureDomainNames := make([]string, 0, len(m.Cluster.Status.FailureDomains))
+	for fdName := range m.Cluster.Status.FailureDomains {
+		failureDomainNames = append(failureDomainNames, fdName)
 	}
 
-	return *failureDomain, nil
+	if len(failureDomainNames) == 0 {
+		return "", errFailureDomainNotFound
+	}
+
+	if len(failureDomainNames) == 1 {
+		return failureDomainNames[0], nil
+	}
+
+	sort.Strings(failureDomainNames)
+	pos := int(crc32.ChecksumIEEE([]byte(m.MvmMachine.Name))) % len(failureDomainNames)
+
+	return failureDomainNames[pos], nil
 }
 
 // GetRawBootstrapData will return the contents of the secret that has been created by the
@@ -247,8 +245,8 @@ func (m *MachineScope) SetNotReady(
 }
 
 // SetProviderID saves the unique microvm and object ID to the MvmMachine spec.
-func (m *MachineScope) SetProviderID(mvmUID *string) {
-	providerID := fmt.Sprintf("%s%s", ProviderPrefix, *mvmUID)
+func (m *MachineScope) SetProviderID(failureDomain, mvmUID string) {
+	providerID := fmt.Sprintf("%s%s/%s", ProviderPrefix, failureDomain, mvmUID)
 	m.MvmMachine.Spec.ProviderID = &providerID
 }
 
@@ -272,11 +270,6 @@ func (m *MachineScope) GetInstanceID() string {
 	return parsed.ID()
 }
 
-// SetFailureDomain saves the microvm host address to the MvmMachine spec.
-func (m *MachineScope) SetFailureDomain(hostAddress *string) {
-	m.MvmMachine.Spec.FailureDomain = hostAddress
-}
-
 // GetSSHPublicKey will return the SSH public key for this machine. It will take into account
 // precedence rules. If there is no key then an empty string will be returned.
 func (m *MachineScope) GetSSHPublicKey() string {
@@ -291,14 +284,13 @@ func (m *MachineScope) GetSSHPublicKey() string {
 	return ""
 }
 
-func (m *MachineScope) getMachinesInCluster() (*clusterv1.MachineList, error) {
-	list := &clusterv1.MachineList{}
-	labels := map[string]string{clusterv1.ClusterLabelName: m.ClusterName()}
-
-	err := m.client.List(m.ctx, list, client.InNamespace(m.Cluster.Namespace), client.MatchingLabels(labels))
-	if err != nil {
-		return nil, fmt.Errorf("unable to list resources: %w", err)
+func (m *MachineScope) getFailureDomainFromProviderID(providerID string) string {
+	if providerID == "" {
+		return ""
 	}
 
-	return list, nil
+	providerID = strings.ReplaceAll(providerID, ProviderPrefix, "")
+	parts := strings.Split(providerID, "/")
+
+	return parts[0]
 }
