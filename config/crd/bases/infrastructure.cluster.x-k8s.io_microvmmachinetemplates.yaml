@@ -68,10 +68,6 @@ spec:
                   spec:
                     description: Spec is the specification of the machine.
                     properties:
-                      failureDomain:
-                        description: FailureDomain is the address of the flintlock
-                          host assigned to this MvmMachine.
-                        type: string
                       initrd:
                         description: Initrd is an optional initial ramdisk to use.
                         properties:

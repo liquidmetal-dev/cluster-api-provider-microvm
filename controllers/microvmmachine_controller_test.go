@@ -275,9 +275,8 @@ func TestMachineReconcileNoVmCreateSucceeds(t *testing.T) {
 	reconciled, err := getMicrovmMachine(client, testMachineName, testClusterNamespace)
 	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
 
-	expectedProviderID := fmt.Sprintf("microvm://%s", testMachineUID)
+	expectedProviderID := fmt.Sprintf("microvm://127.0.0.1:9090/%s", testMachineUID)
 	g.Expect(reconciled.Spec.ProviderID).To(Equal(pointer.String(expectedProviderID)))
-	g.Expect(reconciled.Spec.FailureDomain).To(Equal(pointer.String("127.0.0.1:9090")))
 
 	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmPendingReason)
 	assertMachineVMState(g, reconciled, infrav1.VMStatePending)
@@ -303,7 +302,6 @@ func TestMachineReconcileNoMachineFailureDomainCreateSucceeds(t *testing.T) {
 
 	reconciled, err := getMicrovmMachine(client, testMachineName, testClusterNamespace)
 	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
-	g.Expect(reconciled.Spec.FailureDomain).To(Equal(pointer.String("127.0.0.1:9090")))
 	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmPendingReason)
 	assertMachineVMState(g, reconciled, infrav1.VMStatePending)
 	assertMachineFinalizer(g, reconciled)
@@ -405,6 +403,7 @@ func TestMachineReconcileDeleteVmSucceeds(t *testing.T) {
 	apiObjects.MvmMachine.DeletionTimestamp = &metav1.Time{
 		Time: time.Now(),
 	}
+	apiObjects.MvmMachine.Spec.ProviderID = pointer.String(fmt.Sprintf("microvm://127.0.0.1:9090/%s", testMachineUID))
 	apiObjects.MvmMachine.Finalizers = []string{v1alpha1.MachineFinalizer}
 
 	fakeAPIClient := mock_client.FakeClient{}
