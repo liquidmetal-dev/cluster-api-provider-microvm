@@ -298,7 +298,8 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 	return r.parseMicroVMState(machineScope, microvm.Status.State)
 }
 
-func (r *MicrovmMachineReconciler) getMicrovmService(addr string,
+func (r *MicrovmMachineReconciler) getMicrovmService(
+	addr string,
 	machineScope *scope.MachineScope) (*microvm.Service, error) {
 	if r.MvmClientFunc == nil {
 		return nil, errClientFactoryFuncRequired
