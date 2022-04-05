@@ -172,9 +172,7 @@ func (m *MachineScope) GetFailureDomain() (string, error) {
 
 	providerID := m.GetProviderID()
 	if providerID != "" {
-		failureDomain := m.getFailureDomainFromProviderID(providerID)
-
-		return failureDomain, nil
+		return m.getFailureDomainFromProviderID(providerID), nil
 	}
 
 	// If we've got this far then we need to work out how to get a failure domain. In the future we will make
