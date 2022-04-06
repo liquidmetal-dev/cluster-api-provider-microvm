@@ -1,5 +1,7 @@
 # Releasing CAPMVM
 
+> IMPORTANT - before doing a release that updates the major or minor version make sure you have updated and commited [metadata.yaml](https://github.com/weaveworks/cluster-api-provider-microvm/blob/main/metadata.yaml) with the new version.
+
 ## Determine release version
 
 The projects follows [semantic versioning](https://semver.org/#semantic-versioning-200)
