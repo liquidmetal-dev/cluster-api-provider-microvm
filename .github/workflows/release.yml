@@ -32,6 +32,8 @@ jobs:
       run: make docker-push TAG=${{ env.TAG }}
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     needs: [build]
     steps:
     - name: Checkout
@@ -46,7 +48,7 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        prerelease: true
+        prerelease: false
         draft: true
         fail_on_unmatched_files: true
         generate_release_notes: true
