@@ -6,9 +6,11 @@ require (
 	github.com/go-logr/logr v0.4.0
 	github.com/onsi/gomega v1.18.1
 	github.com/spf13/pflag v1.0.5
+	github.com/weaveworks-liquidmetal/flintlock/api v0.0.0-20220510103109-fab05d0b1346
+	github.com/weaveworks-liquidmetal/flintlock/client v0.0.0-20220510103109-fab05d0b1346
 	github.com/yitsushi/macpot v1.0.2
 	google.golang.org/grpc v1.44.0
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/protobuf v1.28.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.22.4
 	k8s.io/apimachinery v0.22.4
@@ -58,8 +60,6 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.26.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
-	github.com/weaveworks-liquidmetal/flintlock/api v0.0.0-20220510103109-fab05d0b1346 // indirect
-	github.com/weaveworks-liquidmetal/flintlock/client v0.0.0-20220510103109-fab05d0b1346 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/net v0.0.0-20210520170846-37e1c6afe023 // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
