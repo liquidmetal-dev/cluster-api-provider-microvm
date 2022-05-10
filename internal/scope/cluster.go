@@ -14,8 +14,8 @@ import (
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
+	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/defaults"
 )
 
 var _ Scoper = &ClusterScope{}

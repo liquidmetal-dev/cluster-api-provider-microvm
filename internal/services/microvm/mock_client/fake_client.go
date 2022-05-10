@@ -5,8 +5,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/services/microvm"
-	"github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/services/microvm"
+	"github.com/weaveworks-liquidmetal/flintlock/api/services/microvm/v1alpha1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )

@@ -4,10 +4,10 @@
 package microvm
 
 import (
-	flintlocktypes "github.com/weaveworks/flintlock/api/types"
+	flintlocktypes "github.com/weaveworks-liquidmetal/flintlock/api/types"
 
-	"github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/scope"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/scope"
 )
 
 const platformLiquidMetal = "liquid_metal"

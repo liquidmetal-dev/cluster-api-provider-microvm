@@ -24,13 +24,13 @@ import (
 	fakeremote "sigs.k8s.io/cluster-api/controllers/remote/fake"
 	"sigs.k8s.io/cluster-api/util/conditions"
 
-	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
-	"github.com/weaveworks/cluster-api-provider-microvm/controllers"
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/services/microvm"
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/services/microvm/mock_client"
-	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
-	flintlocktypes "github.com/weaveworks/flintlock/api/types"
-	"github.com/weaveworks/flintlock/client/cloudinit/userdata"
+	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/controllers"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/services/microvm"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/services/microvm/mock_client"
+	flintlockv1 "github.com/weaveworks-liquidmetal/flintlock/api/services/microvm/v1alpha1"
+	flintlocktypes "github.com/weaveworks-liquidmetal/flintlock/api/types"
+	"github.com/weaveworks-liquidmetal/flintlock/client/cloudinit/userdata"
 )
 
 const (

@@ -8,18 +8,18 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
-	flintlocktypes "github.com/weaveworks/flintlock/api/types"
-	"github.com/weaveworks/flintlock/client/cloudinit/instance"
-	"github.com/weaveworks/flintlock/client/cloudinit/userdata"
+	flintlockv1 "github.com/weaveworks-liquidmetal/flintlock/api/services/microvm/v1alpha1"
+	flintlocktypes "github.com/weaveworks-liquidmetal/flintlock/api/types"
+	"github.com/weaveworks-liquidmetal/flintlock/client/cloudinit/instance"
+	"github.com/weaveworks-liquidmetal/flintlock/client/cloudinit/userdata"
 	"github.com/yitsushi/macpot"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gopkg.in/yaml.v2"
 	"k8s.io/utils/pointer"
 
-	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/scope"
+	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/defaults"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/scope"
 )
 
 const (
