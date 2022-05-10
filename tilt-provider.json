@@ -2,7 +2,7 @@
     {
       "name": "microvm",
       "config": {
-        "image": "ghcr.io/weaveworks/cluster-api-provider-microvm:dev",
+        "image": "ghcr.io/weaveworks-liquidmetal/cluster-api-provider-microvm:dev",
         "live_reload_deps": [
           "main.go",
           "go.mod",

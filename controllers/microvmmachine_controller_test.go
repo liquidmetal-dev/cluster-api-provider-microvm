@@ -17,11 +17,11 @@ import (
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
-	flintlocktypes "github.com/weaveworks/flintlock/api/types"
+	flintlocktypes "github.com/weaveworks-liquidmetal/flintlock/api/types"
 
-	"github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
-	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/services/microvm/mock_client"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
+	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/services/microvm/mock_client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

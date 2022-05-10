@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	flintlocktypes "github.com/weaveworks/flintlock/api/types"
+	flintlocktypes "github.com/weaveworks-liquidmetal/flintlock/api/types"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -29,10 +29,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/defaults"
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/scope"
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/services/microvm"
+	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/defaults"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/scope"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/services/microvm"
 )
 
 // MicrovmMachineReconciler reconciles a MicrovmMachine object.

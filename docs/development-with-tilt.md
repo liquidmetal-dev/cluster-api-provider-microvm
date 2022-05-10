@@ -25,7 +25,7 @@ This guide show how you can use **Tilt** for interactive development/debugging.
     cd src/github.com/weaveworks
     git clone git@github.com:<GITHUBUSERNAME>/cluster-api-provider-microvm.git
     cd cluster-api-provider-microvm
-    git remote add upstream git@github.com:weaveworks/cluster-api-provider-microvm.git
+    git remote add upstream git@github.com:weaveworks-liquidmetal/cluster-api-provider-microvm.git
     git fetch upstream
     ```
 
@@ -45,7 +45,7 @@ In your cluster-api folder create a file called **tilt-settings.json**:
 ```json
 {
     "default_registry": "gcr.io/yourusername",
-    "provider_repos": ["../../github.com/weaveworks/cluster-api-provider-microvm"],
+    "provider_repos": ["../../github.com/weaveworks-liquidmetal/cluster-api-provider-microvm"],
     "enable_providers": ["microvm", "kubeadm-bootstrap", "kubeadm-control-plane"],
     "kustomize_substitutions": {
         "EXP_MACHINE_POOL": "true",
@@ -84,7 +84,7 @@ When tilt is started you can press the **spacebar** to open up a browser based U
 
 ## Start flintlock
 
-Ensure that you have an instance of flintlock (and containerd) [configured and running](https://github.com/weaveworks/flintlock/blob/main/docs/quick-start.md).
+Ensure that you have an instance of flintlock (and containerd) [configured and running](https://github.com/weaveworks-liquidmetal/flintlock/blob/main/docs/quick-start.md).
 Be sure to start flintlock with `--grpc-endpoint=0.0.0.0:9090` or the CAPMVM controller
 will not be able to connect to the server from within the Kind cluster.
 

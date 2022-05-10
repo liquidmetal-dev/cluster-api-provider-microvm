@@ -1,4 +1,4 @@
-module github.com/weaveworks/cluster-api-provider-microvm/hack/tools
+module github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/hack/tools
 
 go 1.17
 

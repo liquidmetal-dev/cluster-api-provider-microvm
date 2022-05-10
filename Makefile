@@ -7,7 +7,7 @@ SHELL = /usr/bin/env bash -o pipefail
 TAG ?= dev
 ARCH ?= amd64
 REGISTRY ?= ghcr.io
-ORG ?= weaveworks
+ORG ?= weaveworks-liquidmetal
 CONTROLLER_IMAGE_NAME := cluster-api-provider-microvm
 CONTROLLER_IMAGE ?= $(REGISTRY)/$(ORG)/$(CONTROLLER_IMAGE_NAME)
 
@@ -24,7 +24,7 @@ WEBHOOK_ROOT ?= $(MANIFEST_ROOT)/webhook
 RBAC_ROOT ?= $(MANIFEST_ROOT)/rbac
 
 # Set --output-base for conversion-gen if we are not within GOPATH
-ifneq ($(abspath $(REPO_ROOT)),$(shell go env GOPATH)/src/github.com/weaveworks/cluster-api-provider-microvm)
+ifneq ($(abspath $(REPO_ROOT)),$(shell go env GOPATH)/src/github.com/weaveworks-liquidmetal/cluster-api-provider-microvm)
 	GEN_OUTPUT_BASE := --output-base=$(REPO_ROOT)
 else
 	export GOPATH := $(shell go env GOPATH)

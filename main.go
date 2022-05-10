@@ -26,8 +26,8 @@ import (
 	"time"
 
 	"github.com/spf13/pflag"
-	flintlockv1 "github.com/weaveworks/flintlock/api/services/microvm/v1alpha1"
-	flgrpc "github.com/weaveworks/flintlock/client/grpc"
+	flintlockv1 "github.com/weaveworks-liquidmetal/flintlock/api/services/microvm/v1alpha1"
+	flgrpc "github.com/weaveworks-liquidmetal/flintlock/client/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -44,10 +44,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	//+kubebuilder:scaffold:imports
-	infrav1 "github.com/weaveworks/cluster-api-provider-microvm/api/v1alpha1"
-	"github.com/weaveworks/cluster-api-provider-microvm/controllers"
-	"github.com/weaveworks/cluster-api-provider-microvm/internal/services/microvm"
-	"github.com/weaveworks/cluster-api-provider-microvm/version"
+	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/controllers"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/services/microvm"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/version"
 )
 
 //nolint:gochecknoinits // Maybe we can remove it, now just ignore.
