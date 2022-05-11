@@ -1,7 +1,9 @@
 # Cluster API provider Microvm
 
-![GitHub](https://img.shields.io/github/license/weaveworks-liquidmetal/cluster-api-provider-microvm)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/weaveworks-liquidmetal/cluster-api-provider-microvm)
 [![Go Report Card](https://goreportcard.com/badge/github.com/weaveworks-liquidmetal/cluster-api-provider-microvm)](https://goreportcard.com/report/github.com/weaveworks-liquidmetal/cluster-api-provider-microvm)
+[![Slack](https://img.shields.io/badge/join%20slack-%23liquid--metal-brightgreen)](https://weave-community.slack.com/archives/C02KARWGR7S)
 
 ------
 
