@@ -205,9 +205,8 @@ func createMicrovmCluster() *infrav1.MicrovmCluster {
 func createCluster() *clusterv1.Cluster {
 	return &clusterv1.Cluster{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        testClusterName,
-			Namespace:   testClusterNamespace,
-			ClusterName: testClusterName,
+			Name:      testClusterName,
+			Namespace: testClusterNamespace,
 		},
 		Spec: clusterv1.ClusterSpec{
 			InfrastructureRef: &corev1.ObjectReference{
