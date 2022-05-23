@@ -3,7 +3,7 @@ module github.com/weaveworks-liquidmetal/cluster-api-provider-microvm
 go 1.17
 
 require (
-	github.com/go-logr/logr v0.4.0
+	github.com/go-logr/logr v1.2.0
 	github.com/onsi/gomega v1.19.0
 	github.com/spf13/pflag v1.0.5
 	github.com/weaveworks-liquidmetal/flintlock/api v0.0.0-20220510103109-fab05d0b1346
@@ -16,7 +16,7 @@ require (
 	k8s.io/apimachinery v0.22.4
 	k8s.io/client-go v0.22.4
 	k8s.io/klog v1.0.0
-	k8s.io/klog/v2 v2.9.0
+	k8s.io/klog/v2 v2.60.1
 	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b
 	sigs.k8s.io/cluster-api v1.0.2
 	sigs.k8s.io/controller-runtime v0.10.3
