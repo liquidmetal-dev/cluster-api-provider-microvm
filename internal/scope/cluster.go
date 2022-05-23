@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-	"k8s.io/klog/klogr"
+	"k8s.io/klog/v2/klogr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
@@ -95,7 +95,7 @@ func (cs *ClusterScope) Namespace() string {
 
 // ClusterName returns the name of the cluster.
 func (cs *ClusterScope) ClusterName() string {
-	return cs.Cluster.ClusterName
+	return cs.Cluster.Name
 }
 
 // ControllerName returns the name of the controller that created the scope.

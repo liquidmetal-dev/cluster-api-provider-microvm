@@ -3,12 +3,8 @@
 
 package scope
 
-import "github.com/go-logr/logr"
-
 // Scoper is the interface for a scope.
 type Scoper interface {
-	logr.Logger
-
 	// Name returns the name of the resource.
 	Name() string
 	// Namespace returns the resources namespace.
