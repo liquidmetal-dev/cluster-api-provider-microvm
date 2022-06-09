@@ -119,11 +119,24 @@ spec:
                     - hosts
                     type: object
                 type: object
-              sshPublicKey:
-                description: SSHPublicKey is an SSH public key that will be used with
-                  the default user. If specified this will apply to all machine created
-                  unless you specify a different key at the machine level.
-                type: string
+              sshPublicKeys:
+                description: SSHPublicKeys is a list of SSHPublicKeys and their associated
+                  users. If specified these keys will be applied to all machine created
+                  unless you specify different keys at the machine level.
+                items:
+                  properties:
+                    authorizedKeys:
+                      description: AuthorizedKeys is a list of public keys to add
+                        to the user
+                      items:
+                        type: string
+                      type: array
+                    user:
+                      description: User is the name of the user to add keys for (eg
+                        root, ubuntu).
+                      type: string
+                  type: object
+                type: array
             required:
             - placement
             type: object

@@ -24,6 +24,7 @@ import (
 	fakeremote "sigs.k8s.io/cluster-api/controllers/remote/fake"
 	"sigs.k8s.io/cluster-api/util/conditions"
 
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/controllers"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/services/microvm"
@@ -395,30 +396,28 @@ func assertMachineNotReady(g *WithT, machine *infrav1.MicrovmMachine) {
 	g.Expect(machine.Status.Ready).To(BeFalse())
 }
 
-func assertVendorData(g *WithT, vendorDataRaw string, expectedSSHKey string) {
+func assertVendorData(g *WithT, vendorDataRaw string, expectedSSHKeys []v1alpha1.SSHPublicKey) {
 	g.Expect(vendorDataRaw).ToNot(Equal(""))
+	g.Expect(expectedSSHKeys).ToNot(BeNil())
 
 	data, err := base64.StdEncoding.DecodeString(vendorDataRaw)
 	g.Expect(err).NotTo(HaveOccurred(), "expect vendor data to be base64 encoded")
 
-	if expectedSSHKey != "" {
-		vendorData := &userdata.UserData{}
+	vendorData := &userdata.UserData{}
+	g.Expect(yaml.Unmarshal(data, vendorData)).To(Succeed(), "expect vendor data to unmarshall to cloud-init userdata")
 
-		unmarshallErr := yaml.Unmarshal(data, vendorData)
-		g.Expect(unmarshallErr).NotTo(HaveOccurred(), "expect vendor data to unmarshall to cloud-init userdata")
-		g.Expect(vendorData.Users).NotTo(BeNil())
-		users := vendorData.Users
-		g.Expect(users).To(HaveLen(2))
-		for i := range users {
-			user := users[i]
+	users := vendorData.Users
+	g.Expect(users).NotTo(BeNil())
+	g.Expect(len(users)).To(Equal(len(expectedSSHKeys)))
 
-			g.Expect(user.SSHAuthorizedKeys).NotTo(BeNil())
-			keys := user.SSHAuthorizedKeys
-			g.Expect(keys).To(HaveLen(1))
-			g.Expect(keys[0]).To(Equal(expectedSSHKey))
-		}
+	for i, user := range users {
+		g.Expect(user.Name).To(Equal(expectedSSHKeys[i].User))
 
-		vendorDataStr := string(data)
-		g.Expect(vendorDataStr).To(ContainSubstring("#cloud-config\n"))
+		keys := user.SSHAuthorizedKeys
+		g.Expect(keys).To(HaveLen(1))
+		g.Expect(keys[0]).To(Equal(expectedSSHKeys[i].AuthorizedKeys[0]))
 	}
+
+	vendorDataStr := string(data)
+	g.Expect(vendorDataStr).To(ContainSubstring("#cloud-config\n"))
 }
