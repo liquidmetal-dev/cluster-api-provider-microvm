@@ -19,3 +19,11 @@ var (
 
 	errFailureDomainNotFound = errors.New("no failure domains found on the cluster")
 )
+
+type tlsError struct {
+	key string
+}
+
+func (t *tlsError) Error() string {
+	return "required key missing from TLS config data: " + t.key
+}

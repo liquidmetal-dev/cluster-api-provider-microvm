@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/scope"
 )
@@ -96,22 +97,30 @@ func TestMachineGetBasicAuthToken(t *testing.T) {
 	hostName := "hostwiththemost"
 	token := "foo"
 
-	mvmCluster := newMicrovmClusterWithAuth(clusterName, secretName)
+	mvmCluster := newMicrovmClusterWithSpec(clusterName, v1alpha1.MicrovmClusterSpec{
+		Placement: infrav1.Placement{
+			StaticPool: &infrav1.StaticPoolPlacement{
+				BasicAuthSecret: secretName,
+			},
+		},
+	})
 	otherCluster := newMicrovmCluster(clusterName)
-	secret := newSecret(secretName, hostName, token)
-	otherSecret := newSecret(secretName, "differentone", token)
+	secret := newSecret(secretName, map[string][]byte{hostName: []byte(token)})
+	otherSecret := newSecret(secretName, map[string][]byte{"differentone": []byte(token)})
 
 	tt := []struct {
 		name        string
 		expected    string
 		expectedErr func(error)
 		initObjects []client.Object
+		cluster     *infrav1.MicrovmCluster
 	}{
 		{
 			name: "when the token is found in the secret, it is returned",
 			initObjects: []client.Object{
 				mvmCluster, secret,
 			},
+			cluster:  mvmCluster,
 			expected: token,
 			expectedErr: func(err error) {
 				Expect(err).NotTo(HaveOccurred())
@@ -120,6 +129,7 @@ func TestMachineGetBasicAuthToken(t *testing.T) {
 		{
 			name:        "when the secret does not exist, returns the error",
 			initObjects: []client.Object{mvmCluster},
+			cluster:     mvmCluster,
 			expected:    "",
 			expectedErr: func(err error) {
 				Expect(err).To(HaveOccurred())
@@ -128,6 +138,7 @@ func TestMachineGetBasicAuthToken(t *testing.T) {
 		{
 			name:        "when the secret does not contain hostname key, empty string is returned",
 			initObjects: []client.Object{mvmCluster, otherSecret},
+			cluster:     mvmCluster,
 			expected:    "",
 			expectedErr: func(err error) {
 				Expect(err).NotTo(HaveOccurred())
@@ -136,6 +147,7 @@ func TestMachineGetBasicAuthToken(t *testing.T) {
 		{
 			name:        "when the secret name is not set on the cluster, empty string is returned",
 			initObjects: []client.Object{otherCluster, otherSecret},
+			cluster:     otherCluster,
 			expected:    "",
 			expectedErr: func(err error) {
 				Expect(err).NotTo(HaveOccurred())
@@ -149,7 +161,7 @@ func TestMachineGetBasicAuthToken(t *testing.T) {
 			machineScope, err := scope.NewMachineScope(scope.MachineScopeParams{
 				Client:         client,
 				Cluster:        &clusterv1.Cluster{},
-				MicroVMCluster: mvmCluster,
+				MicroVMCluster: tc.cluster,
 				Machine:        &clusterv1.Machine{},
 				MicroVMMachine: &infrav1.MicrovmMachine{},
 			})
@@ -158,6 +170,102 @@ func TestMachineGetBasicAuthToken(t *testing.T) {
 			token, err := machineScope.GetBasicAuthToken(hostName)
 			tc.expectedErr(err)
 			Expect(token).To(Equal(tc.expected))
+		})
+	}
+}
+
+func TestMachineGetTLSConfig(t *testing.T) {
+	RegisterTestingT(t)
+
+	scheme, err := setupScheme()
+	Expect(err).NotTo(HaveOccurred())
+
+	clusterName := "testcluster"
+	secretName := "testsecret"
+
+	mvmCluster := newMicrovmClusterWithSpec(clusterName, v1alpha1.MicrovmClusterSpec{
+		TLSSecretRef: secretName,
+	})
+	otherCluster := newMicrovmCluster(clusterName)
+
+	data := map[string][]byte{
+		"cert": []byte("Zm9v"),
+		"key":  []byte("YmFy"),
+		"ca":   []byte("YmF6"),
+	}
+	secret := newSecret(secretName, data)
+	badData := map[string][]byte{
+		"not": []byte("great"),
+	}
+	otherSecret := newSecret(secretName, badData)
+
+	tt := []struct {
+		name        string
+		expected    func(*v1alpha1.TLSConfig, error)
+		initObjects []client.Object
+		cluster     *infrav1.MicrovmCluster
+	}{
+		{
+			name: "returns the TLS config from the secret",
+			initObjects: []client.Object{
+				mvmCluster, secret,
+			},
+			cluster: mvmCluster,
+			expected: func(cfg *v1alpha1.TLSConfig, err error) {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(cfg).ToNot(BeNil())
+				Expect(cfg.Cert).To(Equal("foo"))
+				Expect(cfg.Key).To(Equal("bar"))
+				Expect(cfg.CACert).To(Equal("baz"))
+			},
+		},
+		{
+			name: "when the secret does not exist, returns an error",
+			initObjects: []client.Object{
+				mvmCluster,
+			},
+			cluster: mvmCluster,
+			expected: func(cfg *v1alpha1.TLSConfig, err error) {
+				Expect(err).To(HaveOccurred())
+			},
+		},
+		{
+			name: "when the TLSSecretRef is not set on the cluster, returns nil",
+			initObjects: []client.Object{
+				otherCluster,
+			},
+			cluster: otherCluster,
+			expected: func(cfg *v1alpha1.TLSConfig, err error) {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(cfg).To(BeNil())
+			},
+		},
+		{
+			name: "when the secret data does not contain the `cert` key, returns an error",
+			initObjects: []client.Object{
+				mvmCluster, otherSecret,
+			},
+			cluster: mvmCluster,
+			expected: func(cfg *v1alpha1.TLSConfig, err error) {
+				Expect(err).To(HaveOccurred())
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			RegisterTestingT(t)
+			client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(tc.initObjects...).Build()
+			machineScope, err := scope.NewMachineScope(scope.MachineScopeParams{
+				Client:         client,
+				Cluster:        &clusterv1.Cluster{},
+				MicroVMCluster: tc.cluster,
+				Machine:        &clusterv1.Machine{},
+				MicroVMMachine: &infrav1.MicrovmMachine{},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			tc.expected(machineScope.GetTLSConfig())
 		})
 	}
 }
@@ -359,24 +467,18 @@ func newMicrovmMachine(clusterName, machineName string, providerID string) *infr
 	return mvmMachine
 }
 
-func newMicrovmClusterWithAuth(name, secretname string) *infrav1.MicrovmCluster {
+func newMicrovmClusterWithSpec(name string, spec v1alpha1.MicrovmClusterSpec) *infrav1.MicrovmCluster {
 	cluster := newMicrovmCluster(name)
-	cluster.Spec.Placement = infrav1.Placement{
-		StaticPool: &infrav1.StaticPoolPlacement{
-			BasicAuthSecret: secretname,
-		},
-	}
+	cluster.Spec = spec
 	return cluster
 }
 
-func newSecret(name, address, token string) *v1.Secret {
+func newSecret(name string, data map[string][]byte) *v1.Secret {
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: "default",
 		},
-		Data: map[string][]byte{
-			address: []byte(token),
-		},
+		Data: data,
 	}
 }

@@ -1,12 +1,15 @@
 package client
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/url"
 
 	flintlockv1 "github.com/weaveworks-liquidmetal/flintlock/api/services/microvm/v1alpha1"
 	flgrpc "github.com/weaveworks-liquidmetal/flintlock/client/grpc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
 	//+kubebuilder:scaffold:imports
@@ -17,6 +20,7 @@ import (
 type clientConfig struct {
 	basicAuthToken string
 	proxy          *infrav1.Proxy
+	tls            *infrav1.TLSConfig
 }
 
 // Options is a func to add a option to the flintlock host client.
@@ -36,15 +40,32 @@ func WithProxy(p *infrav1.Proxy) Options {
 	}
 }
 
+// WithTLS adds TLS credentials to the client.
+func WithTLS(t *infrav1.TLSConfig) Options {
+	return func(c *clientConfig) {
+		c.tls = t
+	}
+}
+
 // FactoryFunc is a func to create a new flintlock client.
 type FactoryFunc func(address string, opts ...Options) (microvm.Client, error)
 
 // NewFlintlockClient returns a connected client to a flintlock host.
 func NewFlintlockClient(address string, opts ...Options) (microvm.Client, error) {
 	cfg := buildConfig(opts...)
+	creds := insecure.NewCredentials()
+
+	if cfg.tls != nil {
+		var err error
+
+		creds, err = loadTLS(cfg.tls)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	dialOpts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithTransportCredentials(creds),
 	}
 
 	if cfg.basicAuthToken != "" {
@@ -78,4 +99,23 @@ func buildConfig(opts ...Options) clientConfig {
 	}
 
 	return cfg
+}
+
+func loadTLS(cfg *infrav1.TLSConfig) (credentials.TransportCredentials, error) {
+	certificate, err := tls.LoadX509KeyPair(cfg.Cert, cfg.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	capool := x509.NewCertPool()
+	if !capool.AppendCertsFromPEM([]byte(cfg.CACert)) {
+		return nil, fmt.Errorf("could not add cert to pool")
+	}
+
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{certificate},
+		RootCAs:      capool,
+	}
+
+	return credentials.NewTLS(tlsConfig), nil
 }

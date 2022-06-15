@@ -5,6 +5,7 @@ package scope
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"hash/crc32"
 	"sort"
@@ -21,6 +22,7 @@ import (
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/defaults"
 )
@@ -312,6 +314,61 @@ func (m *MachineScope) GetBasicAuthToken(addr string) (string, error) {
 	}
 
 	return token, nil
+}
+
+// GetTLSConfig will fetch the TLSSecretRef on the MvmCluster and return the
+// TLS config for the client.
+// If the TLSSecretRef is not set, it will be assumed that the hosts are not
+// configured will TLS and all client calls will be made without credentials.
+func (m *MachineScope) GetTLSConfig() (*v1alpha1.TLSConfig, error) {
+	if m.MvmCluster.Spec.TLSSecretRef == "" {
+		return nil, nil
+	}
+
+	tlsSecret := &corev1.Secret{}
+	secretKey := types.NamespacedName{
+		Name:      m.MvmCluster.Spec.TLSSecretRef,
+		Namespace: m.MvmCluster.Namespace,
+	}
+
+	if err := m.client.Get(context.TODO(), secretKey, tlsSecret); err != nil {
+		return nil, err
+	}
+
+	cert, err := decode(tlsSecret.Data, "cert")
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := decode(tlsSecret.Data, "key")
+	if err != nil {
+		return nil, err
+	}
+
+	ca, err := decode(tlsSecret.Data, "ca")
+	if err != nil {
+		return nil, err
+	}
+
+	return &infrav1.TLSConfig{
+		Cert:   cert,
+		Key:    key,
+		CACert: ca,
+	}, nil
+}
+
+func decode(data map[string][]byte, key string) (string, error) {
+	val, ok := data[key]
+	if !ok {
+		return "", &tlsError{key}
+	}
+
+	dec, err := base64.StdEncoding.DecodeString(string(val))
+	if err != nil {
+		return "", err
+	}
+
+	return string(dec), nil
 }
 
 func (m *MachineScope) getFailureDomainFromProviderID(providerID string) string {

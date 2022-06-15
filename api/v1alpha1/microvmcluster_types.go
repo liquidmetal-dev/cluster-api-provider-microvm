@@ -28,6 +28,24 @@ type MicrovmClusterSpec struct {
 	// MicrovmProxy is the proxy server details to use when calling the microvm service. This is an
 	// alteranative to using the http proxy environment variables and applied purely to the grpc service.
 	MicrovmProxy *Proxy `json:"microvmProxy,omitempty"`
+	// TLSSecretRef is a reference to the name of a secret which contains TLS cert information
+	// for connecting to Flintlock hosts. It is recommended that each flintlock host is configured
+	// with its own cert signed by a common CA, and set to use mTLS.
+	// The CAPMVM client should be provided with the CA, and a client cert and key signed by that CA.
+	// The secret should be created in the same namespace as the MicroVMCluster.
+	// The secret should contain the following data:
+	//
+	// apiVersion: v1
+	// kind: Secret
+	// metadata:
+	// 	name: mytlssecret
+	// type: Opaque
+	// data:
+	// 	cert: YWRtaW4=
+	// 	key: MWYyZDFlMmU2N2Rm
+	// 	ca: Zm9vYmFyCg==
+	// +optional
+	TLSSecretRef string `json:"tlsSecretRef,omitempty"`
 }
 
 type SSHPublicKey struct {

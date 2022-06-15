@@ -313,9 +313,15 @@ func (r *MicrovmMachineReconciler) getMicrovmService(
 		return nil, fmt.Errorf("getting basic auth token: %w", err)
 	}
 
+	tls, err := machineScope.GetTLSConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	clientOpts := []flclient.Options{
 		flclient.WithProxy(machineScope.MvmCluster.Spec.MicrovmProxy),
 		flclient.WithBasicAuth(token),
+		flclient.WithTLS(tls),
 	}
 
 	client, err := r.MvmClientFunc(addr, clientOpts...)
