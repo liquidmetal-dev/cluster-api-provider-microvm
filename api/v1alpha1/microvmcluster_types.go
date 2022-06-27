@@ -28,7 +28,41 @@ type MicrovmClusterSpec struct {
 	// MicrovmProxy is the proxy server details to use when calling the microvm service. This is an
 	// alteranative to using the http proxy environment variables and applied purely to the grpc service.
 	MicrovmProxy *Proxy `json:"microvmProxy,omitempty"`
+	// BundleLookupBaseRegistry is the base Registry URL that is used for pulling byoh bundle images,
+	// if not set, the default will be set to https://projects.registry.vmware.com/cluster_api_provider_bringyourownhost
+	// +optional
+	BundleLookupBaseRegistry string `json:"bundleLookupBaseRegistry,omitempty"`
+	// BundleLookupTag is the tag of the BYOH bundle to be used
+	BundleLookupTag string `json:"bundleLookupTag,omitempty"`
 }
+
+// type MicrovmMixedModeClusterSpec struct {
+// 	MicrovmClusterSpec
+
+// 	AdditionaArgs map[string]string
+// }
+
+// type MicrovmMixedBYOHClusterSpec struct {
+// 	MicrovmClusterSpec
+
+// 	// BundleLookupBaseRegistry is the base Registry URL that is used for pulling byoh bundle images,
+// 	// if not set, the default will be set to https://projects.registry.vmware.com/cluster_api_provider_bringyourownhost
+// 	// +optional
+// 	BundleLookupBaseRegistry string `json:"bundleLookupBaseRegistry,omitempty"`
+
+// 	// BundleLookupTag is the tag of the BYOH bundle to be used
+// 	BundleLookupTag string `json:"bundleLookupTag,omitempty"`
+// }
+
+// type MicrovmMixedMetal3ClusterSpec struct {
+// 	MicrovmClusterSpec
+
+// 	// Determines if the cluster is not to be deployed with an external cloud provider.
+// 	// If set to true, CAPM3 will use node labels to set providerID on the kubernetes nodes.
+// 	// If set to false, providerID is set on nodes by other entities and CAPM3 uses the value of the providerID on the m3m resource.
+// 	// +optional
+// 	NoCloudProvider bool `json:"noCloudProvider,omitempty"`
+// }
 
 // MicrovmClusterStatus defines the observed state of MicrovmCluster.
 type MicrovmClusterStatus struct {
