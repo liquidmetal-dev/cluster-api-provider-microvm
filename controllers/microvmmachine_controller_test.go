@@ -311,11 +311,14 @@ func TestMachineReconcileNoVmCreateClusterSSHSucceeds(t *testing.T) {
 	t.Parallel()
 	g := NewWithT(t)
 
-	expectedSSHKey := "ClusterSSH"
+	expectedKeys := []v1alpha1.SSHPublicKey{{
+		User:           "ubuntu",
+		AuthorizedKeys: []string{"ClusterSSH"},
+	}}
 
 	apiObjects := defaultClusterObjects()
 	apiObjects.MvmMachine.Spec.ProviderID = nil
-	apiObjects.MvmCluster.Spec.SSHPublicKey = expectedSSHKey
+	apiObjects.MvmMachine.Spec.SSHPublicKeys = expectedKeys
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
@@ -336,20 +339,25 @@ func TestMachineReconcileNoVmCreateClusterSSHSucceeds(t *testing.T) {
 	g.Expect(createReq.Microvm.Metadata).To(HaveKeyWithValue("user-data", expectedBootstrapData))
 
 	g.Expect(createReq.Microvm.Metadata).To(HaveKey("vendor-data"), "expect cloud-init vendor-data to be created")
-	assertVendorData(g, createReq.Microvm.Metadata["vendor-data"], expectedSSHKey)
+	assertVendorData(g, createReq.Microvm.Metadata["vendor-data"], expectedKeys)
 }
 
 func TestMachineReconcileNoVmCreateClusterMachineSSHSucceeds(t *testing.T) {
 	t.Parallel()
 	g := NewWithT(t)
 
-	clusterSSH := "ClusterSSH"
-	machineSSH := "MachineSSH"
+	expectedKeys := []v1alpha1.SSHPublicKey{{
+		AuthorizedKeys: []string{"MachineSSH"},
+		User:           "root",
+	}, {
+		AuthorizedKeys: []string{"MachineSSH"},
+		User:           "ubuntu",
+	}}
 
 	apiObjects := defaultClusterObjects()
 	apiObjects.MvmMachine.Spec.ProviderID = nil
-	apiObjects.MvmCluster.Spec.SSHPublicKey = clusterSSH
-	apiObjects.MvmMachine.Spec.SSHPublicKey = machineSSH
+	apiObjects.MvmCluster.Spec.SSHPublicKeys = []v1alpha1.SSHPublicKey{{AuthorizedKeys: []string{"ClusterSSH"}}}
+	apiObjects.MvmMachine.Spec.SSHPublicKeys = expectedKeys
 
 	fakeAPIClient := mock_client.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
@@ -369,7 +377,7 @@ func TestMachineReconcileNoVmCreateClusterMachineSSHSucceeds(t *testing.T) {
 	g.Expect(createReq.Microvm.Metadata).To(HaveKeyWithValue("user-data", expectedBootstrapData))
 
 	g.Expect(createReq.Microvm.Metadata).To(HaveKey("vendor-data"), "expect cloud-init vendor-data to be created")
-	assertVendorData(g, createReq.Microvm.Metadata["vendor-data"], machineSSH)
+	assertVendorData(g, createReq.Microvm.Metadata["vendor-data"], expectedKeys)
 }
 
 func TestMachineReconcileNoVmCreateAdditionReconcile(t *testing.T) {

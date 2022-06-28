@@ -151,24 +151,13 @@ func (s *Service) createVendorData() (string, error) {
 		},
 	}
 
-	// TODO:  allow setting multiple keys #88
-	machineSSHKey := s.scope.GetSSHPublicKey()
-	if machineSSHKey != "" {
-		defaultUser := userdata.User{
-			Name: "ubuntu",
-		}
-		rootUser := userdata.User{
-			Name: "root",
+	for _, key := range s.scope.GetSSHPublicKeys() {
+		user := userdata.User{
+			Name:              key.User,
+			SSHAuthorizedKeys: key.AuthorizedKeys,
 		}
 
-		defaultUser.SSHAuthorizedKeys = []string{
-			machineSSHKey,
-		}
-		rootUser.SSHAuthorizedKeys = []string{
-			machineSSHKey,
-		}
-
-		vendorUserdata.Users = []userdata.User{defaultUser, rootUser}
+		vendorUserdata.Users = append(vendorUserdata.Users, user)
 	}
 
 	data, err := yaml.Marshal(vendorUserdata)

@@ -17,17 +17,26 @@ type MicrovmClusterSpec struct {
 	//
 	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
-	// SSHPublicKey is an SSH public key that will be used with the default user. If specified
-	// this will apply to all machine created unless you specify a different key at the
-	// machine level.
+	// SSHPublicKeys is a list of SSHPublicKeys and their associated users.
+	// If specified these keys will be applied to all machine created unless you
+	// specify different keys at the machine level.
 	// +optional
-	SSHPublicKey string `json:"sshPublicKey,omitempty"`
+	SSHPublicKeys []SSHPublicKey `json:"sshPublicKeys,omitempty"`
 	// Placement specifies how machines for the cluster should be placed onto hosts (i.e. where the microvms are created).
 	// +kubebuilder:validation:Required
 	Placement Placement `json:"placement"`
 	// MicrovmProxy is the proxy server details to use when calling the microvm service. This is an
 	// alteranative to using the http proxy environment variables and applied purely to the grpc service.
 	MicrovmProxy *Proxy `json:"microvmProxy,omitempty"`
+}
+
+type SSHPublicKey struct {
+	// User is the name of the user to add keys for (eg root, ubuntu).
+	// +kubebuilder:validation:Required
+	User string `json:"user,omitempty"`
+	// AuthorizedKeys is a list of public keys to add to the user
+	// +kubebuilder:validation:Required
+	AuthorizedKeys []string `json:"authorizedKeys,omitempty"`
 }
 
 // MicrovmClusterStatus defines the observed state of MicrovmCluster.
