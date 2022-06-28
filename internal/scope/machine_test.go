@@ -181,23 +181,35 @@ func TestMachineGetTLSConfig(t *testing.T) {
 	Expect(err).NotTo(HaveOccurred())
 
 	clusterName := "testcluster"
-	secretName := "testsecret"
+	tlsSecretName := "testtlssecret"
+	caSecretName := "testcasecret"
 
 	mvmCluster := newMicrovmClusterWithSpec(clusterName, v1alpha1.MicrovmClusterSpec{
-		TLSSecretRef: secretName,
+		TLSSecretRef: tlsSecretName,
+		CASecretRef:  caSecretName,
 	})
-	otherCluster := newMicrovmCluster(clusterName)
+	otherClusterNoTLS := newMicrovmClusterWithSpec(clusterName, v1alpha1.MicrovmClusterSpec{
+		CASecretRef: caSecretName,
+	})
+	otherClusterNoCA := newMicrovmClusterWithSpec(clusterName, v1alpha1.MicrovmClusterSpec{
+		TLSSecretRef: tlsSecretName,
+	})
 
-	data := map[string][]byte{
-		"cert": []byte("Zm9v"),
-		"key":  []byte("YmFy"),
-		"ca":   []byte("YmF6"),
+	tlsData := map[string][]byte{
+		"tls.crt": []byte("Zm9v"),
+		"tls.key": []byte("YmFy"),
 	}
-	secret := newSecret(secretName, data)
+	tlsSecret := newSecret(tlsSecretName, tlsData)
+	caData := map[string][]byte{
+		"ca.crt": []byte("YmF6"),
+	}
+	caSecret := newSecret(caSecretName, caData)
+
 	badData := map[string][]byte{
 		"not": []byte("great"),
 	}
-	otherSecret := newSecret(secretName, badData)
+	otherTLSSecret := newSecret(tlsSecretName, badData)
+	otherCASecret := newSecret(tlsSecretName, badData)
 
 	tt := []struct {
 		name        string
@@ -208,7 +220,7 @@ func TestMachineGetTLSConfig(t *testing.T) {
 		{
 			name: "returns the TLS config from the secret",
 			initObjects: []client.Object{
-				mvmCluster, secret,
+				mvmCluster, tlsSecret, caSecret,
 			},
 			cluster: mvmCluster,
 			expected: func(cfg *v1alpha1.TLSConfig, err error) {
@@ -220,9 +232,19 @@ func TestMachineGetTLSConfig(t *testing.T) {
 			},
 		},
 		{
-			name: "when the secret does not exist, returns an error",
+			name: "when the tls secret does not exist, returns an error",
 			initObjects: []client.Object{
-				mvmCluster,
+				mvmCluster, caSecret,
+			},
+			cluster: mvmCluster,
+			expected: func(cfg *v1alpha1.TLSConfig, err error) {
+				Expect(err).To(HaveOccurred())
+			},
+		},
+		{
+			name: "when the ca secret does not exist, returns an error",
+			initObjects: []client.Object{
+				mvmCluster, tlsSecret,
 			},
 			cluster: mvmCluster,
 			expected: func(cfg *v1alpha1.TLSConfig, err error) {
@@ -232,18 +254,39 @@ func TestMachineGetTLSConfig(t *testing.T) {
 		{
 			name: "when the TLSSecretRef is not set on the cluster, returns nil",
 			initObjects: []client.Object{
-				otherCluster,
+				otherClusterNoTLS,
 			},
-			cluster: otherCluster,
+			cluster: otherClusterNoTLS,
 			expected: func(cfg *v1alpha1.TLSConfig, err error) {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(cfg).To(BeNil())
 			},
 		},
 		{
-			name: "when the secret data does not contain the `cert` key, returns an error",
+			name: "when the CASecretRef is not set on the cluster, returns nil",
 			initObjects: []client.Object{
-				mvmCluster, otherSecret,
+				otherClusterNoCA,
+			},
+			cluster: otherClusterNoCA,
+			expected: func(cfg *v1alpha1.TLSConfig, err error) {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(cfg).To(BeNil())
+			},
+		},
+		{
+			name: "when the secret data does not contain the `tls.crt` key, returns an error",
+			initObjects: []client.Object{
+				mvmCluster, otherTLSSecret,
+			},
+			cluster: mvmCluster,
+			expected: func(cfg *v1alpha1.TLSConfig, err error) {
+				Expect(err).To(HaveOccurred())
+			},
+		},
+		{
+			name: "when the secret data does not contain the `ca.crt` key, returns an error",
+			initObjects: []client.Object{
+				mvmCluster, otherCASecret,
 			},
 			cluster: mvmCluster,
 			expected: func(cfg *v1alpha1.TLSConfig, err error) {

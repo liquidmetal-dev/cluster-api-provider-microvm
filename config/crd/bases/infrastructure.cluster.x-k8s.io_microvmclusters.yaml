@@ -53,6 +53,14 @@ spec:
           spec:
             description: MicrovmClusterSpec defines the desired state of MicrovmCluster.
             properties:
+              caSecretRef:
+                description: "CASecretRef is a reference to the name of a secret which
+                  contains private CA information for connecting to Flintlock hosts.
+                  The secret should be created in the same namespace as the MicroVMCluster.
+                  The secret should be of type Opaque, with the following data key:
+                  \n apiVersion: v1 kind: Secret metadata: name: secret-ca type: Opaque
+                  data: ca.crt: | MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ..."
+                type: string
               controlPlaneEndpoint:
                 description: "ControlPlaneEndpoint represents the endpoint used to
                   communicate with the control plane. \n See https://cluster-api.sigs.k8s.io/developer/architecture/controllers/cluster.html
@@ -92,9 +100,10 @@ spec:
                       basicAuthSecret:
                         description: "BasicAuthSecret is the name of the secret containing
                           basic auth info for each host listed in Hosts. The secret
-                          should contain a data entry for each host Endpoint: \n apiVersion:
-                          v1 kind: Secret metadata: name: mybasicauthsecret type:
-                          Opaque data: 1.2.4.5: YWRtaW4= myhost: MWYyZDFlMmU2N2Rm"
+                          should contain a data entry for each host Endpoint without
+                          the port: \n apiVersion: v1 kind: Secret metadata: name:
+                          mybasicauthsecret type: Opaque data: 1.2.4.5: YWRtaW4= myhost:
+                          MWYyZDFlMmU2N2Rm"
                         type: string
                       hosts:
                         description: Hosts defines the pool of hosts that should be
@@ -144,6 +153,20 @@ spec:
                       type: string
                   type: object
                 type: array
+              tlsSecretRef:
+                description: "mTLS Configuration: \n It is recommended that each flintlock
+                  host is configured with its own cert signed by a common CA, and
+                  set to use mTLS. The CAPMVM client should be provided with the CA,
+                  and a client cert and key signed by that CA. There are 2 pieces
+                  of configuration for this: - TLSSecretRef - CASecretRef \n TLSSecretRef
+                  is a reference to the name of a secret which contains TLS cert information
+                  for connecting to Flintlock hosts. The secret should be created
+                  in the same namespace as the MicroVMCluster. The secret should be
+                  of type kubernetes.io/tls https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets
+                  \n apiVersion: v1 kind: Secret metadata: name: secret-tls type:
+                  kubernetes.io/tls data: tls.crt: | MIIC2DCCAcCgAwIBAgIBATANBgkqh
+                  ... tls.key: | MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ..."
+                type: string
             required:
             - placement
             type: object

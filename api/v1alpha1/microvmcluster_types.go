@@ -28,24 +28,49 @@ type MicrovmClusterSpec struct {
 	// MicrovmProxy is the proxy server details to use when calling the microvm service. This is an
 	// alteranative to using the http proxy environment variables and applied purely to the grpc service.
 	MicrovmProxy *Proxy `json:"microvmProxy,omitempty"`
+
+	// mTLS Configuration:
+	//
+	// It is recommended that each flintlock host is configured with its own cert
+	// signed by a common CA, and set to use mTLS.
+	// The CAPMVM client should be provided with the CA, and a client cert and key
+	// signed by that CA.
+	// There are 2 pieces of configuration for this:
+	// - TLSSecretRef
+	// - CASecretRef
+	//
 	// TLSSecretRef is a reference to the name of a secret which contains TLS cert information
-	// for connecting to Flintlock hosts. It is recommended that each flintlock host is configured
-	// with its own cert signed by a common CA, and set to use mTLS.
-	// The CAPMVM client should be provided with the CA, and a client cert and key signed by that CA.
+	// for connecting to Flintlock hosts.
 	// The secret should be created in the same namespace as the MicroVMCluster.
-	// The secret should contain the following data:
+	// The secret should be of type kubernetes.io/tls https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets
 	//
 	// apiVersion: v1
 	// kind: Secret
 	// metadata:
-	// 	name: mytlssecret
-	// type: Opaque
+	// 	name: secret-tls
+	// type: kubernetes.io/tls
 	// data:
-	// 	cert: YWRtaW4=
-	// 	key: MWYyZDFlMmU2N2Rm
-	// 	ca: Zm9vYmFyCg==
+	// 	tls.crt: |
+	// 		MIIC2DCCAcCgAwIBAgIBATANBgkqh ...
+	// 	tls.key: |
+	// 		MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ...
 	// +optional
 	TLSSecretRef string `json:"tlsSecretRef,omitempty"`
+	// CASecretRef is a reference to the name of a secret which contains private CA information
+	// for connecting to Flintlock hosts.
+	// The secret should be created in the same namespace as the MicroVMCluster.
+	// The secret should be of type Opaque, with the following data key:
+	//
+	// apiVersion: v1
+	// kind: Secret
+	// metadata:
+	// 	name: secret-ca
+	// type: Opaque
+	// data:
+	// 	ca.crt: |
+	// 		MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ...
+	// +optional
+	CASecretRef string `json:"caSecretRef,omitempty"`
 }
 
 type SSHPublicKey struct {

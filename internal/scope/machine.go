@@ -31,6 +31,12 @@ var _ Scoper = &MachineScope{}
 
 const ProviderPrefix = "microvm://"
 
+const (
+	tlsCert = "tls.crt"
+	tlsKey  = "tls.key"
+	caCert  = "ca.crt"
+)
+
 type MachineScopeParams struct {
 	Cluster        *clusterv1.Cluster
 	MicroVMCluster *infrav1.MicrovmCluster
@@ -308,7 +314,7 @@ func (m *MachineScope) GetBasicAuthToken(addr string) (string, error) {
 	token := string(tokenSecret.Data[host])
 
 	if token == "" {
-		m.V(2).Info( //nolint:gomnd // this magic number is fine
+		m.Info(
 			"basicAuthToken for host not found in secret", "secret", tokenSecret.Name, "host", host,
 		)
 	}
@@ -316,36 +322,45 @@ func (m *MachineScope) GetBasicAuthToken(addr string) (string, error) {
 	return token, nil
 }
 
-// GetTLSConfig will fetch the TLSSecretRef on the MvmCluster and return the
-// TLS config for the client.
-// If the TLSSecretRef is not set, it will be assumed that the hosts are not
+// GetTLSConfig will fetch the TLSSecretRef and CASecretRef on the MvmCluster
+// and return the TLS config for the client.
+// If either are not set, it will be assumed that the hosts are not
 // configured will TLS and all client calls will be made without credentials.
 func (m *MachineScope) GetTLSConfig() (*v1alpha1.TLSConfig, error) {
-	if m.MvmCluster.Spec.TLSSecretRef == "" {
+	if m.MvmCluster.Spec.TLSSecretRef == "" || m.MvmCluster.Spec.CASecretRef == "" {
+		m.Info("no TLS configuration found. will create insecure connection")
+
 		return nil, nil
 	}
 
-	tlsSecret := &corev1.Secret{}
 	secretKey := types.NamespacedName{
 		Name:      m.MvmCluster.Spec.TLSSecretRef,
 		Namespace: m.MvmCluster.Namespace,
 	}
 
+	tlsSecret := &corev1.Secret{}
 	if err := m.client.Get(context.TODO(), secretKey, tlsSecret); err != nil {
 		return nil, err
 	}
 
-	cert, err := decode(tlsSecret.Data, "cert")
+	cert, err := decode(tlsSecret.Data, tlsCert)
 	if err != nil {
 		return nil, err
 	}
 
-	key, err := decode(tlsSecret.Data, "key")
+	key, err := decode(tlsSecret.Data, tlsKey)
 	if err != nil {
 		return nil, err
 	}
 
-	ca, err := decode(tlsSecret.Data, "ca")
+	secretKey.Name = m.MvmCluster.Spec.CASecretRef
+
+	caSecret := &corev1.Secret{}
+	if err := m.client.Get(context.TODO(), secretKey, caSecret); err != nil {
+		return nil, err
+	}
+
+	ca, err := decode(caSecret.Data, caCert)
 	if err != nil {
 		return nil, err
 	}
