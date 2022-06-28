@@ -109,7 +109,7 @@ func loadTLS(cfg *infrav1.TLSConfig) (credentials.TransportCredentials, error) {
 
 	capool := x509.NewCertPool()
 	if !capool.AppendCertsFromPEM([]byte(cfg.CACert)) {
-		return nil, fmt.Errorf("could not add cert to pool")
+		return nil, fmt.Errorf("could not add cert to pool") //nolint: goerr113 // there is no err to wrap
 	}
 
 	tlsConfig := &tls.Config{

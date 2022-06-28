@@ -22,7 +22,6 @@ import (
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/defaults"
 )
@@ -326,8 +325,8 @@ func (m *MachineScope) GetBasicAuthToken(addr string) (string, error) {
 // and return the TLS config for the client.
 // If either are not set, it will be assumed that the hosts are not
 // configured will TLS and all client calls will be made without credentials.
-func (m *MachineScope) GetTLSConfig() (*v1alpha1.TLSConfig, error) {
-	if m.MvmCluster.Spec.TLSSecretRef == "" || m.MvmCluster.Spec.CASecretRef == "" {
+func (m *MachineScope) GetTLSConfig() (*infrav1.TLSConfig, error) {
+	if m.MvmCluster.Spec.TLSSecretRef == "" {
 		m.Info("no TLS configuration found. will create insecure connection")
 
 		return nil, nil
@@ -353,14 +352,7 @@ func (m *MachineScope) GetTLSConfig() (*v1alpha1.TLSConfig, error) {
 		return nil, err
 	}
 
-	secretKey.Name = m.MvmCluster.Spec.CASecretRef
-
-	caSecret := &corev1.Secret{}
-	if err := m.client.Get(context.TODO(), secretKey, caSecret); err != nil {
-		return nil, err
-	}
-
-	ca, err := decode(caSecret.Data, caCert)
+	ca, err := decode(tlsSecret.Data, caCert)
 	if err != nil {
 		return nil, err
 	}
