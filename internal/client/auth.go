@@ -26,6 +26,5 @@ func (b basicAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[st
 
 // GetRequestMetadata fullfills the credentials.PerRPCCredentials interface.
 func (basicAuth) RequireTransportSecurity() bool {
-	// TODO: change this to true when we add TLS here is a fake issue to make the linter shut up #123
-	return false
+	return true
 }

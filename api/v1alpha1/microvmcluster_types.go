@@ -28,6 +28,34 @@ type MicrovmClusterSpec struct {
 	// MicrovmProxy is the proxy server details to use when calling the microvm service. This is an
 	// alteranative to using the http proxy environment variables and applied purely to the grpc service.
 	MicrovmProxy *Proxy `json:"microvmProxy,omitempty"`
+
+	// mTLS Configuration:
+	//
+	// It is recommended that each flintlock host is configured with its own cert
+	// signed by a common CA, and set to use mTLS.
+	// The CAPMVM client should be provided with the CA, and a client cert and key
+	// signed by that CA.
+	// TLSSecretRef is a reference to the name of a secret which contains TLS cert information
+	// for connecting to Flintlock hosts.
+	// The secret should be created in the same namespace as the MicroVMCluster.
+	// The secret should be of type kubernetes.io/tls https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets
+	// with the addition of a ca.crt key.
+	//
+	// apiVersion: v1
+	// kind: Secret
+	// metadata:
+	// 	name: secret-tls
+	// 	namespace: default  <- same as Cluster
+	// type: kubernetes.io/tls
+	// data:
+	// 	tls.crt: |
+	// 		MIIC2DCCAcCgAwIBAgIBATANBgkqh ...
+	// 	tls.key: |
+	// 		MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ...
+	// 	ca.crt: |
+	// 		MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ...
+	// +optional
+	TLSSecretRef string `json:"tlsSecretRef,omitempty"`
 }
 
 type SSHPublicKey struct {

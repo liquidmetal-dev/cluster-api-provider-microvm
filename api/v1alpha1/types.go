@@ -184,3 +184,10 @@ type Proxy struct {
 	// Endpoint is the address of the proxy.
 	Endpoint string `json:"endpoint"`
 }
+
+// TLSConfig represents config for connecting to TLS enabled hosts.
+type TLSConfig struct {
+	Cert   string `json:"cert"`
+	Key    string `json:"key"`
+	CACert string `json:"caCert"`
+}

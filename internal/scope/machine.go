@@ -5,6 +5,7 @@ package scope
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"hash/crc32"
 	"sort"
@@ -28,6 +29,12 @@ import (
 var _ Scoper = &MachineScope{}
 
 const ProviderPrefix = "microvm://"
+
+const (
+	tlsCert = "tls.crt"
+	tlsKey  = "tls.key"
+	caCert  = "ca.crt"
+)
 
 type MachineScopeParams struct {
 	Cluster        *clusterv1.Cluster
@@ -306,12 +313,69 @@ func (m *MachineScope) GetBasicAuthToken(addr string) (string, error) {
 	token := string(tokenSecret.Data[host])
 
 	if token == "" {
-		m.V(2).Info( //nolint:gomnd // this magic number is fine
+		m.Info(
 			"basicAuthToken for host not found in secret", "secret", tokenSecret.Name, "host", host,
 		)
 	}
 
 	return token, nil
+}
+
+// GetTLSConfig will fetch the TLSSecretRef and CASecretRef on the MvmCluster
+// and return the TLS config for the client.
+// If either are not set, it will be assumed that the hosts are not
+// configured will TLS and all client calls will be made without credentials.
+func (m *MachineScope) GetTLSConfig() (*infrav1.TLSConfig, error) {
+	if m.MvmCluster.Spec.TLSSecretRef == "" {
+		m.Info("no TLS configuration found. will create insecure connection")
+
+		return nil, nil
+	}
+
+	secretKey := types.NamespacedName{
+		Name:      m.MvmCluster.Spec.TLSSecretRef,
+		Namespace: m.MvmCluster.Namespace,
+	}
+
+	tlsSecret := &corev1.Secret{}
+	if err := m.client.Get(context.TODO(), secretKey, tlsSecret); err != nil {
+		return nil, err
+	}
+
+	cert, err := decode(tlsSecret.Data, tlsCert)
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := decode(tlsSecret.Data, tlsKey)
+	if err != nil {
+		return nil, err
+	}
+
+	ca, err := decode(tlsSecret.Data, caCert)
+	if err != nil {
+		return nil, err
+	}
+
+	return &infrav1.TLSConfig{
+		Cert:   cert,
+		Key:    key,
+		CACert: ca,
+	}, nil
+}
+
+func decode(data map[string][]byte, key string) (string, error) {
+	val, ok := data[key]
+	if !ok {
+		return "", &tlsError{key}
+	}
+
+	dec, err := base64.StdEncoding.DecodeString(string(val))
+	if err != nil {
+		return "", err
+	}
+
+	return string(dec), nil
 }
 
 func (m *MachineScope) getFailureDomainFromProviderID(providerID string) string {

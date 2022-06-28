@@ -92,8 +92,10 @@ spec:
                       basicAuthSecret:
                         description: "BasicAuthSecret is the name of the secret containing
                           basic auth info for each host listed in Hosts. The secret
-                          should contain a data entry for each host Endpoint: \n apiVersion:
-                          v1 kind: Secret metadata: name: mybasicauthsecret type:
+                          should be created in the same namespace as the Cluster.
+                          The secret should contain a data entry for each host Endpoint
+                          without the port: \n apiVersion: v1 kind: Secret metadata:
+                          name: mybasicauthsecret namespace: same-as-cluster type:
                           Opaque data: 1.2.4.5: YWRtaW4= myhost: MWYyZDFlMmU2N2Rm"
                         type: string
                       hosts:
@@ -144,6 +146,21 @@ spec:
                       type: string
                   type: object
                 type: array
+              tlsSecretRef:
+                description: "mTLS Configuration: \n It is recommended that each flintlock
+                  host is configured with its own cert signed by a common CA, and
+                  set to use mTLS. The CAPMVM client should be provided with the CA,
+                  and a client cert and key signed by that CA. TLSSecretRef is a reference
+                  to the name of a secret which contains TLS cert information for
+                  connecting to Flintlock hosts. The secret should be created in the
+                  same namespace as the MicroVMCluster. The secret should be of type
+                  kubernetes.io/tls https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets
+                  with the addition of a ca.crt key. \n apiVersion: v1 kind: Secret
+                  metadata: name: secret-tls namespace: default  <- same as Cluster
+                  type: kubernetes.io/tls data: tls.crt: | MIIC2DCCAcCgAwIBAgIBATANBgkqh
+                  ... tls.key: | MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ... ca.crt: | MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ
+                  ..."
+                type: string
             required:
             - placement
             type: object
