@@ -89,6 +89,13 @@ spec:
                     description: StaticPool is used to specify that static pool placement
                       should be used.
                     properties:
+                      basicAuthSecret:
+                        description: "BasicAuthSecret is the name of the secret containing
+                          basic auth info for each host listed in Hosts. The secret
+                          should contain a data entry for each host Endpoint: \n apiVersion:
+                          v1 kind: Secret metadata: name: mybasicauthsecret type:
+                          Opaque data: 1.2.4.5: YWRtaW4= myhost: MWYyZDFlMmU2N2Rm"
+                        type: string
                       hosts:
                         description: Hosts defines the pool of hosts that should be
                           used when creating microvms. The hosts will be supplied

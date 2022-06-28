@@ -149,6 +149,21 @@ type StaticPoolPlacement struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems:=1
 	Hosts []MicrovmHost `json:"hosts"`
+	// BasicAuthSecret is the name of the secret containing basic auth info for each
+	// host listed in Hosts.
+	// The secret should be created in the same namespace as the Cluster.
+	// The secret should contain a data entry for each host Endpoint without the port:
+	//
+	// apiVersion: v1
+	// kind: Secret
+	// metadata:
+	// 	name: mybasicauthsecret
+	//	namespace: same-as-cluster
+	// type: Opaque
+	// data:
+	// 	1.2.4.5: YWRtaW4=
+	// 	myhost: MWYyZDFlMmU2N2Rm
+	BasicAuthSecret string `json:"basicAuthSecret,omitempty"`
 }
 
 type MicrovmHost struct {

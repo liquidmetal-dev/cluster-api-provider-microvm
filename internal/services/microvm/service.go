@@ -17,7 +17,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"k8s.io/utils/pointer"
 
-	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/defaults"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/scope"
 )
@@ -25,8 +24,6 @@ import (
 const (
 	cloudInitHeader = "#cloud-config\n"
 )
-
-type ClientFactoryFunc func(address string, proxy *infrav1.Proxy) (Client, error)
 
 type Client interface {
 	flintlockv1.MicroVMClient
