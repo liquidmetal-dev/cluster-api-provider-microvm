@@ -37,7 +37,7 @@ type MachineScopeParams struct {
 	MicroVMMachine *infrav1.MicrovmMachine
 
 	Client  client.Client
-	Context context.Context
+	Context context.Context //nolint: containedctx // don't care
 }
 
 func NewMachineScope(params MachineScopeParams, opts ...MachineScopeOption) (*MachineScope, error) {
@@ -152,7 +152,7 @@ func (m *MachineScope) Patch() error {
 	)
 
 	err := m.patchHelper.Patch(
-		context.TODO(),
+		m.ctx,
 		m.MvmMachine,
 		patch.WithOwnedConditions{Conditions: []clusterv1.ConditionType{
 			clusterv1.ReadyCondition,
@@ -211,7 +211,7 @@ func (m *MachineScope) GetRawBootstrapData() ([]byte, error) {
 		Name:      *m.Machine.Spec.Bootstrap.DataSecretName,
 	}
 
-	if err := m.client.Get(context.TODO(), secretKey, bootstrapSecret); err != nil {
+	if err := m.client.Get(m.ctx, secretKey, bootstrapSecret); err != nil {
 		return nil, fmt.Errorf("getting bootstrap secret %s: %w", secretKey, err)
 	}
 
@@ -280,6 +280,38 @@ func (m *MachineScope) GetSSHPublicKeys() []infrav1.SSHPublicKey {
 	}
 
 	return nil
+}
+
+// GetBasicAuthToken will fetch the BasicAuthSecret on the MvmCluster and
+// and return the token for the given host.
+// If no secret or no value is found, an empty string is returned.
+func (m *MachineScope) GetBasicAuthToken(addr string) (string, error) {
+	placement := m.MvmCluster.Spec.Placement
+	if placement.StaticPool == nil || placement.StaticPool.BasicAuthSecret == "" {
+		return "", nil
+	}
+
+	tokenSecret := &corev1.Secret{}
+	key := types.NamespacedName{
+		Name:      m.MvmCluster.Spec.Placement.StaticPool.BasicAuthSecret,
+		Namespace: m.MvmCluster.Namespace,
+	}
+
+	if err := m.client.Get(m.ctx, key, tokenSecret); err != nil {
+		return "", err
+	}
+
+	host := strings.Split(addr, ":")[0]
+	// If it's not there, that's fine; we will log and return an empty string
+	token := string(tokenSecret.Data[host])
+
+	if token == "" {
+		m.V(2).Info( //nolint:gomnd // this magic number is fine
+			"basicAuthToken for host not found in secret", "secret", tokenSecret.Name, "host", host,
+		)
+	}
+
+	return token, nil
 }
 
 func (m *MachineScope) getFailureDomainFromProviderID(providerID string) string {

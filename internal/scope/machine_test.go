@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
@@ -82,6 +83,83 @@ func TestMachineGetInstanceID(t *testing.T) {
 
 	instanceID := machineScope.GetInstanceID()
 	Expect(instanceID).To(Equal("abcdefg"))
+}
+
+func TestMachineGetBasicAuthToken(t *testing.T) {
+	RegisterTestingT(t)
+
+	scheme, err := setupScheme()
+	Expect(err).NotTo(HaveOccurred())
+
+	clusterName := "testcluster"
+	secretName := "testsecret"
+	hostName := "hostwiththemost"
+	token := "foo"
+
+	mvmCluster := newMicrovmClusterWithAuth(clusterName, secretName)
+	otherCluster := newMicrovmCluster(clusterName)
+	secret := newSecret(secretName, hostName, token)
+	otherSecret := newSecret(secretName, "differentone", token)
+
+	tt := []struct {
+		name        string
+		expected    string
+		expectedErr func(error)
+		initObjects []client.Object
+	}{
+		{
+			name: "when the token is found in the secret, it is returned",
+			initObjects: []client.Object{
+				mvmCluster, secret,
+			},
+			expected: token,
+			expectedErr: func(err error) {
+				Expect(err).NotTo(HaveOccurred())
+			},
+		},
+		{
+			name:        "when the secret does not exist, returns the error",
+			initObjects: []client.Object{mvmCluster},
+			expected:    "",
+			expectedErr: func(err error) {
+				Expect(err).To(HaveOccurred())
+			},
+		},
+		{
+			name:        "when the secret does not contain hostname key, empty string is returned",
+			initObjects: []client.Object{mvmCluster, otherSecret},
+			expected:    "",
+			expectedErr: func(err error) {
+				Expect(err).NotTo(HaveOccurred())
+			},
+		},
+		{
+			name:        "when the secret name is not set on the cluster, empty string is returned",
+			initObjects: []client.Object{otherCluster, otherSecret},
+			expected:    "",
+			expectedErr: func(err error) {
+				Expect(err).NotTo(HaveOccurred())
+			},
+		},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			RegisterTestingT(t)
+			client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(tc.initObjects...).Build()
+			machineScope, err := scope.NewMachineScope(scope.MachineScopeParams{
+				Client:         client,
+				Cluster:        &clusterv1.Cluster{},
+				MicroVMCluster: mvmCluster,
+				Machine:        &clusterv1.Machine{},
+				MicroVMMachine: &infrav1.MicrovmMachine{},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			token, err := machineScope.GetBasicAuthToken(hostName)
+			tc.expectedErr(err)
+			Expect(token).To(Equal(tc.expected))
+		})
+	}
 }
 
 func TestMachineRandomFailureDomain(t *testing.T) {
@@ -279,4 +357,26 @@ func newMicrovmMachine(clusterName, machineName string, providerID string) *infr
 	}
 
 	return mvmMachine
+}
+
+func newMicrovmClusterWithAuth(name, secretname string) *infrav1.MicrovmCluster {
+	cluster := newMicrovmCluster(name)
+	cluster.Spec.Placement = infrav1.Placement{
+		StaticPool: &infrav1.StaticPoolPlacement{
+			BasicAuthSecret: secretname,
+		},
+	}
+	return cluster
+}
+
+func newSecret(name, address, token string) *v1.Secret {
+	return &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: "default",
+		},
+		Data: map[string][]byte{
+			address: []byte(token),
+		},
+	}
 }
