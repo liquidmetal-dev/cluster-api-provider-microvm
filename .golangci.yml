@@ -1,4 +1,5 @@
 run:
+    go: "1.17"
     timeout: 10m
     tests: false
     allow-parallel-runners: true
@@ -92,3 +93,4 @@ linters:
   - maligned
   - scopelint
   - tagliatelle
+  - wrapcheck

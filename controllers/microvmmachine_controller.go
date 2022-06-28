@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
+	flclient "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/client"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/defaults"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/scope"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/services/microvm"
@@ -42,7 +43,7 @@ type MicrovmMachineReconciler struct {
 	Recorder         record.EventRecorder
 	WatchFilterValue string
 
-	MvmClientFunc microvm.ClientFactoryFunc
+	MvmClientFunc flclient.FactoryFunc
 }
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=microvmmachines,verbs=get;list;watch;create;update;patch;delete
@@ -126,6 +127,7 @@ func (r *MicrovmMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		Machine:        machine,
 		MicroVMMachine: mvmMachine,
 		Client:         r.Client,
+		Context:        ctx,
 	})
 	if err != nil {
 		log.Error(err, "failed to create machine scope")
@@ -300,12 +302,23 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 
 func (r *MicrovmMachineReconciler) getMicrovmService(
 	addr string,
-	machineScope *scope.MachineScope) (*microvm.Service, error) {
+	machineScope *scope.MachineScope,
+) (*microvm.Service, error) {
 	if r.MvmClientFunc == nil {
 		return nil, errClientFactoryFuncRequired
 	}
 
-	client, err := r.MvmClientFunc(addr, machineScope.MvmCluster.Spec.MicrovmProxy)
+	token, err := machineScope.GetBasicAuthToken(addr)
+	if err != nil {
+		return nil, fmt.Errorf("getting basic auth token: %w", err)
+	}
+
+	clientOpts := []flclient.Options{
+		flclient.WithProxy(machineScope.MvmCluster.Spec.MicrovmProxy),
+		flclient.WithBasicAuth(token),
+	}
+
+	client, err := r.MvmClientFunc(addr, clientOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("creating microvm client: %w", err)
 	}

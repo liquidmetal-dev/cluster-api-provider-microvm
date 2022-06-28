@@ -75,6 +75,9 @@ test: ## Run tests.
 
 ##@ Binaries
 
+.PHONY: build
+build: managers ## Build manager binary.
+
 .PHONY: managers
 managers: ## Build manager binary.
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS} -extldflags '-static'" -o $(BIN_DIR)/manager .

@@ -27,6 +27,7 @@ import (
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/controllers"
+	flclient "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/client"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/services/microvm"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/services/microvm/mock_client"
 	flintlockv1 "github.com/weaveworks-liquidmetal/flintlock/api/services/microvm/v1alpha1"
@@ -88,7 +89,7 @@ func (co clusterObjects) AsRuntimeObjects() []runtime.Object {
 func reconcileMachine(client client.Client, mockAPIClient microvm.Client) (ctrl.Result, error) {
 	machineController := &controllers.MicrovmMachineReconciler{
 		Client: client,
-		MvmClientFunc: func(address string, proxy *infrav1.Proxy) (microvm.Client, error) {
+		MvmClientFunc: func(address string, opts ...flclient.Options) (microvm.Client, error) {
 			return mockAPIClient, nil
 		},
 	}

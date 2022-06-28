@@ -45,7 +45,7 @@ In your cluster-api folder create a file called **tilt-settings.json**:
 ```json
 {
     "default_registry": "gcr.io/yourusername",
-    "provider_repos": ["../../github.com/weaveworks-liquidmetal/cluster-api-provider-microvm"],
+    "provider_repos": ["PATH/TO/YOUR/CAPMVM"],
     "enable_providers": ["microvm", "kubeadm-bootstrap", "kubeadm-control-plane"],
     "kustomize_substitutions": {
         "EXP_MACHINE_POOL": "true",
@@ -77,7 +77,11 @@ We will run tilt in a kind based cluster.
 3. Run the following:
 
     ```bash
-    kind create cluster && tilt up
+    # if you have any GITHUB_TOKEN or cred set in the environment, unset that first
+
+    export CAPI_KIND_CLUSTER_NAME=capmvm-test
+    kind create cluster --name $CAPI_KIND_CLUSTER_NAME
+    tilt up
     ```
 
 When tilt is started you can press the **spacebar** to open up a browser based UI.
