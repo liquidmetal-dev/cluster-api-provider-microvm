@@ -171,12 +171,25 @@ spec:
                         - id
                         - image
                         type: object
-                      sshPublicKey:
-                        description: SSHPublicKey is an SSH public key that will be
-                          used with the default user on this machine. If specified
-                          it will take precedence over any SSH key specified at the
-                          cluster level.
-                        type: string
+                      sshPublicKeys:
+                        description: SSHPublicKeys is list of SSH public keys that
+                          will be used with stated users on this machine. If specified
+                          they will take precedence over any SSH keys specified at
+                          the cluster level.
+                        items:
+                          properties:
+                            authorizedKeys:
+                              description: AuthorizedKeys is a list of public keys
+                                to add to the user
+                              items:
+                                type: string
+                              type: array
+                            user:
+                              description: User is the name of the user to add keys
+                                for (eg root, ubuntu).
+                              type: string
+                          type: object
+                        type: array
                       vcpu:
                         description: VCPU specifies how many vcpu's the microvm will
                           be allocated.

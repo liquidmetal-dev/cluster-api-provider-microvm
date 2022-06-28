@@ -268,18 +268,18 @@ func (m *MachineScope) GetInstanceID() string {
 	return parsed.ID()
 }
 
-// GetSSHPublicKey will return the SSH public key for this machine. It will take into account
-// precedence rules. If there is no key then an empty string will be returned.
-func (m *MachineScope) GetSSHPublicKey() string {
-	if m.MvmMachine.Spec.SSHPublicKey != "" {
-		return m.MvmMachine.Spec.SSHPublicKey
+// GetSSHPublicKeys will return the SSH public keys for this machine. It will take into account
+// precedence rules. If there are no keys then nil will be returned.
+func (m *MachineScope) GetSSHPublicKeys() []infrav1.SSHPublicKey {
+	if len(m.MvmMachine.Spec.SSHPublicKeys) != 0 {
+		return m.MvmMachine.Spec.SSHPublicKeys
 	}
 
-	if m.MvmCluster.Spec.SSHPublicKey != "" {
-		return m.MvmCluster.Spec.SSHPublicKey
+	if len(m.MvmCluster.Spec.SSHPublicKeys) != 0 {
+		return m.MvmCluster.Spec.SSHPublicKeys
 	}
 
-	return ""
+	return nil
 }
 
 func (m *MachineScope) getFailureDomainFromProviderID(providerID string) string {

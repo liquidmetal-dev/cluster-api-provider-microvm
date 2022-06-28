@@ -19,11 +19,12 @@ const (
 type MicrovmMachineSpec struct {
 	MicrovmSpec `json:",inline"`
 
-	// SSHPublicKey is an SSH public key that will be used with the default user on this
-	// machine. If specified it will take precedence over any SSH key specified at
+	// SSHPublicKeys is list of SSH public keys that will be used with stated users
+	// on this machine.
+	// If specified they will take precedence over any SSH keys specified at
 	// the cluster level.
 	// +optional
-	SSHPublicKey string `json:"sshPublicKey,omitempty"`
+	SSHPublicKeys []SSHPublicKey `json:"sshPublicKeys,omitempty"`
 
 	// ProviderID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
