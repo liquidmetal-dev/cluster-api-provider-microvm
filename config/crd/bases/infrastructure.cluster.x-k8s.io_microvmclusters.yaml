@@ -156,9 +156,10 @@ spec:
                   same namespace as the MicroVMCluster. The secret should be of type
                   kubernetes.io/tls https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets
                   with the addition of a ca.crt key. \n apiVersion: v1 kind: Secret
-                  metadata: name: secret-tls type: kubernetes.io/tls data: tls.crt:
-                  | MIIC2DCCAcCgAwIBAgIBATANBgkqh ... tls.key: | MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ
-                  ... ca.crt: | MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ..."
+                  metadata: name: secret-tls namespace: default  <- same as Cluster
+                  type: kubernetes.io/tls data: tls.crt: | MIIC2DCCAcCgAwIBAgIBATANBgkqh
+                  ... tls.key: | MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ... ca.crt: | MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ
+                  ..."
                 type: string
             required:
             - placement

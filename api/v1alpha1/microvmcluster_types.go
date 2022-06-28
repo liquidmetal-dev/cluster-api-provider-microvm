@@ -45,6 +45,7 @@ type MicrovmClusterSpec struct {
 	// kind: Secret
 	// metadata:
 	// 	name: secret-tls
+	// 	namespace: default  <- same as Cluster
 	// type: kubernetes.io/tls
 	// data:
 	// 	tls.crt: |

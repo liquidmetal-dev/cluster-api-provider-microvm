@@ -113,6 +113,7 @@ func loadTLS(cfg *infrav1.TLSConfig) (credentials.TransportCredentials, error) {
 	}
 
 	tlsConfig := &tls.Config{
+		MinVersion:   tls.VersionTLS13,
 		Certificates: []tls.Certificate{certificate},
 		RootCAs:      capool,
 	}
