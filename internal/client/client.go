@@ -69,7 +69,11 @@ func NewFlintlockClient(address string, opts ...Options) (microvm.Client, error)
 	}
 
 	if cfg.basicAuthToken != "" {
-		dialOpts = append(dialOpts, grpc.WithPerRPCCredentials(Basic(cfg.basicAuthToken)))
+		dialOpts = append(dialOpts,
+			grpc.WithPerRPCCredentials(
+				Basic(cfg.basicAuthToken, cfg.tls != nil),
+			),
+		)
 	}
 
 	if cfg.proxy != nil {

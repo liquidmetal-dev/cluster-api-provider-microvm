@@ -6,12 +6,13 @@ import (
 )
 
 type basicAuth struct {
-	token string
+	token           string
+	requireSecurity bool
 }
 
 // Basic creates a basicAuth with a token.
-func Basic(t string) basicAuth { //nolint: revive // this will not be used
-	return basicAuth{token: t}
+func Basic(t string, s bool) basicAuth { //nolint: revive // this will not be used
+	return basicAuth{token: t, requireSecurity: s}
 }
 
 // GetRequestMetadata fullfills the credentials.PerRPCCredentials interface,
@@ -25,6 +26,6 @@ func (b basicAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[st
 }
 
 // GetRequestMetadata fullfills the credentials.PerRPCCredentials interface.
-func (basicAuth) RequireTransportSecurity() bool {
-	return true
+func (b basicAuth) RequireTransportSecurity() bool {
+	return b.requireSecurity
 }
