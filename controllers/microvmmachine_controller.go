@@ -315,7 +315,7 @@ func (r *MicrovmMachineReconciler) getMicrovmService(
 
 	tls, err := machineScope.GetTLSConfig()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting tls config: %w", err)
 	}
 
 	clientOpts := []flclient.Options{

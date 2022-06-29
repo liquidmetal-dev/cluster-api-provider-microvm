@@ -187,7 +187,7 @@ type Proxy struct {
 
 // TLSConfig represents config for connecting to TLS enabled hosts.
 type TLSConfig struct {
-	Cert   string `json:"cert"`
-	Key    string `json:"key"`
-	CACert string `json:"caCert"`
+	Cert   []byte `json:"cert"`
+	Key    []byte `json:"key"`
+	CACert []byte `json:"caCert"`
 }
