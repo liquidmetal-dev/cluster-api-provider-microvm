@@ -79,9 +79,6 @@ type Volume struct {
 	// +kubebuilder:default:=false
 	// +optional
 	ReadOnly bool `json:"readOnly,omitempty"`
-	// MountPoint is the mount point of the volume in the machine.
-	// +kubebuilder:validation:Required
-	MountPoint string `json:"mountPoint,omitempty"`
 }
 
 // IfaceType is a type representing the network interface types.

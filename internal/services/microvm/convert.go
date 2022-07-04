@@ -32,7 +32,6 @@ func convertToFlintlockAPI(machineScope *scope.MachineScope) *flintlocktypes.Mic
 		RootVolume: &flintlocktypes.Volume{
 			Id:         "root",
 			IsReadOnly: mvmSpec.RootVolume.ReadOnly,
-			MountPoint: mvmSpec.RootVolume.MountPoint,
 			Source: &flintlocktypes.VolumeSource{
 				ContainerSource: &mvmSpec.RootVolume.Image,
 			},
@@ -55,7 +54,6 @@ func convertToFlintlockAPI(machineScope *scope.MachineScope) *flintlocktypes.Mic
 		apiVM.AdditionalVolumes = append(apiVM.AdditionalVolumes, &flintlocktypes.Volume{
 			Id:         volume.ID,
 			IsReadOnly: volume.ReadOnly,
-			MountPoint: volume.MountPoint,
 			Source: &flintlocktypes.VolumeSource{
 				ContainerSource: &volume.Image,
 			},
