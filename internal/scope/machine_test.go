@@ -189,9 +189,9 @@ func TestMachineGetTLSConfig(t *testing.T) {
 	otherClusterNoTLS := newMicrovmCluster(clusterName)
 
 	tlsData := map[string][]byte{
-		"tls.crt": []byte("Zm9v"),
-		"tls.key": []byte("YmFy"),
-		"ca.crt":  []byte("YmF6"),
+		"tls.crt": []byte("foo"),
+		"tls.key": []byte("bar"),
+		"ca.crt":  []byte("baz"),
 	}
 	tlsSecret := newSecret(tlsSecretName, tlsData)
 
@@ -215,9 +215,9 @@ func TestMachineGetTLSConfig(t *testing.T) {
 			expected: func(cfg *v1alpha1.TLSConfig, err error) {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(cfg).ToNot(BeNil())
-				Expect(cfg.Cert).To(Equal("foo"))
-				Expect(cfg.Key).To(Equal("bar"))
-				Expect(cfg.CACert).To(Equal("baz"))
+				Expect(cfg.Cert).To(Equal([]byte("foo")))
+				Expect(cfg.Key).To(Equal([]byte("bar")))
+				Expect(cfg.CACert).To(Equal([]byte("baz")))
 			},
 		},
 		{

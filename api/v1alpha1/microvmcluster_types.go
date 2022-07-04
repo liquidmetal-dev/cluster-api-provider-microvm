@@ -38,7 +38,7 @@ type MicrovmClusterSpec struct {
 	// TLSSecretRef is a reference to the name of a secret which contains TLS cert information
 	// for connecting to Flintlock hosts.
 	// The secret should be created in the same namespace as the MicroVMCluster.
-	// The secret should be of type kubernetes.io/tls https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets
+	// The secret should be of type Opaque
 	// with the addition of a ca.crt key.
 	//
 	// apiVersion: v1
@@ -46,14 +46,20 @@ type MicrovmClusterSpec struct {
 	// metadata:
 	// 	name: secret-tls
 	// 	namespace: default  <- same as Cluster
-	// type: kubernetes.io/tls
+	// type: Opaque
 	// data:
 	// 	tls.crt: |
+	// 		-----BEGIN CERTIFICATE-----
 	// 		MIIC2DCCAcCgAwIBAgIBATANBgkqh ...
+	// 		-----END CERTIFICATE-----
 	// 	tls.key: |
+	// 		-----BEGIN EC PRIVATE KEY-----
 	// 		MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ...
+	// 		-----END EC PRIVATE KEY-----
 	// 	ca.crt: |
+	// 		-----BEGIN CERTIFICATE-----
 	// 		MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ...
+	// 		-----END CERTIFICATE-----
 	// +optional
 	TLSSecretRef string `json:"tlsSecretRef,omitempty"`
 }

@@ -5,7 +5,6 @@ package scope
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"hash/crc32"
 	"sort"
@@ -342,40 +341,26 @@ func (m *MachineScope) GetTLSConfig() (*infrav1.TLSConfig, error) {
 		return nil, err
 	}
 
-	cert, err := decode(tlsSecret.Data, tlsCert)
-	if err != nil {
-		return nil, err
+	certBytes, ok := tlsSecret.Data[tlsCert]
+	if !ok {
+		return nil, &tlsError{tlsCert}
 	}
 
-	key, err := decode(tlsSecret.Data, tlsKey)
-	if err != nil {
-		return nil, err
+	keyBytes, ok := tlsSecret.Data[tlsKey]
+	if !ok {
+		return nil, &tlsError{tlsKey}
 	}
 
-	ca, err := decode(tlsSecret.Data, caCert)
-	if err != nil {
-		return nil, err
+	caBytes, ok := tlsSecret.Data[caCert]
+	if !ok {
+		return nil, &tlsError{caCert}
 	}
 
 	return &infrav1.TLSConfig{
-		Cert:   cert,
-		Key:    key,
-		CACert: ca,
+		Cert:   certBytes,
+		Key:    keyBytes,
+		CACert: caBytes,
 	}, nil
-}
-
-func decode(data map[string][]byte, key string) (string, error) {
-	val, ok := data[key]
-	if !ok {
-		return "", &tlsError{key}
-	}
-
-	dec, err := base64.StdEncoding.DecodeString(string(val))
-	if err != nil {
-		return "", err
-	}
-
-	return string(dec), nil
 }
 
 func (m *MachineScope) getFailureDomainFromProviderID(providerID string) string {

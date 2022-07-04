@@ -69,7 +69,11 @@ func NewFlintlockClient(address string, opts ...Options) (microvm.Client, error)
 	}
 
 	if cfg.basicAuthToken != "" {
-		dialOpts = append(dialOpts, grpc.WithPerRPCCredentials(Basic(cfg.basicAuthToken)))
+		dialOpts = append(dialOpts,
+			grpc.WithPerRPCCredentials(
+				Basic(cfg.basicAuthToken, cfg.tls != nil),
+			),
+		)
 	}
 
 	if cfg.proxy != nil {
@@ -102,13 +106,13 @@ func buildConfig(opts ...Options) clientConfig {
 }
 
 func loadTLS(cfg *infrav1.TLSConfig) (credentials.TransportCredentials, error) {
-	certificate, err := tls.LoadX509KeyPair(cfg.Cert, cfg.Key)
+	certificate, err := tls.X509KeyPair(cfg.Cert, cfg.Key)
 	if err != nil {
 		return nil, err
 	}
 
 	capool := x509.NewCertPool()
-	if !capool.AppendCertsFromPEM([]byte(cfg.CACert)) {
+	if !capool.AppendCertsFromPEM(cfg.CACert) {
 		return nil, fmt.Errorf("could not add cert to pool") //nolint: goerr113 // there is no err to wrap
 	}
 
