@@ -631,10 +631,10 @@ github.com/valyala/fastjson v1.6.3/go.mod h1:CLCAqky6SMuOcxStkYQvblddUtoRxhYMGLr
 github.com/vincent-petithory/dataurl v1.0.0/go.mod h1:FHafX5vmDzyP+1CQATJn7WFKc9CvnvxyvZy6I1MrG/U=
 github.com/vmware/vmw-guestinfo v0.0.0-20170707015358-25eff159a728/go.mod h1:x9oS4Wk2s2u4tS29nEaDLdzvuHdB19CvSGJjPgkZJNk=
 github.com/vmware/vmw-ovflib v0.0.0-20170608004843-1f217b9dc714/go.mod h1:jiPk45kn7klhByRvUq5i2vo1RtHKBHj+iWGFpxbXuuI=
-github.com/weaveworks-liquidmetal/flintlock/api v0.0.0-20220510103109-fab05d0b1346 h1:w/Ld8EgtzXjFQK0fB6pEfptON2DP2LxWB69sGiimkMw=
-github.com/weaveworks-liquidmetal/flintlock/api v0.0.0-20220510103109-fab05d0b1346/go.mod h1:JPML9O56MoPKGX97jfj++BtuFFS84jm4T+jWQBjO5Uc=
-github.com/weaveworks-liquidmetal/flintlock/client v0.0.0-20220510103109-fab05d0b1346 h1:5CxmOoxgQBfsHE6TXB0DphgYFHosWdqaap3F7sJ2kPQ=
-github.com/weaveworks-liquidmetal/flintlock/client v0.0.0-20220510103109-fab05d0b1346/go.mod h1:d65mpsT+pbMnMJZhUqeNtt7lcQnsX8cowl9dTRkniSI=
+github.com/weaveworks-liquidmetal/flintlock/api v0.0.0-20220628141946-264f4544f49f h1:I+BieoFUnOC9Y7m9NwGfK6wtEwzSkPeBLPEQf3+8r+Y=
+github.com/weaveworks-liquidmetal/flintlock/api v0.0.0-20220628141946-264f4544f49f/go.mod h1:JPML9O56MoPKGX97jfj++BtuFFS84jm4T+jWQBjO5Uc=
+github.com/weaveworks-liquidmetal/flintlock/client v0.0.0-20220628141946-264f4544f49f h1:zrUZz+usVtrvojEcbfG6Le+gv4467gXrlwRQGniRTaA=
+github.com/weaveworks-liquidmetal/flintlock/client v0.0.0-20220628141946-264f4544f49f/go.mod h1:d65mpsT+pbMnMJZhUqeNtt7lcQnsX8cowl9dTRkniSI=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca/go.mod h1:ce1O1j6UtZfjr22oyGxGLbauSBp2YVXpARAosm7dHBg=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=

@@ -17,6 +17,13 @@ git pull --tags
 git describe --tags --abbrev=0
 ```
 
+## Update `metadata.yaml`
+
+If you are increasing by a major or minor version, edit `metadata.yaml` to contain
+the new contract.
+
+Open a PR and merge to main BEFORE you continue with the release.
+
 ## Create tag
 
 * Checkout upstream main
