@@ -294,11 +294,17 @@ Run `make help` to see all development commands. Generally you will use `make bu
 
 ### Running the unit tests
 
-To run the tests simply run the following:
+To run the tests simply execute the following:
 
 ```bash
 make test
 ```
+
+### Running the end-to-end tests
+
+See the dedicated [e2e doc][e2e] on how to run the end to end tests.
+These should be straightforward to run, so we ask that you do run them before
+submitting any work.
 
 ### Writing your solution
 
@@ -545,3 +551,4 @@ Contributors are also welcome to backfill ADRs if they are found to be missing.
 [discussions]: https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm//discussions
 [adr-template]: ./docs/adr/0000-template.md
 [developing]: ./docs/development-with-tilt.md
+[e2e]: ./test/e2e
