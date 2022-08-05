@@ -52,6 +52,7 @@ COUNTERFEITER := $(TOOLS_BIN_DIR)/counterfeiter
 GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
 DEFAULTER_GEN := $(TOOLS_BIN_DIR)/defaulter-gen
+GINKGO := $(TOOLS_BIN_DIR)/ginkgo
 
 .DEFAULT_GOAL := help
 
@@ -69,9 +70,20 @@ endif
 lint: $(GOLANGCI_LINT) ## Lint
 	$(GOLANGCI_LINT) run -v --fast=false
 
+##@ Testing
+
+# TODO fix this to use tags or something
 .PHONY: test
 test: ## Run tests.
-	go test -v ./...
+	go test -v ./controllers/... ./internal/...
+
+TEST_ARTEFACTS := $(REPO_ROOT)/test/e2e/_artefacts
+E2E_ARGS ?= ""
+
+.PHONY: e2e
+e2e: TAG=e2e
+e2e: $(GINKGO) docker-build ## Run end to end test suite.
+	$(GINKGO) -tags=e2e -v -r test/e2e -- -e2e.artefact-dir $(TEST_ARTEFACTS) $(E2E_ARGS)
 
 ##@ Binaries
 
@@ -81,7 +93,6 @@ build: managers ## Build manager binary.
 .PHONY: managers
 managers: ## Build manager binary.
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS} -extldflags '-static'" -o $(BIN_DIR)/manager .
-
 
 ##@ Docker
 
@@ -146,6 +157,9 @@ $(GOLANGCI_LINT): $(TOOLS_DIR)/go.mod # Get and build golangci-lint
 
 $(COUNTERFEITER): $(TOOLS_DIR)/go.mod # Get and build counterfieter
 	cd $(TOOLS_DIR); go build -tags=tools -o $(subst hack/tools/,,$@) github.com/maxbrunsfeld/counterfeiter/v6
+
+$(GINKGO): $(TOOLS_DIR)/go.mod # Get and build ginkgo v1
+	cd $(TOOLS_DIR); go build -tags=tools -o $(subst hack/tools/,,$@) github.com/onsi/ginkgo/ginkgo
 
 ##@ Utility
 

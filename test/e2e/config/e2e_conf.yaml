@@ -1,0 +1,90 @@
+---
+images:
+- name: ghcr.io/weaveworks-liquidmetal/cluster-api-provider-microvm:e2e
+  loadBehavior: mustLoad
+- name: quay.io/jetstack/cert-manager-cainjector:v1.7.2
+  loadBehavior: tryLoad
+- name: quay.io/jetstack/cert-manager-webhook:v1.7.2
+  loadBehavior: tryLoad
+- name: quay.io/jetstack/cert-manager-controller:v1.7.2
+  loadBehavior: tryLoad
+- name: registry.k8s.io/cluster-api/cluster-api-controller:v1.1.5
+  loadBehavior: tryLoad
+- name: registry.k8s.io/cluster-api/kubeadm-bootstrap-controller:v1.1.5
+  loadBehavior: tryLoad
+- name: registry.k8s.io/cluster-api/kubeadm-control-plane-controller:v1.1.5
+  loadBehavior: tryLoad
+
+providers:
+  - name: cluster-api
+    type: CoreProvider
+    versions:
+      - name: v1.1.5
+        value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.1.5/core-components.yaml"
+        type: "url"
+        contract: v1beta1
+        files:
+          - sourcePath: "../data/v1beta1/metadata.yaml"
+        replacements:
+          - old: "imagePullPolicy: Always"
+            new: "imagePullPolicy: IfNotPresent"
+          - old: --metrics-bind-addr=127.0.0.1:8080
+            new: --metrics-bind-addr=:8080
+  - name: kubeadm
+    type: BootstrapProvider
+    versions:
+      - name: v1.1.5
+        value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.1.5/bootstrap-components.yaml"
+        type: "url"
+        contract: v1beta1
+        files:
+          - sourcePath: "../data/v1beta1/metadata.yaml"
+        replacements:
+          - old: "imagePullPolicy: Always"
+            new: "imagePullPolicy: IfNotPresent"
+          - old: --metrics-bind-addr=127.0.0.1:8080
+            new: --metrics-bind-addr=:8080
+  - name: kubeadm
+    type: ControlPlaneProvider
+    versions:
+      - name: v1.1.5
+        value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.1.5/control-plane-components.yaml"
+        type: "url"
+        contract: v1beta1
+        files:
+          - sourcePath: "../data/v1beta1/metadata.yaml"
+        replacements:
+          - old: "imagePullPolicy: Always"
+            new: "imagePullPolicy: IfNotPresent"
+          - old: --metrics-bind-addr=127.0.0.1:8080
+            new: --metrics-bind-addr=:8080
+  - name: microvm
+    type: InfrastructureProvider
+    versions:
+      - name: v0.6.99 # made up version to test main
+        value: ../../../config/default
+        contract: v1beta1
+        files:
+          - sourcePath: "../data/v1beta1_provider/metadata.yaml"
+          - sourcePath: "../data/infrastructure-microvm/cluster-template-cilium.yaml"
+          - sourcePath: "../data/infrastructure-microvm/cluster-template.yaml"
+        replacements:
+          - old: "failureThreshold: 3"
+            new: "failureThreshold: 12"
+          - old: "imagePullPolicy: Always"
+            new: "imagePullPolicy: IfNotPresent"
+          - old: --metrics-bind-addr=127.0.0.1:8080
+            new: --metrics-bind-addr=:8080
+          - old: ghcr.io/weaveworks-liquidmetal/cluster-api-provider-microvm:dev
+            new: ghcr.io/weaveworks-liquidmetal/cluster-api-provider-microvm:e2e
+
+variables:
+  EXP_CLUSTER_RESOURCE_SET: "true"
+
+intervals:
+  default/wait-cluster: ["30m", "10s"]
+  default/wait-control-plane: ["25m", "10s"]
+  default/wait-worker-nodes: ["20m", "10s"]
+  default/wait-controllers: ["5m", "10s"]
+  default/wait-delete-cluster: ["20m", "10s"]
+  default/wait-workload-task: ["5m", "10s"]
