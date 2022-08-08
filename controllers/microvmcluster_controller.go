@@ -245,7 +245,11 @@ func (r *MicrovmClusterReconciler) SetupWithManager(
 		Watches(
 			&source.Kind{Type: &clusterv1.Cluster{}},
 			handler.EnqueueRequestsFromMapFunc(
-				util.ClusterToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("MicrovmCluster")),
+				util.ClusterToInfrastructureMapFunc(ctx,
+					infrav1.GroupVersion.WithKind("MicrovmCluster"),
+					r.Client,
+					&clusterv1.Cluster{},
+				),
 			),
 			builder.WithPredicates(
 				predicates.ClusterUnpaused(log),
