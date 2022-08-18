@@ -42,6 +42,10 @@ type FakeClient struct {
 		result1 *emptypb.Empty
 		result2 error
 	}
+	DisposeStub        func()
+	disposeMutex       sync.RWMutex
+	disposeArgsForCall []struct {
+	}
 	GetMicroVMStub        func(context.Context, *v1alpha1.GetMicroVMRequest, ...grpc.CallOption) (*v1alpha1.GetMicroVMResponse, error)
 	getMicroVMMutex       sync.RWMutex
 	getMicroVMArgsForCall []struct {
@@ -221,6 +225,30 @@ func (fake *FakeClient) DeleteMicroVMReturnsOnCall(i int, result1 *emptypb.Empty
 		result1 *emptypb.Empty
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeClient) Dispose() {
+	fake.disposeMutex.Lock()
+	fake.disposeArgsForCall = append(fake.disposeArgsForCall, struct {
+	}{})
+	stub := fake.DisposeStub
+	fake.recordInvocation("Dispose", []interface{}{})
+	fake.disposeMutex.Unlock()
+	if stub != nil {
+		fake.DisposeStub()
+	}
+}
+
+func (fake *FakeClient) DisposeCallCount() int {
+	fake.disposeMutex.RLock()
+	defer fake.disposeMutex.RUnlock()
+	return len(fake.disposeArgsForCall)
+}
+
+func (fake *FakeClient) DisposeCalls(stub func()) {
+	fake.disposeMutex.Lock()
+	defer fake.disposeMutex.Unlock()
+	fake.DisposeStub = stub
 }
 
 func (fake *FakeClient) GetMicroVM(arg1 context.Context, arg2 *v1alpha1.GetMicroVMRequest, arg3 ...grpc.CallOption) (*v1alpha1.GetMicroVMResponse, error) {
@@ -428,6 +456,8 @@ func (fake *FakeClient) Invocations() map[string][][]interface{} {
 	defer fake.createMicroVMMutex.RUnlock()
 	fake.deleteMicroVMMutex.RLock()
 	defer fake.deleteMicroVMMutex.RUnlock()
+	fake.disposeMutex.RLock()
+	defer fake.disposeMutex.RUnlock()
 	fake.getMicroVMMutex.RLock()
 	defer fake.getMicroVMMutex.RUnlock()
 	fake.listMicroVMsMutex.RLock()

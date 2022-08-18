@@ -90,9 +90,10 @@ func NewFlintlockClient(address string, opts ...Options) (microvm.Client, error)
 		return nil, fmt.Errorf("creating grpc connection: %w", err)
 	}
 
-	flClient := flintlockv1.NewMicroVMClient(conn)
-
-	return flClient, nil
+	return &disposableClient{
+		flintlockClient: flintlockv1.NewMicroVMClient(conn),
+		conn:            conn,
+	}, nil
 }
 
 func buildConfig(opts ...Options) clientConfig {
