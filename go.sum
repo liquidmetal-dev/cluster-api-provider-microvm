@@ -1368,7 +1368,6 @@ inet.af/netaddr v0.0.0-20220617031823-097006376321/go.mod h1:OIezDfdzOgFhuw4HuWa
 k8s.io/api v0.23.5/go.mod h1:Na4XuKng8PXJ2JsploYYrivXrINeTaycCGcYgF91Xm8=
 k8s.io/api v0.24.0/go.mod h1:5Jl90IUrJHUJYEMANRURMiVvJ0g7Ax7r3R1bqO8zx8I=
 k8s.io/api v0.24.2/go.mod h1:AHqbSkTm6YrQ0ObxjO3Pmp/ubFF/KuM7jU+3khoBsOg=
-k8s.io/api v0.24.3/go.mod h1:elGR/XSZrS7z7cSZPzVWaycpJuGIw57j9b95/1PdJNI=
 k8s.io/api v0.24.4 h1:I5Y645gJ8zWKawyr78lVfDQkZrAViSbeRXsPZWTxmXk=
 k8s.io/api v0.24.4/go.mod h1:42pVfA0NRxrtJhZQOvRSyZcJihzAdU59WBtTjYcB0/M=
 k8s.io/apiextensions-apiserver v0.23.5 h1:5SKzdXyvIJKu+zbfPc3kCbWpbxi+O+zdmAJBm26UJqI=
@@ -1376,7 +1375,6 @@ k8s.io/apiextensions-apiserver v0.23.5/go.mod h1:ntcPWNXS8ZPKN+zTXuzYMeg731CP0he
 k8s.io/apimachinery v0.23.5/go.mod h1:BEuFMMBaIbcOqVIJqNZJXGFTP4W6AycEpb5+m/97hrM=
 k8s.io/apimachinery v0.24.0/go.mod h1:82Bi4sCzVBdpYjyI4jY6aHX+YCUchUIrZrXKedjd2UM=
 k8s.io/apimachinery v0.24.2/go.mod h1:82Bi4sCzVBdpYjyI4jY6aHX+YCUchUIrZrXKedjd2UM=
-k8s.io/apimachinery v0.24.3/go.mod h1:82Bi4sCzVBdpYjyI4jY6aHX+YCUchUIrZrXKedjd2UM=
 k8s.io/apimachinery v0.24.4 h1:S0Ur3J/PbivTcL43EdSdPhqCqKla2NIuneNwZcTDeGQ=
 k8s.io/apimachinery v0.24.4/go.mod h1:82Bi4sCzVBdpYjyI4jY6aHX+YCUchUIrZrXKedjd2UM=
 k8s.io/apiserver v0.23.5/go.mod h1:7wvMtGJ42VRxzgVI7jkbKvMbuCbVbgsWFT7RyXiRNTw=
@@ -1386,8 +1384,8 @@ k8s.io/cli-runtime v0.24.0/go.mod h1:9XxoZDsEkRFUThnwqNviqzljtT/LdHtNWvcNFrAXl0A
 k8s.io/client-go v0.23.5/go.mod h1:flkeinTO1CirYgzMPRWxUCnV0G4Fbu2vLhYCObnt/r4=
 k8s.io/client-go v0.24.0/go.mod h1:VFPQET+cAFpYxh6Bq6f4xyMY80G6jKKktU6G0m00VDw=
 k8s.io/client-go v0.24.2/go.mod h1:zg4Xaoo+umDsfCWr4fCnmLEtQXyCNXCvJuSsglNcV30=
-k8s.io/client-go v0.24.3 h1:Nl1840+6p4JqkFWEW2LnMKU667BUxw03REfLAVhuKQY=
-k8s.io/client-go v0.24.3/go.mod h1:AAovolf5Z9bY1wIg2FZ8LPQlEdKHjLI7ZD4rw920BJw=
+k8s.io/client-go v0.24.4 h1:hIAIJZIPyaw46AkxwyR0FRfM/pRxpUNTd3ysYu9vyRg=
+k8s.io/client-go v0.24.4/go.mod h1:+AxlPWw/H6f+EJhRSjIeALaJT4tbeB/8g9BNvXGPd0Y=
 k8s.io/cluster-bootstrap v0.24.0 h1:MTs2x3Vfcl/PWvB5bfX7gzTFRyi4ZSbNSQgGJTCb6Sw=
 k8s.io/cluster-bootstrap v0.24.0/go.mod h1:xw+IfoaUweMCAoi+VYhmqkcjii2G7gNg59dmGn7hi0g=
 k8s.io/code-generator v0.23.5/go.mod h1:S0Q1JVA+kSzTI1oUvbKAxZY/DYbA/ZUb4Uknog12ETk=
