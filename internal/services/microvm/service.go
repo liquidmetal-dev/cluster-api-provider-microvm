@@ -27,6 +27,7 @@ const (
 
 type Client interface {
 	flintlockv1.MicroVMClient
+	Dispose()
 }
 
 type Service struct {
@@ -111,6 +112,10 @@ func (s *Service) Delete(ctx context.Context) (*emptypb.Empty, error) {
 	}
 
 	return s.client.DeleteMicroVM(ctx, input)
+}
+
+func (s *Service) Dispose() {
+	s.client.Dispose()
 }
 
 func (s *Service) addMetadata(apiMicroVM *flintlocktypes.MicroVMSpec) error {

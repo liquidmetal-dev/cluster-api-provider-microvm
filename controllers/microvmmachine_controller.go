@@ -256,6 +256,8 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 		return ctrl.Result{}, err
 	}
 
+	defer mvmSvc.Dispose()
+
 	var microvm *flintlocktypes.MicroVM
 
 	providerID := machineScope.GetProviderID()
