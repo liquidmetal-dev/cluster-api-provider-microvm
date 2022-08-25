@@ -158,6 +158,11 @@ spec:
                             description: Image is the container image to use for the
                               volume.
                             type: string
+                          mountPoint:
+                            description: MountPoint allows you to optionally specify
+                              a mount point for the volume. This only applied to additional
+                              volumes and it will use cloud-init to mount the volumes.
+                            type: string
                           readOnly:
                             default: false
                             description: ReadOnly specifies that the volume is to
@@ -205,6 +210,12 @@ spec:
                             image:
                               description: Image is the container image to use for
                                 the volume.
+                              type: string
+                            mountPoint:
+                              description: MountPoint allows you to optionally specify
+                                a mount point for the volume. This only applied to
+                                additional volumes and it will use cloud-init to mount
+                                the volumes.
                               type: string
                             readOnly:
                               default: false

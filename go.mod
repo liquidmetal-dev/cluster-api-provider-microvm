@@ -23,9 +23,15 @@ require (
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 
-// pinning this because cluster-api needs 0.23.5, but something else is
-// pulling in 0.24.2 which is breaking the e2es.
-replace k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.23.5
+
+replace (
+	// pinning this because cluster-api needs 0.23.5, but something else is
+	// pulling in 0.24.2 which is breaking the e2es.
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.23.5
+
+	github.com/weaveworks-liquidmetal/flintlock/api => /home/richard/code/weaveworks-liquidmetal/flintlock/api
+	github.com/weaveworks-liquidmetal/flintlock/client => /home/richard/code/weaveworks-liquidmetal/flintlock/client
+)
 
 require (
 	cloud.google.com/go/compute v1.6.1 // indirect

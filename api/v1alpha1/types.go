@@ -79,6 +79,10 @@ type Volume struct {
 	// +kubebuilder:default:=false
 	// +optional
 	ReadOnly bool `json:"readOnly,omitempty"`
+	// MountPoint allows you to optionally specify a mount point for the volume. This only
+	// applied to additional volumes and it will use cloud-init to mount the volumes.
+	// +optional
+	MountPoint string `json:"mountPoint,omitempty"`
 }
 
 // IfaceType is a type representing the network interface types.

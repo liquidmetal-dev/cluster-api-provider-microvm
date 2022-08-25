@@ -57,6 +57,7 @@ func convertToFlintlockAPI(machineScope *scope.MachineScope) *flintlocktypes.Mic
 			Source: &flintlocktypes.VolumeSource{
 				ContainerSource: &volume.Image,
 			},
+			MountPoint: &volume.MountPoint,
 		})
 	}
 
