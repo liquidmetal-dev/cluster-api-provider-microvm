@@ -18,8 +18,8 @@ require (
 	k8s.io/client-go v0.24.4
 	k8s.io/klog/v2 v2.70.1
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
-	sigs.k8s.io/cluster-api v1.2.1
-	sigs.k8s.io/cluster-api/test v1.2.1
+	sigs.k8s.io/cluster-api v1.1.5
+	sigs.k8s.io/cluster-api/test v1.1.5
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 
@@ -72,7 +72,7 @@ require (
 	github.com/google/cel-go v0.10.1 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
-	github.com/google/go-github/v45 v45.2.0 // indirect
+	github.com/google/go-github/v33 v33.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.2.0 // indirect
