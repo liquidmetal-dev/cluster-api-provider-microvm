@@ -10,7 +10,7 @@ require (
 	github.com/weaveworks-liquidmetal/flintlock/api v0.0.0-20220628141946-264f4544f49f
 	github.com/weaveworks-liquidmetal/flintlock/client v0.0.0-20220628141946-264f4544f49f
 	github.com/yitsushi/macpot v1.0.2
-	google.golang.org/grpc v1.48.0
+	google.golang.org/grpc v1.50.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.24.4
@@ -19,7 +19,7 @@ require (
 	k8s.io/klog/v2 v2.70.1
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
 	sigs.k8s.io/cluster-api v1.2.1
-	sigs.k8s.io/cluster-api/test v1.2.1
+	sigs.k8s.io/cluster-api/test v1.2.2
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 
