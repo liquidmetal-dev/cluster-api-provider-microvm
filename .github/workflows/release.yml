@@ -57,5 +57,6 @@ jobs:
         files: |
           templates/cluster-template.yaml
           templates/cluster-template-cilium.yaml
+          templates/cluster-template-flannel.yaml
           metadata.yaml
           infrastructure-components.yaml
