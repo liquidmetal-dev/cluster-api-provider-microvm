@@ -75,7 +75,7 @@ spec:
   template:
     spec:
       kernel:
-        filename: boot/image
+        filename: boot/vmlinux
         image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/flintlock-kernel:5.10.77}"
       kernelCmdline: {}
       memoryMb: 2048
@@ -117,7 +117,7 @@ spec:
   template:
     spec:
       kernel:
-        filename: boot/image
+        filename: boot/vmlinux
         image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/flintlock-kernel:5.10.77}"
       kernelCmdline: {}
       memoryMb: 2048
