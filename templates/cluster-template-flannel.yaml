@@ -75,7 +75,7 @@ spec:
   template:
     spec:
       kernel:
-        filename: boot/image
+        filename: boot/vmlinux
         image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/flintlock-kernel:5.10.77}"
       kernelCmdline: {}
       memoryMb: 2048
@@ -109,6 +109,7 @@ spec:
         apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
         kind: MicrovmMachineTemplate
         name: "${CLUSTER_NAME}-md-0"
+---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
 kind: MicrovmMachineTemplate
 metadata:
@@ -117,7 +118,7 @@ spec:
   template:
     spec:
       kernel:
-        filename: boot/image
+        filename: boot/vmlinux
         image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/flintlock-kernel:5.10.77}"
       kernelCmdline: {}
       memoryMb: 2048
@@ -245,7 +246,7 @@ data:
         }
       net-conf.json: |
         {
-          "Network": ${POD_CIDR:=10.244.0.0/16},
+          "Network": "${POD_CIDR:=10.244.0.0/16}",
           "Backend": {
             "Type": "vxlan"
           }
