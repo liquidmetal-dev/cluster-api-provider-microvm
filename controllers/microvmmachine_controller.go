@@ -9,6 +9,9 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
+	flclient "github.com/weaveworks-liquidmetal/controller-pkg/client"
+	flservice "github.com/weaveworks-liquidmetal/controller-pkg/services/microvm"
+	"github.com/weaveworks-liquidmetal/controller-pkg/types/microvm"
 	flintlocktypes "github.com/weaveworks-liquidmetal/flintlock/api/types"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -30,10 +33,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
-	flclient "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/client"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/defaults"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/scope"
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/services/microvm"
 )
 
 // MicrovmMachineReconciler reconciles a MicrovmMachine object.
@@ -169,6 +170,7 @@ func (r *MicrovmMachineReconciler) reconcileDelete(
 
 		return ctrl.Result{}, nil
 	}
+	defer mvmSvc.Close()
 
 	microvm, err := mvmSvc.Get(ctx)
 	if err != nil && !isSpecNotFound(err) {
@@ -255,8 +257,7 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 
 		return ctrl.Result{}, err
 	}
-
-	defer mvmSvc.Dispose()
+	defer mvmSvc.Close()
 
 	var microvm *flintlocktypes.MicroVM
 
@@ -305,7 +306,7 @@ func (r *MicrovmMachineReconciler) reconcileNormal(
 func (r *MicrovmMachineReconciler) getMicrovmService(
 	addr string,
 	machineScope *scope.MachineScope,
-) (*microvm.Service, error) {
+) (*flservice.Service, error) {
 	if r.MvmClientFunc == nil {
 		return nil, errClientFactoryFuncRequired
 	}
@@ -331,7 +332,7 @@ func (r *MicrovmMachineReconciler) getMicrovmService(
 		return nil, fmt.Errorf("creating microvm client: %w", err)
 	}
 
-	return microvm.New(machineScope, client, addr), nil
+	return flservice.New(machineScope, client, addr), nil
 }
 
 func (r *MicrovmMachineReconciler) parseMicroVMState(
@@ -341,7 +342,7 @@ func (r *MicrovmMachineReconciler) parseMicroVMState(
 	switch state {
 	// ALL DONE \o/
 	case flintlocktypes.MicroVMStatus_CREATED:
-		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateRunning
+		machineScope.MvmMachine.Status.VMState = &microvm.VMStateRunning
 		machineScope.V(defaults.LogLevelDebug).Info("microvm is in created state")
 		machineScope.Info("microvm created", "name", machineScope.Name(), "UID", machineScope.GetInstanceID())
 		machineScope.SetReady()
@@ -349,14 +350,14 @@ func (r *MicrovmMachineReconciler) parseMicroVMState(
 		return reconcile.Result{}, nil
 	// MVM IS PENDING
 	case flintlocktypes.MicroVMStatus_PENDING:
-		machineScope.MvmMachine.Status.VMState = &infrav1.VMStatePending
+		machineScope.MvmMachine.Status.VMState = &microvm.VMStatePending
 		machineScope.SetNotReady(infrav1.MicrovmPendingReason, clusterv1.ConditionSeverityInfo, "")
 
 		return ctrl.Result{RequeueAfter: requeuePeriod}, nil
 	// MVM IS FAILING
 	case flintlocktypes.MicroVMStatus_FAILED:
 		// TODO: we need a failure reason from flintlock: Flintlock #299
-		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateFailed
+		machineScope.MvmMachine.Status.VMState = &microvm.VMStateFailed
 		machineScope.SetNotReady(infrav1.MicrovmProvisionFailedReason,
 			clusterv1.ConditionSeverityError,
 			errMicrovmFailed.Error(),
@@ -370,7 +371,7 @@ func (r *MicrovmMachineReconciler) parseMicroVMState(
 		return ctrl.Result{RequeueAfter: requeuePeriod}, nil
 		// NO IDEA WHAT IS GOING ON WITH THIS MVM
 	default:
-		machineScope.MvmMachine.Status.VMState = &infrav1.VMStateUnknown
+		machineScope.MvmMachine.Status.VMState = &microvm.VMStateUnknown
 		machineScope.SetNotReady(
 			infrav1.MicrovmUnknownStateReason,
 			clusterv1.ConditionSeverityError,

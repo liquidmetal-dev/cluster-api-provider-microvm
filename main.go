@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/spf13/pflag"
+	client "github.com/weaveworks-liquidmetal/controller-pkg/client"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -41,7 +42,6 @@ import (
 	//+kubebuilder:scaffold:imports
 	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/controllers"
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/client"
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/version"
 )
 

@@ -5,12 +5,15 @@ package scope
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"hash/crc32"
 	"sort"
 	"strings"
 
 	"github.com/go-logr/logr"
+	flclient "github.com/weaveworks-liquidmetal/controller-pkg/client"
+	"github.com/weaveworks-liquidmetal/controller-pkg/types/microvm"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2/klogr"
@@ -171,6 +174,24 @@ func (m *MachineScope) Patch() error {
 	return nil
 }
 
+// GetMicrovmSpec returns the spec for the MicroVM.
+func (m *MachineScope) GetMicrovmSpec() microvm.VMSpec {
+	return m.MvmMachine.Spec.VMSpec
+}
+
+// GetLabels returns any user defined or default labels for the microvm.
+func (m *MachineScope) GetLabels() map[string]string {
+	labels := map[string]string{}
+
+	if m.MvmMachine.Spec.VMSpec.Labels != nil {
+		labels = m.MvmMachine.Spec.VMSpec.Labels
+	}
+
+	labels["cluster-name"] = m.ClusterName()
+
+	return labels
+}
+
 func (m *MachineScope) GetFailureDomain() (string, error) {
 	if m.Machine.Spec.FailureDomain != nil && *m.Machine.Spec.FailureDomain != "" {
 		return *m.Machine.Spec.FailureDomain, nil
@@ -206,9 +227,9 @@ func (m *MachineScope) GetFailureDomain() (string, error) {
 // bootstrap provider that is being used for this cluster/machine. Initially this we will
 // be using the Kubeadm bootstrap provider and so this will contain cloud-init configuration
 // that will invoke kubeadm to create or join a cluster.
-func (m *MachineScope) GetRawBootstrapData() ([]byte, error) {
+func (m *MachineScope) GetRawBootstrapData() (string, error) {
 	if m.Machine.Spec.Bootstrap.DataSecretName == nil {
-		return nil, errMissingBootstrapDataSecret
+		return "", errMissingBootstrapDataSecret
 	}
 
 	bootstrapSecret := &corev1.Secret{}
@@ -218,15 +239,15 @@ func (m *MachineScope) GetRawBootstrapData() ([]byte, error) {
 	}
 
 	if err := m.client.Get(m.ctx, secretKey, bootstrapSecret); err != nil {
-		return nil, fmt.Errorf("getting bootstrap secret %s: %w", secretKey, err)
+		return "", fmt.Errorf("getting bootstrap secret %s: %w", secretKey, err)
 	}
 
 	bootstrapData, ok := bootstrapSecret.Data["value"]
 	if !ok {
-		return nil, errMissingBootstrapSecretKey
+		return "", errMissingBootstrapSecretKey
 	}
 
-	return bootstrapData, nil
+	return base64.StdEncoding.EncodeToString(bootstrapData), nil
 }
 
 // SetReady sets any properties/conditions that are used to indicate that the MicrovmMachine is 'Ready'
@@ -276,7 +297,7 @@ func (m *MachineScope) GetInstanceID() string {
 
 // GetSSHPublicKeys will return the SSH public keys for this machine. It will take into account
 // precedence rules. If there are no keys then nil will be returned.
-func (m *MachineScope) GetSSHPublicKeys() []infrav1.SSHPublicKey {
+func (m *MachineScope) GetSSHPublicKeys() []microvm.SSHPublicKey {
 	if len(m.MvmMachine.Spec.SSHPublicKeys) != 0 {
 		return m.MvmMachine.Spec.SSHPublicKeys
 	}
@@ -324,7 +345,7 @@ func (m *MachineScope) GetBasicAuthToken(addr string) (string, error) {
 // and return the TLS config for the client.
 // If either are not set, it will be assumed that the hosts are not
 // configured will TLS and all client calls will be made without credentials.
-func (m *MachineScope) GetTLSConfig() (*infrav1.TLSConfig, error) {
+func (m *MachineScope) GetTLSConfig() (*flclient.TLSConfig, error) {
 	if m.MvmCluster.Spec.TLSSecretRef == "" {
 		m.Info("no TLS configuration found. will create insecure connection")
 
@@ -356,7 +377,7 @@ func (m *MachineScope) GetTLSConfig() (*infrav1.TLSConfig, error) {
 		return nil, &tlsError{caCert}
 	}
 
-	return &infrav1.TLSConfig{
+	return &flclient.TLSConfig{
 		Cert:   certBytes,
 		Key:    keyBytes,
 		CACert: caBytes,

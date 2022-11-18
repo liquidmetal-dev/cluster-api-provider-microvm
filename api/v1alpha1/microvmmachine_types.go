@@ -4,6 +4,7 @@
 package v1alpha1
 
 import (
+	microvm "github.com/weaveworks-liquidmetal/controller-pkg/types/microvm"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/errors"
@@ -17,14 +18,14 @@ const (
 
 // MicrovmMachineSpec defines the desired state of MicrovmMachine.
 type MicrovmMachineSpec struct {
-	MicrovmSpec `json:",inline"`
+	microvm.VMSpec `json:",inline"`
 
 	// SSHPublicKeys is list of SSH public keys that will be used with stated users
 	// on this machine.
 	// If specified they will take precedence over any SSH keys specified at
 	// the cluster level.
 	// +optional
-	SSHPublicKeys []SSHPublicKey `json:"sshPublicKeys,omitempty"`
+	SSHPublicKeys []microvm.SSHPublicKey `json:"sshPublicKeys,omitempty"`
 
 	// ProviderID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
@@ -38,7 +39,7 @@ type MicrovmMachineStatus struct {
 	Ready bool `json:"ready"`
 
 	// VMState indicates the state of the microvm.
-	VMState *VMState `json:"vmState,omitempty"`
+	VMState *microvm.VMState `json:"vmState,omitempty"`
 
 	// Addresses contains the microvm associated addresses.
 	Addresses []clusterv1.MachineAddress `json:"addresses,omitempty"`
