@@ -4,6 +4,8 @@
 package v1alpha1
 
 import (
+	flclient "github.com/weaveworks-liquidmetal/controller-pkg/client"
+	"github.com/weaveworks-liquidmetal/controller-pkg/types/microvm"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
@@ -21,13 +23,13 @@ type MicrovmClusterSpec struct {
 	// If specified these keys will be applied to all machine created unless you
 	// specify different keys at the machine level.
 	// +optional
-	SSHPublicKeys []SSHPublicKey `json:"sshPublicKeys,omitempty"`
+	SSHPublicKeys []microvm.SSHPublicKey `json:"sshPublicKeys,omitempty"`
 	// Placement specifies how machines for the cluster should be placed onto hosts (i.e. where the microvms are created).
 	// +kubebuilder:validation:Required
 	Placement Placement `json:"placement"`
 	// MicrovmProxy is the proxy server details to use when calling the microvm service. This is an
 	// alteranative to using the http proxy environment variables and applied purely to the grpc service.
-	MicrovmProxy *Proxy `json:"microvmProxy,omitempty"`
+	MicrovmProxy *flclient.Proxy `json:"microvmProxy,omitempty"`
 
 	// mTLS Configuration:
 	//

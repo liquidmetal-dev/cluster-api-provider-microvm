@@ -6,6 +6,7 @@ import (
 
 	. "github.com/onsi/gomega"
 
+	flclient "github.com/weaveworks-liquidmetal/controller-pkg/client"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -202,7 +203,7 @@ func TestMachineGetTLSConfig(t *testing.T) {
 
 	tt := []struct {
 		name        string
-		expected    func(*v1alpha1.TLSConfig, error)
+		expected    func(*flclient.TLSConfig, error)
 		initObjects []client.Object
 		cluster     *infrav1.MicrovmCluster
 	}{
@@ -212,7 +213,7 @@ func TestMachineGetTLSConfig(t *testing.T) {
 				mvmCluster, tlsSecret,
 			},
 			cluster: mvmCluster,
-			expected: func(cfg *v1alpha1.TLSConfig, err error) {
+			expected: func(cfg *flclient.TLSConfig, err error) {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(cfg).ToNot(BeNil())
 				Expect(cfg.Cert).To(Equal([]byte("foo")))
@@ -226,7 +227,7 @@ func TestMachineGetTLSConfig(t *testing.T) {
 				mvmCluster,
 			},
 			cluster: mvmCluster,
-			expected: func(cfg *v1alpha1.TLSConfig, err error) {
+			expected: func(cfg *flclient.TLSConfig, err error) {
 				Expect(err).To(HaveOccurred())
 			},
 		},
@@ -236,7 +237,7 @@ func TestMachineGetTLSConfig(t *testing.T) {
 				otherClusterNoTLS,
 			},
 			cluster: otherClusterNoTLS,
-			expected: func(cfg *v1alpha1.TLSConfig, err error) {
+			expected: func(cfg *flclient.TLSConfig, err error) {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(cfg).To(BeNil())
 			},
@@ -247,7 +248,7 @@ func TestMachineGetTLSConfig(t *testing.T) {
 				mvmCluster, otherTLSSecret,
 			},
 			cluster: mvmCluster,
-			expected: func(cfg *v1alpha1.TLSConfig, err error) {
+			expected: func(cfg *flclient.TLSConfig, err error) {
 				Expect(err).To(HaveOccurred())
 			},
 		},

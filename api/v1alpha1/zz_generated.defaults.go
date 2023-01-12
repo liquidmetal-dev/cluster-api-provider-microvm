@@ -21,15 +21,15 @@ func RegisterDefaults(scheme *runtime.Scheme) error {
 }
 
 func SetObjectDefaults_MicrovmMachine(in *MicrovmMachine) {
-	for i := range in.Spec.MicrovmSpec.NetworkInterfaces {
-		a := &in.Spec.MicrovmSpec.NetworkInterfaces[i]
+	for i := range in.Spec.VMSpec.NetworkInterfaces {
+		a := &in.Spec.VMSpec.NetworkInterfaces[i]
 		SetDefaults_NetworkInterface(a)
 	}
 }
 
 func SetObjectDefaults_MicrovmMachineTemplate(in *MicrovmMachineTemplate) {
-	for i := range in.Spec.Template.Spec.MicrovmSpec.NetworkInterfaces {
-		a := &in.Spec.Template.Spec.MicrovmSpec.NetworkInterfaces[i]
+	for i := range in.Spec.Template.Spec.VMSpec.NetworkInterfaces {
+		a := &in.Spec.Template.Spec.VMSpec.NetworkInterfaces[i]
 		SetDefaults_NetworkInterface(a)
 	}
 }

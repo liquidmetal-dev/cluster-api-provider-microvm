@@ -17,11 +17,12 @@ import (
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
+	"github.com/weaveworks-liquidmetal/controller-pkg/types/microvm"
 	flintlocktypes "github.com/weaveworks-liquidmetal/flintlock/api/types"
 
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
 	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/services/microvm/mock_client"
+	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/controllers/fakes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -162,7 +163,7 @@ func TestMachineReconcileServiceGetError(t *testing.T) {
 
 	objects := defaultClusterObjects()
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	fakeAPIClient.GetMicroVMReturns(nil, errors.New("something terrible happened"))
 
 	client := createFakeClient(g, objects.AsRuntimeObjects())
@@ -175,7 +176,7 @@ func TestMachineReconcileMachineExistsAndRunning(t *testing.T) {
 
 	apiObjects := defaultClusterObjects()
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withExistingMicrovm(&fakeAPIClient, flintlocktypes.MicroVMStatus_CREATED)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
@@ -193,7 +194,7 @@ func TestMachineReconcileMachineExistsAndPending(t *testing.T) {
 
 	apiObjects := defaultClusterObjects()
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withExistingMicrovm(&fakeAPIClient, flintlocktypes.MicroVMStatus_PENDING)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
@@ -205,7 +206,7 @@ func TestMachineReconcileMachineExistsAndPending(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
 
 	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmPendingReason)
-	assertMachineVMState(g, reconciled, infrav1.VMStatePending)
+	assertMachineVMState(g, reconciled, microvm.VMStatePending)
 	assertMachineFinalizer(g, reconciled)
 }
 
@@ -214,7 +215,7 @@ func TestMachineReconcileMachineExistsButFailed(t *testing.T) {
 
 	apiObjects := defaultClusterObjects()
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withExistingMicrovm(&fakeAPIClient, flintlocktypes.MicroVMStatus_FAILED)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
@@ -225,7 +226,7 @@ func TestMachineReconcileMachineExistsButFailed(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
 
 	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmProvisionFailedReason)
-	assertMachineVMState(g, reconciled, infrav1.VMStateFailed)
+	assertMachineVMState(g, reconciled, microvm.VMStateFailed)
 	assertMachineFinalizer(g, reconciled)
 }
 
@@ -234,7 +235,7 @@ func TestMachineReconcileMachineExistsButUnknownState(t *testing.T) {
 
 	apiObjects := defaultClusterObjects()
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withExistingMicrovm(&fakeAPIClient, flintlocktypes.MicroVMStatus_MicroVMState(42))
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
@@ -245,7 +246,7 @@ func TestMachineReconcileMachineExistsButUnknownState(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
 
 	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmUnknownStateReason)
-	assertMachineVMState(g, reconciled, infrav1.VMStateUnknown)
+	assertMachineVMState(g, reconciled, microvm.VMStateUnknown)
 	assertMachineFinalizer(g, reconciled)
 }
 
@@ -255,7 +256,7 @@ func TestMachineReconcileNoVmCreateSucceeds(t *testing.T) {
 	apiObjects := defaultClusterObjects()
 	apiObjects.MvmMachine.Spec.ProviderID = nil
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
 	withCreateMicrovmSuccess(&fakeAPIClient)
 
@@ -279,7 +280,7 @@ func TestMachineReconcileNoVmCreateSucceeds(t *testing.T) {
 	g.Expect(reconciled.Spec.ProviderID).To(Equal(pointer.String(expectedProviderID)))
 
 	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmPendingReason)
-	assertMachineVMState(g, reconciled, infrav1.VMStatePending)
+	assertMachineVMState(g, reconciled, microvm.VMStatePending)
 	assertMachineFinalizer(g, reconciled)
 }
 
@@ -290,7 +291,7 @@ func TestMachineReconcileNoMachineFailureDomainCreateSucceeds(t *testing.T) {
 	apiObjects.MvmMachine.Spec.ProviderID = nil
 	apiObjects.Machine.Spec.FailureDomain = nil
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
 	withCreateMicrovmSuccess(&fakeAPIClient)
 
@@ -303,7 +304,7 @@ func TestMachineReconcileNoMachineFailureDomainCreateSucceeds(t *testing.T) {
 	reconciled, err := getMicrovmMachine(client, testMachineName, testClusterNamespace)
 	g.Expect(err).NotTo(HaveOccurred(), "Getting microvm machine should not fail")
 	assertConditionFalse(g, reconciled, infrav1.MicrovmReadyCondition, infrav1.MicrovmPendingReason)
-	assertMachineVMState(g, reconciled, infrav1.VMStatePending)
+	assertMachineVMState(g, reconciled, microvm.VMStatePending)
 	assertMachineFinalizer(g, reconciled)
 }
 
@@ -311,7 +312,7 @@ func TestMachineReconcileNoVmCreateClusterSSHSucceeds(t *testing.T) {
 	t.Parallel()
 	g := NewWithT(t)
 
-	expectedKeys := []v1alpha1.SSHPublicKey{{
+	expectedKeys := []microvm.SSHPublicKey{{
 		User:           "ubuntu",
 		AuthorizedKeys: []string{"ClusterSSH"},
 	}}
@@ -320,7 +321,7 @@ func TestMachineReconcileNoVmCreateClusterSSHSucceeds(t *testing.T) {
 	apiObjects.MvmMachine.Spec.ProviderID = nil
 	apiObjects.MvmMachine.Spec.SSHPublicKeys = expectedKeys
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
 	withCreateMicrovmSuccess(&fakeAPIClient)
 
@@ -346,7 +347,7 @@ func TestMachineReconcileNoVmCreateClusterMachineSSHSucceeds(t *testing.T) {
 	t.Parallel()
 	g := NewWithT(t)
 
-	expectedKeys := []v1alpha1.SSHPublicKey{{
+	expectedKeys := []microvm.SSHPublicKey{{
 		AuthorizedKeys: []string{"MachineSSH"},
 		User:           "root",
 	}, {
@@ -356,10 +357,10 @@ func TestMachineReconcileNoVmCreateClusterMachineSSHSucceeds(t *testing.T) {
 
 	apiObjects := defaultClusterObjects()
 	apiObjects.MvmMachine.Spec.ProviderID = nil
-	apiObjects.MvmCluster.Spec.SSHPublicKeys = []v1alpha1.SSHPublicKey{{AuthorizedKeys: []string{"ClusterSSH"}}}
+	apiObjects.MvmCluster.Spec.SSHPublicKeys = []microvm.SSHPublicKey{{AuthorizedKeys: []string{"ClusterSSH"}}}
 	apiObjects.MvmMachine.Spec.SSHPublicKeys = expectedKeys
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
 	withCreateMicrovmSuccess(&fakeAPIClient)
 
@@ -386,7 +387,7 @@ func TestMachineReconcileNoVmCreateAdditionReconcile(t *testing.T) {
 	apiObjects := defaultClusterObjects()
 	apiObjects.MvmMachine.Spec.ProviderID = nil
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
 	withCreateMicrovmSuccess(&fakeAPIClient)
 
@@ -414,7 +415,7 @@ func TestMachineReconcileDeleteVmSucceeds(t *testing.T) {
 	apiObjects.MvmMachine.Spec.ProviderID = pointer.String(fmt.Sprintf("microvm://127.0.0.1:9090/%s", testMachineUID))
 	apiObjects.MvmMachine.Finalizers = []string{v1alpha1.MachineFinalizer}
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withExistingMicrovm(&fakeAPIClient, flintlocktypes.MicroVMStatus_CREATED)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
@@ -441,7 +442,7 @@ func TestMachineReconcileDeleteGetReturnsNil(t *testing.T) {
 	}
 	apiObjects.MvmMachine.Finalizers = []string{v1alpha1.MachineFinalizer}
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withMissingMicrovm(&fakeAPIClient)
 
 	client := createFakeClient(g, apiObjects.AsRuntimeObjects())
@@ -466,7 +467,7 @@ func TestMachineReconcileDeleteGetErrors(t *testing.T) {
 	}
 	apiObjects.MvmMachine.Finalizers = []string{v1alpha1.MachineFinalizer}
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withExistingMicrovm(&fakeAPIClient, flintlocktypes.MicroVMStatus_CREATED)
 	fakeAPIClient.GetMicroVMReturns(nil, errors.New("something terrible happened"))
 
@@ -484,7 +485,7 @@ func TestMachineReconcileDeleteDeleteErrors(t *testing.T) {
 	}
 	apiObjects.MvmMachine.Finalizers = []string{v1alpha1.MachineFinalizer}
 
-	fakeAPIClient := mock_client.FakeClient{}
+	fakeAPIClient := fakes.FakeClient{}
 	withExistingMicrovm(&fakeAPIClient, flintlocktypes.MicroVMStatus_CREATED)
 	fakeAPIClient.DeleteMicroVMReturns(nil, errors.New("something terrible happened"))
 
