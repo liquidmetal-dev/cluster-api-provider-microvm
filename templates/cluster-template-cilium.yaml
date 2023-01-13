@@ -44,7 +44,7 @@ metadata:
   name: "${CLUSTER_NAME}-control-plane"
 spec:
   replicas: ${CONTROL_PLANE_MACHINE_COUNT}
-  version: "${KUBERNETES_VERSION:=v1.21.8}"
+  version: "${KUBERNETES_VERSION:=v1.23.5}"
   machineTemplate:
     infrastructureRef:
       kind: MicrovmMachineTemplate
@@ -76,10 +76,14 @@ spec:
       memoryMb: 2048
       rootVolume:
         id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.21.8}"
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.23.5}"
       kernel:
         filename: "boot/vmlinux"
-        image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/flintlock-kernel:5.10.77}"
+        image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-bin:5.10.77}"
+      volumes:
+      - id: modules
+        image: "${MVM_KERNEL_MODULES_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-modules:5.10.77}"
+        mountPoint: /lib/modules/5.10.77
       kernelCmdline: {}
       networkInterfaces:
       - guestDeviceName: "eth1"
@@ -97,7 +101,7 @@ spec:
   template:
     spec:
       clusterName: "${CLUSTER_NAME}"
-      version: "${KUBERNETES_VERSION:=v1.21.8}"
+      version: "${KUBERNETES_VERSION:=v1.23.5}"
       bootstrap:
         configRef:
           name: "${CLUSTER_NAME}-md-0"
@@ -119,10 +123,14 @@ spec:
       memoryMb: 2048
       rootVolume:
         id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.21.8}"
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.23.5}"
       kernel:
         filename: "boot/vmlinux"
-        image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/flintlock-kernel:5.10.77}"
+        image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-bin:5.10.77}"
+      volumes:
+      - id: modules
+        image: "${MVM_KERNEL_MODULES_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-modules:5.10.77}"
+        mountPoint: /lib/modules/5.10.77
       kernelCmdline: {}
       networkInterfaces:
       - guestDeviceName: "eth1"

@@ -101,13 +101,14 @@ Create the declaration for your cluster. We will use the template in the repo.
 3. Create a cluster declaration from the template
 
     ```bash
-    export KUBERNETES_VERSION=v1.20.0
+    export KUBERNETES_VERSION=v1.23.5
     export CLUSTER_NAME=mvm-test
     export CONTROL_PLANE_MACHINE_COUNT=1
     export WORKER_MACHINE_COUNT=1
     export CONTROL_PLANE_VIP=192.168.8.15
-    export MVM_ROOT_IMAGE=docker.io/richardcase/ubuntu-bionic-test:cloudimage_v0.0.1
-    export MVM_KERNEL_IMAGE=docker.io/richardcase/ubuntu-bionic-kernel:0.0.11
+    export MVM_ROOT_IMAGE=ghcr.io/weaveworks-liquidmetal/capmvm-k8s-os:1.23.5
+    export MVM_KERNEL_IMAGE=ghcr.io/weaveworks-liquidmetal/kernel-bin:5.10.77
+    export MVM_KERNEL_MODULES_IMAGE=ghcr.io/weaveworks-liquidmetal/kernel-modules:5.10.77
     # NOTE: change 192.168.8.2 to be the IP address from step 2
     export HOST_ENDPOINT=192.168.8.2:9090
 

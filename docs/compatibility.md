@@ -4,6 +4,7 @@ This table shows the compatibility between CAPMVM and Flintlock versions.
 
 | CAPMVM      | Flintlock              |
 | ----------- | ---------------------- |
+| `v0.8.0`    | `>= v0.5.0`            |
 | `v0.7.0`    | `>= v0.1.0`            |
 | `v0.6.0`    | `v0.1.0`               |
 | `v0.5.x`    | `v0.1.0-alpha.9`       |
