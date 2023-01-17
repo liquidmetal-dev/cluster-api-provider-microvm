@@ -103,6 +103,12 @@ spec:
                           recommended list, they will be used automatically. This
                           field is for additional values.
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels allow you to include extra data on the
+                          Microvm
+                        type: object
                       memoryMb:
                         description: MemoryMb is the amount of memory in megabytes
                           that the microvm will be allocated.
@@ -155,8 +161,13 @@ spec:
                             description: ID is a unique identifier for this volume.
                             type: string
                           image:
-                            description: Image is the container image to use for the
-                              volume.
+                            description: Image is the container image to use as the
+                              source for the volume.
+                            type: string
+                          mountPoint:
+                            description: MountPoint specifies the guest mountpoint
+                              for the volume. This will only be applied to additional
+                              volumes.
                             type: string
                           readOnly:
                             default: false
@@ -203,8 +214,13 @@ spec:
                               description: ID is a unique identifier for this volume.
                               type: string
                             image:
-                              description: Image is the container image to use for
-                                the volume.
+                              description: Image is the container image to use as
+                                the source for the volume.
+                              type: string
+                            mountPoint:
+                              description: MountPoint specifies the guest mountpoint
+                                for the volume. This will only be applied to additional
+                                volumes.
                               type: string
                             readOnly:
                               default: false

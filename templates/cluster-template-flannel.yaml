@@ -44,7 +44,7 @@ metadata:
   name: "${CLUSTER_NAME}-control-plane"
 spec:
   replicas: ${CONTROL_PLANE_MACHINE_COUNT}
-  version: "${KUBERNETES_VERSION:=v1.21.8}"
+  version: "${KUBERNETES_VERSION:=v1.23.5}"
   machineTemplate:
     infrastructureRef:
       apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
@@ -74,17 +74,21 @@ metadata:
 spec:
   template:
     spec:
+      rootVolume:
+        id: root
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.23.5}"
       kernel:
         filename: boot/vmlinux
-        image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/flintlock-kernel:5.10.77}"
+        image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-bin:5.10.77}"
+      volumes:
+      - id: modules
+        image: "${MVM_KERNEL_MODULES_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-modules:5.10.77}"
+        mountPoint: /lib/modules/5.10.77
       kernelCmdline: {}
       memoryMb: 2048
       networkInterfaces:
       - guestDeviceName: eth1
         type: macvtap
-      rootVolume:
-        id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.21.8}"
       vcpu: 2
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
@@ -99,7 +103,7 @@ spec:
   template:
     spec:
       clusterName: "${CLUSTER_NAME}"
-      version: "${KUBERNETES_VERSION:=v1.21.8}"
+      version: "${KUBERNETES_VERSION:=v1.23.5}"
       bootstrap:
         configRef:
           apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
@@ -117,17 +121,21 @@ metadata:
 spec:
   template:
     spec:
+      rootVolume:
+        id: root
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.23.5}"
       kernel:
         filename: boot/vmlinux
-        image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/flintlock-kernel:5.10.77}"
+        image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-bin:5.10.77}"
+      volumes:
+      - id: modules
+        image: "${MVM_KERNEL_MODULES_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-modules:5.10.77}"
+        mountPoint: /lib/modules/5.10.77
       kernelCmdline: {}
       memoryMb: 2048
       networkInterfaces:
       - guestDeviceName: eth1
         type: macvtap
-      rootVolume:
-        id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.21.8}"
       vcpu: 2
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
