@@ -74,9 +74,11 @@ metadata:
 spec:
   template:
     spec:
+      kernelVersion: "${KERNEL_VERSION}"
+      osVersion: "${OS_VERSION}"
       rootVolume:
         id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.23.5}"
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-k8s-os:1.23.5}"
       kernel:
         filename: boot/vmlinux
         image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-bin:5.10.77}"
@@ -121,9 +123,11 @@ metadata:
 spec:
   template:
     spec:
+      kernelVersion: "${KERNEL_VERSION}"
+      osVersion: "${OS_VERSION}"
       rootVolume:
         id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.23.5}"
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-k8s-os:1.23.5}"
       kernel:
         filename: boot/vmlinux
         image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-bin:5.10.77}"

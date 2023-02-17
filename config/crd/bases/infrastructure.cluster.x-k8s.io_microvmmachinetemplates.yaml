@@ -233,10 +233,8 @@ spec:
                           type: object
                         type: array
                     required:
-                    - kernel
                     - memoryMb
                     - networkInterfaces
-                    - rootVolume
                     - vcpu
                     type: object
                 required:

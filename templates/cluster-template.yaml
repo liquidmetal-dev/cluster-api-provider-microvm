@@ -70,9 +70,11 @@ spec:
     spec:
       vcpu: 2
       memoryMb: 2048
+      kernelVersion: "${KERNEL_VERSION}"
+      osVersion: "${OS_VERSION}"
       rootVolume:
         id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.23.5}"
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-k8s-os:1.23.5}"
       kernel:
         filename: "boot/vmlinux"
         image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-bin:5.10.77}"
@@ -117,9 +119,11 @@ spec:
     spec:
       vcpu: 2
       memoryMb: 2048
+      kernelVersion: "${KERNEL_VERSION}"
+      osVersion: "${OS_VERSION}"
       rootVolume:
         id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.23.5}"
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-k8s-os:1.23.5}"
       kernel:
         filename: "boot/vmlinux"
         image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-bin:5.10.77}"
