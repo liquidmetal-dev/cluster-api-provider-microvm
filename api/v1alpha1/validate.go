@@ -18,3 +18,33 @@ func (p *Placement) Validate() []*field.Error {
 
 	return errs
 }
+
+func (s *MicrovmSpec) Validate() []*field.Error {
+	var errs field.ErrorList
+
+	if s.OsVersion == "" {
+		if s.RootVolume.ID == "" {
+			errs = append(errs,
+				field.Required(field.NewPath("spec", "rootVolume", "id"), "must be set if osVersion is omitted"))
+		}
+
+		if s.RootVolume.Image == "" {
+			errs = append(errs,
+				field.Required(field.NewPath("spec", "rootVolume", "image"), "must be set if osVersion is omitted"))
+		}
+	}
+
+	if s.KernelVersion == "" {
+		if s.Kernel.Image == "" {
+			errs = append(errs,
+				field.Required(field.NewPath("spec", "kernel", "image"), "must be set if kernelVersion is omitted"))
+		}
+
+		if s.Kernel.Filename == "" {
+			errs = append(errs,
+				field.Required(field.NewPath("spec", "kernel", "filename"), "must be set if kernelVersion is omitted"))
+		}
+	}
+
+	return errs
+}
