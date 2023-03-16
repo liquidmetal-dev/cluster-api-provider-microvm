@@ -8,7 +8,7 @@ import (
 
 	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/test/e2e/utils"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

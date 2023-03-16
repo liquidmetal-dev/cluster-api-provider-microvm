@@ -162,8 +162,8 @@ $(GOLANGCI_LINT): $(TOOLS_DIR)/go.mod # Get and build golangci-lint
 $(COUNTERFEITER): $(TOOLS_DIR)/go.mod # Get and build counterfieter
 	cd $(TOOLS_DIR); go build -tags=tools -o $(subst hack/tools/,,$@) github.com/maxbrunsfeld/counterfeiter/v6
 
-$(GINKGO): $(TOOLS_DIR)/go.mod # Get and build ginkgo v1
-	cd $(TOOLS_DIR); go build -tags=tools -o $(subst hack/tools/,,$@) github.com/onsi/ginkgo/ginkgo
+$(GINKGO): $(TOOLS_DIR)/go.mod # Get and build ginkgo v2
+	cd $(TOOLS_DIR); go build -tags=tools -o $(subst hack/tools/,,$@) github.com/onsi/ginkgo/v2/ginkgo
 
 ##@ Utility
 
