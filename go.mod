@@ -2,13 +2,19 @@ module github.com/weaveworks-liquidmetal/cluster-api-provider-microvm
 
 go 1.17
 
+// This is required because the cluster-api/test package imports an invalid
+// cluster-api version. Basically whenever you bump cluster-api and
+// cluster-api/test, bump this to match.
+// https://github.com/kubernetes-sigs/cluster-api/pull/4765
+replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.2.1
+
 require (
 	github.com/go-logr/logr v1.2.3
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.20.0
 	github.com/spf13/pflag v1.0.5
-	github.com/weaveworks-liquidmetal/controller-pkg/client v0.0.0-20230113164813-f1ccd249c9ba
-	github.com/weaveworks-liquidmetal/controller-pkg/services/microvm v0.0.0-20230113164813-f1ccd249c9ba
+	github.com/weaveworks-liquidmetal/controller-pkg/client v0.0.0-20230116125931-089fb91de682
+	github.com/weaveworks-liquidmetal/controller-pkg/services/microvm v0.0.0-20230314141046-be161234224e
 	github.com/weaveworks-liquidmetal/controller-pkg/types/microvm v0.0.0-20230113164813-f1ccd249c9ba
 	github.com/weaveworks-liquidmetal/flintlock/api v0.0.0-20230109155544-97f4f12ca184
 	github.com/weaveworks-liquidmetal/flintlock/client v0.0.0-20230109155544-97f4f12ca184
@@ -25,10 +31,6 @@ require (
 	sigs.k8s.io/cluster-api/test v1.2.1
 	sigs.k8s.io/controller-runtime v0.12.3
 )
-
-// pinning this because cluster-api needs 0.23.5, but something else is
-// pulling in 0.24.2 which is breaking the e2es.
-replace k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.23.5
 
 require (
 	cloud.google.com/go/compute v1.6.1 // indirect
