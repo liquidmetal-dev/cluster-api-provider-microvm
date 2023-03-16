@@ -1,6 +1,6 @@
 module github.com/weaveworks-liquidmetal/cluster-api-provider-microvm
 
-go 1.17
+go 1.19
 
 // This is required because the cluster-api/test package imports an invalid
 // cluster-api version. Basically whenever you bump cluster-api and
