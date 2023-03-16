@@ -88,11 +88,15 @@ e2e: $(GINKGO) docker-build ## Run end to end test suite.
 ##@ Binaries
 
 .PHONY: build
-build: managers ## Build manager binary.
+build: managers compile-e2e ## Build all binaries.
 
 .PHONY: managers
 managers: ## Build manager binary.
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS} -extldflags '-static'" -o $(BIN_DIR)/manager .
+
+.PHONY: compile-e2e
+compile-e2e: ## Test e2e compilation
+	go test -c -o /dev/null -tags=e2e ./test/e2e
 
 ##@ Docker
 
@@ -142,7 +146,7 @@ generate-manifests: $(CONTROLLER_GEN)
 		paths=./controllers/... \
 		output:rbac:dir=$(RBAC_ROOT) \
 		rbac:roleName=manager-role
-	
+
 
 ##@ Tools binaries
 
