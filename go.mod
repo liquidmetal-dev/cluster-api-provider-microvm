@@ -11,7 +11,7 @@ replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.3.5
 require (
 	github.com/go-logr/logr v1.2.3
 	github.com/onsi/ginkgo/v2 v2.9.1
-	github.com/onsi/gomega v1.27.3
+	github.com/onsi/gomega v1.27.4
 	github.com/spf13/pflag v1.0.5
 	github.com/weaveworks-liquidmetal/controller-pkg/client v0.0.0-20230116125931-089fb91de682
 	github.com/weaveworks-liquidmetal/controller-pkg/services/microvm v0.0.0-20230314141046-be161234224e
@@ -22,24 +22,17 @@ require (
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.25.0
-	k8s.io/apimachinery v0.25.0
-	k8s.io/client-go v0.25.0
-	k8s.io/klog/v2 v2.80.1
-	k8s.io/utils v0.0.0-20221108210102-8e77b1f39fe2
+	k8s.io/api v0.27.1
+	k8s.io/apimachinery v0.27.1
+	k8s.io/client-go v0.27.1
+	k8s.io/klog/v2 v2.90.1
+	k8s.io/utils v0.0.0-20230209194617-a36077c30491
 	sigs.k8s.io/cluster-api v1.3.5
 	sigs.k8s.io/cluster-api/test v1.3.5
 	sigs.k8s.io/controller-runtime v0.13.1
 )
 
 require (
-	cloud.google.com/go/compute v1.7.0 // indirect
-	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
-	github.com/Azure/go-autorest/autorest v0.11.27 // indirect
-	github.com/Azure/go-autorest/autorest/adal v0.9.20 // indirect
-	github.com/Azure/go-autorest/autorest/date v0.3.0 // indirect
-	github.com/Azure/go-autorest/logger v0.2.1 // indirect
-	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
 	github.com/BurntSushi/toml v1.0.0 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -65,13 +58,12 @@ require (
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/go-openapi/jsonpointer v0.19.5 // indirect
-	github.com/go-openapi/jsonreference v0.20.0 // indirect
+	github.com/go-openapi/jsonpointer v0.19.6 // indirect
+	github.com/go-openapi/jsonreference v0.20.1 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/gobuffalo/flect v0.3.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v4 v4.2.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/cel-go v0.12.4 // indirect
@@ -137,8 +129,8 @@ require (
 	k8s.io/apiserver v0.25.0 // indirect
 	k8s.io/cluster-bootstrap v0.25.0 // indirect
 	k8s.io/component-base v0.25.0 // indirect
-	k8s.io/kube-openapi v0.0.0-20220803164354-a70c9af30aea // indirect
-	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
+	k8s.io/kube-openapi v0.0.0-20230308215209-15aac26d736a // indirect
+	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kind v0.17.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
