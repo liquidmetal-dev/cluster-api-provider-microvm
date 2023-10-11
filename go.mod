@@ -13,11 +13,11 @@ require (
 	github.com/onsi/ginkgo/v2 v2.9.1
 	github.com/onsi/gomega v1.27.3
 	github.com/spf13/pflag v1.0.5
-	github.com/weaveworks-liquidmetal/controller-pkg/client v0.0.0-20230116125931-089fb91de682
-	github.com/weaveworks-liquidmetal/controller-pkg/services/microvm v0.0.0-20230314141046-be161234224e
-	github.com/weaveworks-liquidmetal/controller-pkg/types/microvm v0.0.0-20230113164813-f1ccd249c9ba
-	github.com/weaveworks-liquidmetal/flintlock/api v0.0.0-20230109155544-97f4f12ca184
-	github.com/weaveworks-liquidmetal/flintlock/client v0.0.0-20230109155544-97f4f12ca184
+	github.com/weaveworks-liquidmetal/controller-pkg/client v0.0.0-20230531132000-8b78794ae040
+	github.com/weaveworks-liquidmetal/controller-pkg/services/microvm v0.0.0-20230531132000-8b78794ae040
+	github.com/weaveworks-liquidmetal/controller-pkg/types/microvm v0.0.0-20230531132000-8b78794ae040
+	github.com/weaveworks-liquidmetal/flintlock/api v0.0.0-20230526050646-f421319741e7
+	github.com/weaveworks-liquidmetal/flintlock/client v0.0.0-20230526050646-f421319741e7
 	github.com/yitsushi/macpot v1.0.2
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1

@@ -111,6 +111,13 @@ spec:
                   type: object
                 minItems: 1
                 type: array
+              provider:
+                description: 'Provider allows you to specify the name of the microvm
+                  provider to use. If this isn''t supplied then the default provider
+                  will be used. NOTE that the default provider cannot be controlled
+                  here: it would have been chosen by the operator configuring Flintlock
+                  on the remote host.'
+                type: string
               providerID:
                 description: ProviderID is the unique identifier as specified by the
                   cloud provider.
