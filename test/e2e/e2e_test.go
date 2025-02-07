@@ -10,7 +10,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/test/e2e/utils"
+	"github.com/liquidmetal-dev/cluster-api-provider-microvm/test/e2e/utils"
 	"k8s.io/utils/pointer"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -61,7 +61,7 @@ var _ = Describe("CAPMVM", func() {
 
 		utils.SetEnvVar("CONTROL_PLANE_VIP", mngr.VIPAddress, false)
 		utils.SetEnvVar("KUBERNETES_VERSION", fmt.Sprintf("v%s", mngr.KubernetesVersion), false)
-		utils.SetEnvVar("MVM_ROOT_IMAGE", fmt.Sprintf("%s:%s", "ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes", mngr.KubernetesVersion), false)
+		utils.SetEnvVar("MVM_ROOT_IMAGE", fmt.Sprintf("%s:%s", "ghcr.io/liquidmetal-dev/capmvm-kubernetes", mngr.KubernetesVersion), false)
 
 		result := &clusterctl.ApplyClusterTemplateAndWaitResult{}
 

@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/spf13/pflag"
-	client "github.com/weaveworks-liquidmetal/controller-pkg/client"
+	client "github.com/liquidmetal-dev/controller-pkg/client"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -40,9 +40,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	//+kubebuilder:scaffold:imports
-	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/controllers"
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/version"
+	infrav1 "github.com/liquidmetal-dev/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/liquidmetal-dev/cluster-api-provider-microvm/controllers"
+	"github.com/liquidmetal-dev/cluster-api-provider-microvm/version"
 )
 
 //nolint:gochecknoinits // Maybe we can remove it, now just ignore.

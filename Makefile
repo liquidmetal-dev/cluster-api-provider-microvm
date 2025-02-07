@@ -7,7 +7,7 @@ SHELL = /usr/bin/env bash -o pipefail
 TAG ?= dev
 ARCH ?= amd64
 REGISTRY ?= ghcr.io
-ORG ?= weaveworks-liquidmetal
+ORG ?= liquidmetal-dev
 CONTROLLER_IMAGE_NAME := cluster-api-provider-microvm
 CONTROLLER_IMAGE ?= $(REGISTRY)/$(ORG)/$(CONTROLLER_IMAGE_NAME)
 
@@ -23,12 +23,7 @@ CRD_ROOT ?= $(MANIFEST_ROOT)/crd/bases
 WEBHOOK_ROOT ?= $(MANIFEST_ROOT)/webhook
 RBAC_ROOT ?= $(MANIFEST_ROOT)/rbac
 
-# Set --output-base for conversion-gen if we are not within GOPATH
-ifneq ($(abspath $(REPO_ROOT)),$(shell go env GOPATH)/src/github.com/weaveworks-liquidmetal/cluster-api-provider-microvm)
-	GEN_OUTPUT_BASE := --output-base=$(REPO_ROOT)
-else
-	export GOPATH := $(shell go env GOPATH)
-endif
+GEN_FILE :=--output-file=zz_generated.defaults.go
 
 # Set build time variables including version details
 LDFLAGS := $(shell source ./hack/scripts/version.sh; version::ldflags)
@@ -127,8 +122,8 @@ generate-go: $(CONTROLLER_GEN) $(DEFAULTER_GEN) $(COUNTERFEITER)
 		object:headerFile="hack/boilerplate.go.txt" 
 
 	$(DEFAULTER_GEN) \
-		--input-dirs=./api/v1alpha1 \
-		--v=0 $(GEN_OUTPUT_BASE) \
+		./api/v1alpha1 \
+		--v=0 $(GEN_FILE) \
 		--go-header-file=./hack/boilerplate.go.txt
 
 	go generate ./...

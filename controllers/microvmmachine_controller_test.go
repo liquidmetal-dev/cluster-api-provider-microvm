@@ -17,12 +17,12 @@ import (
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 
-	"github.com/weaveworks-liquidmetal/controller-pkg/types/microvm"
-	flintlocktypes "github.com/weaveworks-liquidmetal/flintlock/api/types"
+	"github.com/liquidmetal-dev/controller-pkg/types/microvm"
+	flintlocktypes "github.com/liquidmetal-dev/flintlock/api/types"
 
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
-	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/controllers/fakes"
+	"github.com/liquidmetal-dev/cluster-api-provider-microvm/api/v1alpha1"
+	infrav1 "github.com/liquidmetal-dev/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/liquidmetal-dev/cluster-api-provider-microvm/controllers/fakes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

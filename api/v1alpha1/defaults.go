@@ -1,7 +1,7 @@
 package v1alpha1
 
 import (
-	"github.com/weaveworks-liquidmetal/controller-pkg/types/microvm"
+	"github.com/liquidmetal-dev/controller-pkg/types/microvm"
 	"github.com/yitsushi/macpot"
 )
 

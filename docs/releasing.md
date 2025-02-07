@@ -1,6 +1,6 @@
 # Releasing CAPMVM
 
-> IMPORTANT - before doing a release that updates the major or minor version make sure you have updated and commited [metadata.yaml](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/blob/main/metadata.yaml) with the new version.
+> IMPORTANT - before doing a release that updates the major or minor version make sure you have updated and commited [metadata.yaml](https://github.com/liquidmetal-dev/cluster-api-provider-microvm/blob/main/metadata.yaml) with the new version.
 
 ## Determine release version
 
@@ -45,8 +45,8 @@ git tag -s "${RELEASE_VERSION}" -m "${RELEASE_VERSION}"
 git push origin "${RELEASE_VERSION}"
 ```
 
-* Check the [release](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/actions/workflows/release.yml) GitHub Actions workflow completes successfully.
-* Check that the [docker image](https://github.com/orgs/weaveworks-liquidmetal/packages?repo_name=cluster-api-provider-microvm) for that tag was created successfully. (This
+* Check the [release](https://github.com/liquidmetal-dev/cluster-api-provider-microvm/actions/workflows/release.yml) GitHub Actions workflow completes successfully.
+* Check that the [docker image](https://github.com/orgs/liquidmetal-dev/packages?repo_name=cluster-api-provider-microvm) for that tag was created successfully. (This
 won't actually be visible while the repo is private for... reasons.)
 
 ## Edit & Publish GitHub Release

@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	flclient "github.com/weaveworks-liquidmetal/controller-pkg/client"
-	flservice "github.com/weaveworks-liquidmetal/controller-pkg/services/microvm"
-	"github.com/weaveworks-liquidmetal/controller-pkg/types/microvm"
-	flintlocktypes "github.com/weaveworks-liquidmetal/flintlock/api/types"
+	flclient "github.com/liquidmetal-dev/controller-pkg/client"
+	flservice "github.com/liquidmetal-dev/controller-pkg/services/microvm"
+	"github.com/liquidmetal-dev/controller-pkg/types/microvm"
+	flintlocktypes "github.com/liquidmetal-dev/flintlock/api/types"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -32,9 +32,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	infrav1 "github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/defaults"
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/scope"
+	infrav1 "github.com/liquidmetal-dev/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/liquidmetal-dev/cluster-api-provider-microvm/internal/defaults"
+	"github.com/liquidmetal-dev/cluster-api-provider-microvm/internal/scope"
 )
 
 // MicrovmMachineReconciler reconciles a MicrovmMachine object.

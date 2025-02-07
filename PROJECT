@@ -2,7 +2,7 @@ domain: cluster.x-k8s.io
 layout:
 - go.kubebuilder.io/v3
 projectName: cluster-api-provider-microvm
-repo: github.com/weaveworks-liquidmetal/cluster-api-provider-microvm
+repo: github.com/liquidmetal-dev/cluster-api-provider-microvm
 resources:
 - api:
     crdVersion: v1
@@ -11,7 +11,7 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: MicrovmCluster
-  path: github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1
+  path: github.com/liquidmetal-dev/cluster-api-provider-microvm/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -20,7 +20,7 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: MicrovmMachine
-  path: github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1
+  path: github.com/liquidmetal-dev/cluster-api-provider-microvm/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -29,6 +29,6 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: MicrovmMachineTemplate
-  path: github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1
+  path: github.com/liquidmetal-dev/cluster-api-provider-microvm/api/v1alpha1
   version: v1alpha1
 version: "3"

@@ -6,7 +6,7 @@ package e2e_test
 import (
 	"testing"
 
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/test/e2e/utils"
+	"github.com/liquidmetal-dev/cluster-api-provider-microvm/test/e2e/utils"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

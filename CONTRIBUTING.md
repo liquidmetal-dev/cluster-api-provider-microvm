@@ -78,11 +78,11 @@ Here is a non-exhaustive list of ways you can help out:
 
 1. Help out others in the [community slack channel][slack-channel], or in some [discussions][discussions]. :sos:
 
-1. Chime in on [bugs](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/issues?q=is%3Aopen+is%3Aissue+label%3Akind%2Fbug+), [feature requests](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/issues?q=is%3Aopen+is%3Aissue+label%3Akind%2Ffeature) and asks for [help][discussions]. :thought_balloon:
+1. Chime in on [bugs](https://github.com/liquidmetal-dev/cluster-api-provider-microvm/issues?q=is%3Aopen+is%3Aissue+label%3Akind%2Fbug+), [feature requests](https://github.com/liquidmetal-dev/cluster-api-provider-microvm/issues?q=is%3Aopen+is%3Aissue+label%3Akind%2Ffeature) and asks for [help][discussions]. :thought_balloon:
 
-1. Dig into some [`needs-investigation`](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/labels/needs-investigation) or [`help wanted`](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/labels/help-wanted) :detective:
+1. Dig into some [`needs-investigation`](https://github.com/liquidmetal-dev/cluster-api-provider-microvm/labels/needs-investigation) or [`help wanted`](https://github.com/liquidmetal-dev/cluster-api-provider-microvm/labels/help-wanted) :detective:
 
-1. Get involved in some [PR reviews](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/pulls). :nerd_face:
+1. Get involved in some [PR reviews](https://github.com/liquidmetal-dev/cluster-api-provider-microvm/pulls). :nerd_face:
 
 # Opening Issues
 
@@ -218,7 +218,7 @@ If you are not here to report a bug, ask for help or request some new behaviour,
 is the section for you. We have curated a set of issues for anyone who simply
 wants to build up their open-source cred :muscle:.
 
-- Issues labelled [`good first issue`](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/labels/good%20first%20issue)
+- Issues labelled [`good first issue`](https://github.com/liquidmetal-dev/cluster-api-provider-microvm/labels/good%20first%20issue)
   should be accessible to folks new to the repo, as well as to open source in general.
 
   These issues should present a low/non-existent barrier to entry with a thorough description,
@@ -234,7 +234,7 @@ wants to build up their open-source cred :muscle:.
 
   See more on [asking for help](#asking-for-help) below!
 
-- [`help wanted` issues](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/labels/help%20wanted)
+- [`help wanted` issues](https://github.com/liquidmetal-dev/cluster-api-provider-microvm/labels/help%20wanted)
   are for those a little more familiar with the code base, but should still be accessible enough
   to newcomers.
 
@@ -441,7 +441,7 @@ the body of the commit should describe the _why_ and _how_.
 If you encountered any weirdness along the way, this is a good place
 to note what you discovered and how you solved it.
 
-An example of a stellar commit message can be found [here](https://github.com/weaveworks-liquidmetal/flintlock/commit/7a30dd99dc7c05827ba11050505c476799bb2932).
+An example of a stellar commit message can be found [here](https://github.com/liquidmetal-dev/flintlock/commit/7a30dd99dc7c05827ba11050505c476799bb2932).
 
 The format can be described more formally as follows:
 
@@ -468,7 +468,7 @@ The core team regularly processes incoming issues. There may be some delay over 
 
 Every issue will be assigned a `priority/<x>` label. The levels of priorities are:
 
-- [`critical-urgent`](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/labels/priority%2Fcritical-urgent): These are time sensitive issues which should be picked up immediately.
+- [`critical-urgent`](https://github.com/liquidmetal-dev/cluster-api-provider-microvm/labels/priority%2Fcritical-urgent): These are time sensitive issues which should be picked up immediately.
   If an issue labelled `critical` is not assigned or being actively worked on,
   someone is expected to drop what they're doing immediately to work on it.
   This usually means the core team, but community members are welcome to claim
@@ -477,13 +477,13 @@ Every issue will be assigned a `priority/<x>` label. The levels of priorities ar
   they will be paired with a core team-member to manage the tracking, communication and release of any fix
   as well as to assume responsibility of all progess._
 
-- [`important-soon`](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm//labels/priority%2Fimportant-soon): Must be assigned as soon as capacity becomes available.
+- [`important-soon`](https://github.com/liquidmetal-dev/cluster-api-provider-microvm//labels/priority%2Fimportant-soon): Must be assigned as soon as capacity becomes available.
   Ideally something should be delivered in time for the next release.
 
-- [`important-longterm`](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm//labels/priority%2Fimportant-longterm): Important over the long term, but may not be currently
+- [`important-longterm`](https://github.com/liquidmetal-dev/cluster-api-provider-microvm//labels/priority%2Fimportant-longterm): Important over the long term, but may not be currently
   staffed and/or may require multiple releases to complete.
 
-- [`backlog`](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm//labels/priority%2Fbacklog): There appears to be general agreement that this would be good to have,
+- [`backlog`](https://github.com/liquidmetal-dev/cluster-api-provider-microvm//labels/priority%2Fbacklog): There appears to be general agreement that this would be good to have,
   but we may not have anyone available to work on it right now or in the immediate future.
   PRs are still very welcome, although it might take a while to get them reviewed if
   reviewers are fully occupied with higher priority issues, for example immediately before a release.
@@ -492,11 +492,11 @@ These priority categories have been inspired by [the Kubernetes contributing gui
 
 Other labels include:
 
-- [`adr-required`](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm//labels/adr-required):
+- [`adr-required`](https://github.com/liquidmetal-dev/cluster-api-provider-microvm//labels/adr-required):
   Indicates that the issue or PR contains a decision that needs to be documented in a [ADR](#adrs-architectural-decision-records) _before_
   it can be worked on.
 
-- [`needs-investigation`](https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm//labels/needs-investigation):  There is currently insufficient information to either categorize properly,
+- [`needs-investigation`](https://github.com/liquidmetal-dev/cluster-api-provider-microvm//labels/needs-investigation):  There is currently insufficient information to either categorize properly,
   or to understand and implement a solution. This could be because the issue opener did
   not provide enough relevant information, or because more in-depth research is required
   before work can begin.
@@ -548,7 +548,7 @@ Contributors are also welcome to backfill ADRs if they are found to be missing.
 # :rocket: :tada: Thanks for reading! :tada: :rocket:
 
 [slack-channel]: https://weave-community.slack.com/archives/C02KARWGR7S
-[discussions]: https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm//discussions
+[discussions]: https://github.com/liquidmetal-dev/cluster-api-provider-microvm//discussions
 [adr-template]: ./docs/adr/0000-template.md
 [developing]: ./docs/development-with-tilt.md
 [e2e]: ./test/e2e

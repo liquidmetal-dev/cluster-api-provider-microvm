@@ -9,5 +9,5 @@ spec:
       imagePullSecrets:
       - name: capmvm-private-image-cred
       containers:
-      - image: ghcr.io/weaveworks-liquidmetal/cluster-api-provider-microvm:dev
+      - image: ghcr.io/liquidmetal-dev/cluster-api-provider-microvm:dev
         name: manager
