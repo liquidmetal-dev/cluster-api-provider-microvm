@@ -5,8 +5,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/weaveworks-liquidmetal/controller-pkg/client"
-	"github.com/weaveworks-liquidmetal/flintlock/api/services/microvm/v1alpha1"
+	"github.com/liquidmetal-dev/controller-pkg/client"
+	"github.com/liquidmetal-dev/flintlock/api/services/microvm/v1alpha1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -76,7 +76,7 @@ type FakeClient struct {
 		result1 *v1alpha1.ListMicroVMsResponse
 		result2 error
 	}
-	ListMicroVMsStreamStub        func(context.Context, *v1alpha1.ListMicroVMsRequest, ...grpc.CallOption) (v1alpha1.MicroVM_ListMicroVMsStreamClient, error)
+	ListMicroVMsStreamStub        func(context.Context, *v1alpha1.ListMicroVMsRequest, ...grpc.CallOption) (grpc.ServerStreamingClient[v1alpha1.ListMessage], error)
 	listMicroVMsStreamMutex       sync.RWMutex
 	listMicroVMsStreamArgsForCall []struct {
 		arg1 context.Context
@@ -84,11 +84,11 @@ type FakeClient struct {
 		arg3 []grpc.CallOption
 	}
 	listMicroVMsStreamReturns struct {
-		result1 v1alpha1.MicroVM_ListMicroVMsStreamClient
+		result1 grpc.ServerStreamingClient[v1alpha1.ListMessage]
 		result2 error
 	}
 	listMicroVMsStreamReturnsOnCall map[int]struct {
-		result1 v1alpha1.MicroVM_ListMicroVMsStreamClient
+		result1 grpc.ServerStreamingClient[v1alpha1.ListMessage]
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -383,7 +383,7 @@ func (fake *FakeClient) ListMicroVMsReturnsOnCall(i int, result1 *v1alpha1.ListM
 	}{result1, result2}
 }
 
-func (fake *FakeClient) ListMicroVMsStream(arg1 context.Context, arg2 *v1alpha1.ListMicroVMsRequest, arg3 ...grpc.CallOption) (v1alpha1.MicroVM_ListMicroVMsStreamClient, error) {
+func (fake *FakeClient) ListMicroVMsStream(arg1 context.Context, arg2 *v1alpha1.ListMicroVMsRequest, arg3 ...grpc.CallOption) (grpc.ServerStreamingClient[v1alpha1.ListMessage], error) {
 	fake.listMicroVMsStreamMutex.Lock()
 	ret, specificReturn := fake.listMicroVMsStreamReturnsOnCall[len(fake.listMicroVMsStreamArgsForCall)]
 	fake.listMicroVMsStreamArgsForCall = append(fake.listMicroVMsStreamArgsForCall, struct {
@@ -410,7 +410,7 @@ func (fake *FakeClient) ListMicroVMsStreamCallCount() int {
 	return len(fake.listMicroVMsStreamArgsForCall)
 }
 
-func (fake *FakeClient) ListMicroVMsStreamCalls(stub func(context.Context, *v1alpha1.ListMicroVMsRequest, ...grpc.CallOption) (v1alpha1.MicroVM_ListMicroVMsStreamClient, error)) {
+func (fake *FakeClient) ListMicroVMsStreamCalls(stub func(context.Context, *v1alpha1.ListMicroVMsRequest, ...grpc.CallOption) (grpc.ServerStreamingClient[v1alpha1.ListMessage], error)) {
 	fake.listMicroVMsStreamMutex.Lock()
 	defer fake.listMicroVMsStreamMutex.Unlock()
 	fake.ListMicroVMsStreamStub = stub
@@ -423,28 +423,28 @@ func (fake *FakeClient) ListMicroVMsStreamArgsForCall(i int) (context.Context, *
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeClient) ListMicroVMsStreamReturns(result1 v1alpha1.MicroVM_ListMicroVMsStreamClient, result2 error) {
+func (fake *FakeClient) ListMicroVMsStreamReturns(result1 grpc.ServerStreamingClient[v1alpha1.ListMessage], result2 error) {
 	fake.listMicroVMsStreamMutex.Lock()
 	defer fake.listMicroVMsStreamMutex.Unlock()
 	fake.ListMicroVMsStreamStub = nil
 	fake.listMicroVMsStreamReturns = struct {
-		result1 v1alpha1.MicroVM_ListMicroVMsStreamClient
+		result1 grpc.ServerStreamingClient[v1alpha1.ListMessage]
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeClient) ListMicroVMsStreamReturnsOnCall(i int, result1 v1alpha1.MicroVM_ListMicroVMsStreamClient, result2 error) {
+func (fake *FakeClient) ListMicroVMsStreamReturnsOnCall(i int, result1 grpc.ServerStreamingClient[v1alpha1.ListMessage], result2 error) {
 	fake.listMicroVMsStreamMutex.Lock()
 	defer fake.listMicroVMsStreamMutex.Unlock()
 	fake.ListMicroVMsStreamStub = nil
 	if fake.listMicroVMsStreamReturnsOnCall == nil {
 		fake.listMicroVMsStreamReturnsOnCall = make(map[int]struct {
-			result1 v1alpha1.MicroVM_ListMicroVMsStreamClient
+			result1 grpc.ServerStreamingClient[v1alpha1.ListMessage]
 			result2 error
 		})
 	}
 	fake.listMicroVMsStreamReturnsOnCall[i] = struct {
-		result1 v1alpha1.MicroVM_ListMicroVMsStreamClient
+		result1 grpc.ServerStreamingClient[v1alpha1.ListMessage]
 		result2 error
 	}{result1, result2}
 }

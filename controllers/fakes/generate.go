@@ -4,4 +4,4 @@
 package fakes
 
 // Run go generate to regenerate this mock.
-//go:generate ../../hack/tools/bin/counterfeiter -o fake_client.go github.com/weaveworks-liquidmetal/controller-pkg/client.Client
+//go:generate ../../hack/tools/bin/counterfeiter -o fake_client.go github.com/liquidmetal-dev/controller-pkg/client.Client

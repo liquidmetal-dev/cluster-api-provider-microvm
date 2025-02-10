@@ -15,7 +15,7 @@ Cluster API[^1][^2] supports a number of resources kinds that infrastructure pro
 
 ## Decision
 
-Cluster API Provider Microvm (CAPMVM) will not support **Machine Pools** initially as [flintlock](https://github.com/weaveworks-liquidmetal/flintlock) has no way concept of auto-scaling or machine pools.
+Cluster API Provider Microvm (CAPMVM) will not support **Machine Pools** initially as [flintlock](https://github.com/liquidmetal-dev/flintlock) has no way concept of auto-scaling or machine pools.
 
 ## Consequences
 

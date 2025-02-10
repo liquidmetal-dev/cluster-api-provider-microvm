@@ -1,8 +1,8 @@
 # Cluster API provider Microvm
 
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
-![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/weaveworks-liquidmetal/cluster-api-provider-microvm)
-[![Go Report Card](https://goreportcard.com/badge/github.com/weaveworks-liquidmetal/cluster-api-provider-microvm)](https://goreportcard.com/report/github.com/weaveworks-liquidmetal/cluster-api-provider-microvm)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/liquidmetal-dev/cluster-api-provider-microvm)
+[![Go Report Card](https://goreportcard.com/badge/github.com/liquidmetal-dev/cluster-api-provider-microvm)](https://goreportcard.com/report/github.com/liquidmetal-dev/cluster-api-provider-microvm)
 [![Slack](https://img.shields.io/badge/join%20slack-%23liquid--metal-brightgreen)](https://weave-community.slack.com/archives/C02KARWGR7S)
 
 ------
@@ -60,24 +60,24 @@ Other interesting resources include:
 Thank you to our contributors:
 
 <p>
-<a href="https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=weaveworks-liquidmetal/cluster-api-provider-microvm" />
+<a href="https://github.com/liquidmetal-dev/cluster-api-provider-microvm/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=liquidmetal-dev/cluster-api-provider-microvm" />
 </a>
 </p>
 
 <!-- References -->
 [prow]: https://go.k8s.io/bot-commands
-[new_issue]: https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/issues/new/choose
+[new_issue]: https://github.com/liquidmetal-dev/cluster-api-provider-microvm/issues/new/choose
 [cluster_api]: https://github.com/kubernetes-sigs/cluster-api
 [tilt]: https://tilt.dev
 [cluster_api_tilt]: https://master.cluster-api.sigs.k8s.io/developer/tilt.html
 [cluster-api-supported-v]: https://cluster-api.sigs.k8s.io/reference/versions.html
-[flintlock]: https://github.com/weaveworks-liquidmetal/flintlock
+[flintlock]: https://github.com/liquidmetal-dev/flintlock
 [firecracker]: https://firecracker-microvm.github.io/
 [cloudhypervisor]: https://www.cloudhypervisor.org/
 [contrib]: ./CONTRIBUTING.md
 [coc]: ./CODE_OF_CONDUCT.md
-[milestones]: https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/milestones
+[milestones]: https://github.com/liquidmetal-dev/cluster-api-provider-microvm/milestones
 [adr]: ./docs/adr
 [license]: ./LICENSE
-[issues]: https://github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/issues
+[issues]: https://github.com/liquidmetal-dev/cluster-api-provider-microvm/issues

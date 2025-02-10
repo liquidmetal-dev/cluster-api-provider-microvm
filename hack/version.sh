@@ -87,7 +87,7 @@ version::ldflags() {
         local key=${1}
         local val=${2}
         ldflags+=(
-            "-X 'github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/version.${key}=${val}'"
+            "-X 'github.com/liquidmetal-dev/cluster-api-provider-microvm/version.${key}=${val}'"
         )
     }
 

@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	"sigs.k8s.io/cluster-api/util/yaml"
 
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/api/v1alpha1"
+	"github.com/liquidmetal-dev/cluster-api-provider-microvm/api/v1alpha1"
 )
 
 // ApplyClusterInput tidies up the input params for ApplyClusterTemplateAndWait

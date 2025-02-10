@@ -13,7 +13,7 @@ an [Equinix][equinix] host, but if you do not have an account there you will not
 be able to run these tests.
 
 ```bash
-git clone https://github.com/weaveworks-liquidmetal/flintlock
+git clone https://github.com/liquidmetal-dev/flintlock
 cd flintlock
 sudo ./hack/scripts/provision.sh --grpc-address 0.0.0.0:9090 --dev --insecure
 ```
@@ -112,5 +112,5 @@ cluster is set as the current context.
 _Note: `-e2e.flintlock-hosts` and `-e2e.artefact-dir` are already passed to the
 tests as part of the `make` command._
 
-[lmats]: https://github.com/weaveworks-liquidmetal/liquid-metal-acceptance-tests
+[lmats]: https://github.com/liquidmetal-dev/liquid-metal-acceptance-tests
 [equinix]: https://metal.equinix.com/

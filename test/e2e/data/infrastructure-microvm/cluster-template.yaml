@@ -70,10 +70,10 @@ spec:
       memoryMb: 2048
       rootVolume:
         id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.21.8}"
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/liquidmetal-dev/capmvm-kubernetes:1.21.8}"
       kernel:
         filename: "boot/vmlinux"
-        image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/flintlock-kernel:5.10.77}"
+        image: "${MVM_KERNEL_IMAGE:=ghcr.io/liquidmetal-dev/flintlock-kernel:5.10.77}"
       kernelCmdline: {}
       networkInterfaces:
       - guestDeviceName: "eth1"
@@ -113,10 +113,10 @@ spec:
       memoryMb: 2048
       rootVolume:
         id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.21.8}"
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/liquidmetal-dev/capmvm-kubernetes:1.21.8}"
       kernel:
         filename: "boot/vmlinux"
-        image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/flintlock-kernel:5.10.77}"
+        image: "${MVM_KERNEL_IMAGE:=ghcr.io/liquidmetal-dev/flintlock-kernel:5.10.77}"
       kernelCmdline: {}
       networkInterfaces:
       - guestDeviceName: "eth1"

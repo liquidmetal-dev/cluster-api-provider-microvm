@@ -76,13 +76,13 @@ spec:
     spec:
       rootVolume:
         id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.23.5}"
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/liquidmetal-dev/capmvm-kubernetes:1.23.5}"
       kernel:
         filename: boot/vmlinux
-        image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-bin:5.10.77}"
+        image: "${MVM_KERNEL_IMAGE:=ghcr.io/liquidmetal-dev/kernel-bin:5.10.77}"
       volumes:
       - id: modules
-        image: "${MVM_KERNEL_MODULES_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-modules:5.10.77}"
+        image: "${MVM_KERNEL_MODULES_IMAGE:=ghcr.io/liquidmetal-dev/kernel-modules:5.10.77}"
         mountPoint: /lib/modules/5.10.77
       kernelCmdline: {}
       memoryMb: 2048
@@ -123,13 +123,13 @@ spec:
     spec:
       rootVolume:
         id: root
-        image: "${MVM_ROOT_IMAGE:=ghcr.io/weaveworks-liquidmetal/capmvm-kubernetes:1.23.5}"
+        image: "${MVM_ROOT_IMAGE:=ghcr.io/liquidmetal-dev/capmvm-kubernetes:1.23.5}"
       kernel:
         filename: boot/vmlinux
-        image: "${MVM_KERNEL_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-bin:5.10.77}"
+        image: "${MVM_KERNEL_IMAGE:=ghcr.io/liquidmetal-dev/kernel-bin:5.10.77}"
       volumes:
       - id: modules
-        image: "${MVM_KERNEL_MODULES_IMAGE:=ghcr.io/weaveworks-liquidmetal/kernel-modules:5.10.77}"
+        image: "${MVM_KERNEL_MODULES_IMAGE:=ghcr.io/liquidmetal-dev/kernel-modules:5.10.77}"
         mountPoint: /lib/modules/5.10.77
       kernelCmdline: {}
       memoryMb: 2048

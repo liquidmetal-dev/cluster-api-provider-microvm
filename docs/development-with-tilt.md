@@ -25,7 +25,7 @@ This guide show how you can use **Tilt** for interactive development/debugging.
     cd src/github.com/weaveworks
     git clone git@github.com:<GITHUBUSERNAME>/cluster-api-provider-microvm.git
     cd cluster-api-provider-microvm
-    git remote add upstream git@github.com:weaveworks-liquidmetal/cluster-api-provider-microvm.git
+    git remote add upstream git@github.com:liquidmetal-dev/cluster-api-provider-microvm.git
     git fetch upstream
     ```
 
@@ -88,7 +88,7 @@ When tilt is started you can press the **spacebar** to open up a browser based U
 
 ## Start flintlock
 
-Ensure that you have an instance of flintlock (and containerd) [configured and running](https://github.com/weaveworks-liquidmetal/flintlock/blob/main/docs/quick-start.md).
+Ensure that you have an instance of flintlock (and containerd) [configured and running](https://github.com/liquidmetal-dev/flintlock/blob/main/docs/quick-start.md).
 Be sure to start flintlock with `--grpc-endpoint=0.0.0.0:9090` or the CAPMVM controller
 will not be able to connect to the server from within the Kind cluster.
 
@@ -106,9 +106,9 @@ Create the declaration for your cluster. We will use the template in the repo.
     export CONTROL_PLANE_MACHINE_COUNT=1
     export WORKER_MACHINE_COUNT=1
     export CONTROL_PLANE_VIP=192.168.8.15
-    export MVM_ROOT_IMAGE=ghcr.io/weaveworks-liquidmetal/capmvm-k8s-os:1.23.5
-    export MVM_KERNEL_IMAGE=ghcr.io/weaveworks-liquidmetal/kernel-bin:5.10.77
-    export MVM_KERNEL_MODULES_IMAGE=ghcr.io/weaveworks-liquidmetal/kernel-modules:5.10.77
+    export MVM_ROOT_IMAGE=ghcr.io/liquidmetal-dev/capmvm-k8s-os:1.23.5
+    export MVM_KERNEL_IMAGE=ghcr.io/liquidmetal-dev/kernel-bin:5.10.77
+    export MVM_KERNEL_MODULES_IMAGE=ghcr.io/liquidmetal-dev/kernel-modules:5.10.77
     # NOTE: change 192.168.8.2 to be the IP address from step 2
     export HOST_ENDPOINT=192.168.8.2:9090
 

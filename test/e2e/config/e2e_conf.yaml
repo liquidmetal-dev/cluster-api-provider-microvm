@@ -1,6 +1,6 @@
 ---
 images:
-- name: ghcr.io/weaveworks-liquidmetal/cluster-api-provider-microvm:e2e
+- name: ghcr.io/liquidmetal-dev/cluster-api-provider-microvm:e2e
   loadBehavior: mustLoad
 - name: quay.io/jetstack/cert-manager-cainjector:v1.7.2
   loadBehavior: tryLoad
@@ -75,8 +75,8 @@ providers:
             new: "imagePullPolicy: IfNotPresent"
           - old: --metrics-bind-addr=127.0.0.1:8080
             new: --metrics-bind-addr=:8080
-          - old: ghcr.io/weaveworks-liquidmetal/cluster-api-provider-microvm:dev
-            new: ghcr.io/weaveworks-liquidmetal/cluster-api-provider-microvm:e2e
+          - old: ghcr.io/liquidmetal-dev/cluster-api-provider-microvm:dev
+            new: ghcr.io/liquidmetal-dev/cluster-api-provider-microvm:e2e
 
 variables:
   EXP_CLUSTER_RESOURCE_SET: "true"

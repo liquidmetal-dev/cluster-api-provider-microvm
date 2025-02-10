@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.10.0
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: microvmclusters.infrastructure.cluster.x-k8s.io
 spec:
   group: infrastructure.cluster.x-k8s.io
@@ -38,14 +38,19 @@ spec:
         description: MicrovmCluster is the Schema for the microvmclusters API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -53,9 +58,11 @@ spec:
             description: MicrovmClusterSpec defines the desired state of MicrovmCluster.
             properties:
               controlPlaneEndpoint:
-                description: "ControlPlaneEndpoint represents the endpoint used to
-                  communicate with the control plane. \n See https://cluster-api.sigs.k8s.io/developer/architecture/controllers/cluster.html
-                  for more details."
+                description: |-
+                  ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+
+                  See https://cluster-api.sigs.k8s.io/developer/architecture/controllers/cluster.html
+                  for more details.
                 properties:
                   host:
                     description: The hostname on which the API server is serving.
@@ -69,10 +76,9 @@ spec:
                 - port
                 type: object
               microvmProxy:
-                description: MicrovmProxy is the proxy server details to use when
-                  calling the microvm service. This is an alteranative to using the
-                  http proxy environment variables and applied purely to the grpc
-                  service.
+                description: |-
+                  MicrovmProxy is the proxy server details to use when calling the microvm service. This is an
+                  alteranative to using the http proxy environment variables and applied purely to the grpc service.
                 properties:
                   endpoint:
                     description: Endpoint is the address of the proxy.
@@ -90,29 +96,29 @@ spec:
                     properties:
                       basicAuthSecret:
                         description: "BasicAuthSecret is the name of the secret containing
-                          basic auth info for each host listed in Hosts. The secret
-                          should be created in the same namespace as the Cluster.
-                          The secret should contain a data entry for each host Endpoint
-                          without the port: \n apiVersion: v1 kind: Secret metadata:
-                          name: mybasicauthsecret namespace: same-as-cluster type:
-                          Opaque data: 1.2.4.5: YWRtaW4= myhost: MWYyZDFlMmU2N2Rm"
+                          basic auth info for each\nhost listed in Hosts.\nThe secret
+                          should be created in the same namespace as the Cluster.\nThe
+                          secret should contain a data entry for each host Endpoint
+                          without the port:\n\napiVersion: v1\nkind: Secret\nmetadata:\n\tname:
+                          mybasicauthsecret\n\tnamespace: same-as-cluster\ntype: Opaque\ndata:\n\t1.2.4.5:
+                          YWRtaW4=\n\tmyhost: MWYyZDFlMmU2N2Rm"
                         type: string
                       hosts:
-                        description: Hosts defines the pool of hosts that should be
-                          used when creating microvms. The hosts will be supplied
-                          to CAPI (as fault domains) and it will place machines across
-                          them.
+                        description: |-
+                          Hosts defines the pool of hosts that should be used when creating microvms. The hosts will
+                          be supplied to CAPI (as fault domains) and it will place machines across them.
                         items:
                           properties:
                             controlplaneAllowed:
                               default: true
-                              description: ControlPlaneAllowed marks this host as
-                                suitable for running control plane nodes in addition
-                                to worker nodes.
+                              description: |-
+                                ControlPlaneAllowed marks this host as suitable for running control plane nodes in
+                                addition to worker nodes.
                               type: boolean
                             endpoint:
-                              description: Endpoint is the API endpoint for the microvm
-                                service (i.e. flintlock) including the port.
+                              description: |-
+                                Endpoint is the API endpoint for the microvm service (i.e. flintlock)
+                                including the port.
                               type: string
                             name:
                               description: Name is an optional name for the host.
@@ -128,9 +134,10 @@ spec:
                     type: object
                 type: object
               sshPublicKeys:
-                description: SSHPublicKeys is a list of SSHPublicKeys and their associated
-                  users. If specified these keys will be applied to all machine created
-                  unless you specify different keys at the machine level.
+                description: |-
+                  SSHPublicKeys is a list of SSHPublicKeys and their associated users.
+                  If specified these keys will be applied to all machine created unless you
+                  specify different keys at the machine level.
                 items:
                   properties:
                     authorizedKeys:
@@ -143,23 +150,27 @@ spec:
                       description: User is the name of the user to add keys for (eg
                         root, ubuntu).
                       type: string
+                  required:
+                  - authorizedKeys
+                  - user
                   type: object
                 type: array
               tlsSecretRef:
-                description: "mTLS Configuration: \n It is recommended that each flintlock
-                  host is configured with its own cert signed by a common CA, and
-                  set to use mTLS. The CAPMVM client should be provided with the CA,
-                  and a client cert and key signed by that CA. TLSSecretRef is a reference
-                  to the name of a secret which contains TLS cert information for
-                  connecting to Flintlock hosts. The secret should be created in the
-                  same namespace as the MicroVMCluster. The secret should be of type
-                  Opaque with the addition of a ca.crt key. \n apiVersion: v1 kind:
-                  Secret metadata: name: secret-tls namespace: default  <- same as
-                  Cluster type: Opaque data: tls.crt: | -----BEGIN CERTIFICATE-----
-                  MIIC2DCCAcCgAwIBAgIBATANBgkqh ... -----END CERTIFICATE----- tls.key:
-                  | -----BEGIN EC PRIVATE KEY----- MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ...
-                  -----END EC PRIVATE KEY----- ca.crt: | -----BEGIN CERTIFICATE-----
-                  MIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ... -----END CERTIFICATE-----"
+                description: "mTLS Configuration:\n\nIt is recommended that each flintlock
+                  host is configured with its own cert\nsigned by a common CA, and
+                  set to use mTLS.\nThe CAPMVM client should be provided with the
+                  CA, and a client cert and key\nsigned by that CA.\nTLSSecretRef
+                  is a reference to the name of a secret which contains TLS cert information\nfor
+                  connecting to Flintlock hosts.\nThe secret should be created in
+                  the same namespace as the MicroVMCluster.\nThe secret should be
+                  of type Opaque\nwith the addition of a ca.crt key.\n\napiVersion:
+                  v1\nkind: Secret\nmetadata:\n\tname: secret-tls\n\tnamespace: default
+                  \ <- same as Cluster\ntype: Opaque\ndata:\n\ttls.crt: |\n\t\t-----BEGIN
+                  CERTIFICATE-----\n\t\tMIIC2DCCAcCgAwIBAgIBATANBgkqh ...\n\t\t-----END
+                  CERTIFICATE-----\n\ttls.key: |\n\t\t-----BEGIN EC PRIVATE KEY-----\n\t\tMIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ
+                  ...\n\t\t-----END EC PRIVATE KEY-----\n\tca.crt: |\n\t\t-----BEGIN
+                  CERTIFICATE-----\n\t\tMIIEpgIBAAKCAQEA7yn3bRHQ5FHMQ ...\n\t\t-----END
+                  CERTIFICATE-----"
                 type: string
             required:
             - placement
@@ -174,37 +185,37 @@ spec:
                     operational state.
                   properties:
                     lastTransitionTime:
-                      description: Last time the condition transitioned from one status
-                        to another. This should be when the underlying condition changed.
-                        If that is not known, then using the time when the API field
-                        changed is acceptable.
+                      description: |-
+                        Last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed. If that is not known, then using the time when
+                        the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: A human readable message indicating details about
-                        the transition. This field may be empty.
+                      description: |-
+                        A human readable message indicating details about the transition.
+                        This field may be empty.
                       type: string
                     reason:
-                      description: The reason for the condition's last transition
-                        in CamelCase. The specific API may choose whether or not this
-                        field is considered a guaranteed API. This field may not be
-                        empty.
+                      description: |-
+                        The reason for the condition's last transition in CamelCase.
+                        The specific API may choose whether or not this field is considered a guaranteed API.
+                        This field may not be empty.
                       type: string
                     severity:
-                      description: Severity provides an explicit classification of
-                        Reason code, so the users or machines can immediately understand
-                        the current situation and act accordingly. The Severity field
-                        MUST be set only when Status=False.
+                      description: |-
+                        Severity provides an explicit classification of Reason code, so the users or machines can immediately
+                        understand the current situation and act accordingly.
+                        The Severity field MUST be set only when Status=False.
                       type: string
                     status:
                       description: Status of the condition, one of True, False, Unknown.
                       type: string
                     type:
-                      description: Type of condition in CamelCase or in foo.example.com/CamelCase.
-                        Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important.
+                      description: |-
+                        Type of condition in CamelCase or in foo.example.com/CamelCase.
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions
+                        can be useful (see .node.status.conditions), the ability to deconflict is important.
                       type: string
                   required:
                   - lastTransitionTime
@@ -214,9 +225,9 @@ spec:
                 type: array
               failureDomains:
                 additionalProperties:
-                  description: FailureDomainSpec is the Schema for Cluster API failure
-                    domains. It allows controllers to understand how many failure
-                    domains a cluster can optionally span across.
+                  description: |-
+                    FailureDomainSpec is the Schema for Cluster API failure domains.
+                    It allows controllers to understand how many failure domains a cluster can optionally span across.
                   properties:
                     attributes:
                       additionalProperties:
@@ -229,9 +240,9 @@ spec:
                         is suitable for use by control plane machines.
                       type: boolean
                   type: object
-                description: FailureDomains is a list of the failure domains that
-                  CAPI should spread the machines across. For the CAPMVM provider
-                  this equates to host machines that can run microvms using Flintlock.
+                description: |-
+                  FailureDomains is a list of the failure domains that CAPI should spread the machines across. For
+                  the CAPMVM provider this equates to host machines that can run microvms using Flintlock.
                 type: object
               ready:
                 default: false

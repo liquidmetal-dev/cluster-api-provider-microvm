@@ -19,7 +19,7 @@ import (
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/internal/scope"
+	"github.com/liquidmetal-dev/cluster-api-provider-microvm/internal/scope"
 )
 
 // SetEnvVar adds some logging around which vars are set for the test.

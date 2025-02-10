@@ -24,7 +24,7 @@ linters-settings:
   misspell:
     locale: GB
   goimports:
-    local-prefixes: github.com/weaveworks-liquidmetal/cluster-api-provider-microvm
+    local-prefixes: github.com/liquidmetal-dev/cluster-api-provider-microvm
   govet:
     check-shadowing: true
   nolintlint:
@@ -47,10 +47,10 @@ issues:
   - text: "should not use dot imports|don't use an underscore in package name"
     linters:
     - golint
-  - text: "local replacement are not allowed: github.com/weaveworks-liquidmetal/cluster-api-provider-microvm/"
+  - text: "local replacement are not allowed: github.com/liquidmetal-dev/cluster-api-provider-microvm/"
     linters:
     - gomoddirectives
-  - text: "github.com/weaveworks-liquidmetal/"
+  - text: "github.com/liquidmetal-dev/"
     linters:
     - wrapcheck
   - source: "https://"
