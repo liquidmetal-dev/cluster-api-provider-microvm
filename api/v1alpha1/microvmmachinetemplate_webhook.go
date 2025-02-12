@@ -10,6 +10,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var _ = logf.Log.WithName("microvmmachinetemplate-resource")
@@ -27,16 +28,16 @@ func (r *MicrovmMachineTemplate) SetupWebhookWithManager(mgr ctrl.Manager) error
 var _ webhook.Validator = &MicrovmMachineTemplate{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
-func (r *MicrovmMachineTemplate) ValidateCreate() error {
-	return nil
+func (r *MicrovmMachineTemplate) ValidateCreate() (admission.Warnings, error) {
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-func (r *MicrovmMachineTemplate) ValidateDelete() error {
-	return nil
+func (r *MicrovmMachineTemplate) ValidateDelete() (admission.Warnings, error) {
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (r *MicrovmMachineTemplate) ValidateUpdate(old runtime.Object) error {
-	return nil
+func (r *MicrovmMachineTemplate) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
+	return nil, nil
 }

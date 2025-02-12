@@ -9,8 +9,9 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/cluster-api/test/framework"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	"sigs.k8s.io/cluster-api/util/yaml"
 
@@ -36,12 +37,19 @@ func ApplyClusterTemplateAndWait(ctx context.Context, params ApplyClusterInput) 
 	input := params.Input
 	result := params.Result
 
-	setDefaults(&input)
 	Expect(ctx).NotTo(BeNil(), "ctx is required for ApplyClusterTemplateAndWait")
 	Expect(input.ClusterProxy).ToNot(BeNil(), "Invalid argument. input.ClusterProxy can't be nil when calling ApplyClusterTemplateAndWait")
 	Expect(result).ToNot(BeNil(), "Invalid argument. result can't be nil when calling ApplyClusterTemplateAndWait")
 	Expect(input.ConfigCluster.ControlPlaneMachineCount).ToNot(BeNil())
 	Expect(input.ConfigCluster.WorkerMachineCount).ToNot(BeNil())
+
+	// Ensure we have a Cluster for dump and cleanup steps in AfterEach even if ApplyClusterTemplateAndWait fails.
+	result.Cluster = &clusterv1.Cluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      input.ConfigCluster.ClusterName,
+			Namespace: input.ConfigCluster.Namespace,
+		},
+	}
 
 	By("Getting the cluster template yaml")
 
@@ -67,52 +75,22 @@ func ApplyClusterTemplateAndWait(ctx context.Context, params ApplyClusterInput) 
 	By("Adding provided flintlock hosts to MicrovmCluster template")
 	workloadClusterTemplate = addFlintlockHostsToTemplate(params.Hosts, workloadClusterTemplate)
 
-	By("Applying the cluster template yaml to the cluster")
-	Expect(input.ClusterProxy.Apply(ctx, workloadClusterTemplate, input.Args...)).To(Succeed())
-
-	By("Waiting for the top level cluster object to register as provisioned")
-
-	result.Cluster = framework.DiscoveryAndWaitForCluster(ctx, framework.DiscoveryAndWaitForClusterInput{
-		Getter:    input.ClusterProxy.GetClient(),
-		Namespace: input.ConfigCluster.Namespace,
-		Name:      input.ConfigCluster.ClusterName,
-	}, input.WaitForClusterIntervals...)
-
-	By("Waiting for control plane to be initialized")
-	input.WaitForControlPlaneInitialized(ctx, input, result)
-
-	By("Waiting for control plane to be ready")
-	input.WaitForControlPlaneMachinesReady(ctx, input, result)
-
-	By("Waiting for the machine deployments to be provisioned")
-
-	result.MachineDeployments = framework.DiscoveryAndWaitForMachineDeployments(ctx, framework.DiscoveryAndWaitForMachineDeploymentsInput{
-		Lister:  input.ClusterProxy.GetClient(),
-		Cluster: result.Cluster,
-	}, input.WaitForMachineDeployments...)
-}
-
-// This is a dupe of clusterctl.setDefaults copied over because the other calling
-// func we copied called this private one.
-func setDefaults(input *clusterctl.ApplyClusterTemplateAndWaitInput) {
-	if input.WaitForControlPlaneInitialized == nil {
-		input.WaitForControlPlaneInitialized = func(ctx context.Context, input clusterctl.ApplyClusterTemplateAndWaitInput, result *clusterctl.ApplyClusterTemplateAndWaitResult) {
-			result.ControlPlane = framework.DiscoveryAndWaitForControlPlaneInitialized(ctx, framework.DiscoveryAndWaitForControlPlaneInitializedInput{
-				Lister:  input.ClusterProxy.GetClient(),
-				Cluster: result.Cluster,
-			}, input.WaitForControlPlaneIntervals...)
-		}
-	}
-
-	if input.WaitForControlPlaneMachinesReady == nil {
-		input.WaitForControlPlaneMachinesReady = func(ctx context.Context, input clusterctl.ApplyClusterTemplateAndWaitInput, result *clusterctl.ApplyClusterTemplateAndWaitResult) {
-			framework.WaitForControlPlaneAndMachinesReady(ctx, framework.WaitForControlPlaneAndMachinesReadyInput{
-				GetLister:    input.ClusterProxy.GetClient(),
-				Cluster:      result.Cluster,
-				ControlPlane: result.ControlPlane,
-			}, input.WaitForControlPlaneIntervals...)
-		}
-	}
+	clusterctl.ApplyCustomClusterTemplateAndWait(ctx, clusterctl.ApplyCustomClusterTemplateAndWaitInput{
+		ClusterProxy:                 input.ClusterProxy,
+		CustomTemplateYAML:           workloadClusterTemplate,
+		ClusterName:                  input.ConfigCluster.ClusterName,
+		Namespace:                    input.ConfigCluster.Namespace,
+		CNIManifestPath:              input.CNIManifestPath,
+		Flavor:                       input.ConfigCluster.Flavor,
+		WaitForClusterIntervals:      input.WaitForClusterIntervals,
+		WaitForControlPlaneIntervals: input.WaitForControlPlaneIntervals,
+		WaitForMachineDeployments:    input.WaitForMachineDeployments,
+		WaitForMachinePools:          input.WaitForMachinePools,
+		CreateOrUpdateOpts:           input.CreateOrUpdateOpts,
+		PreWaitForCluster:            input.PreWaitForCluster,
+		PostMachinesProvisioned:      input.PostMachinesProvisioned,
+		ControlPlaneWaiters:          input.ControlPlaneWaiters,
+	}, (*clusterctl.ApplyCustomClusterTemplateAndWaitResult)(result))
 }
 
 // This disaster was not copied over from anywhere, it is all ours!

@@ -25,7 +25,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	infrav1 "github.com/liquidmetal-dev/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/liquidmetal-dev/cluster-api-provider-microvm/internal/defaults"
@@ -240,10 +239,10 @@ func (r *MicrovmClusterReconciler) SetupWithManager(
 	builder := ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
 		For(&infrav1.MicrovmCluster{}).
-		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(log, r.WatchFilterValue)).
-		WithEventFilter(predicates.ResourceIsNotExternallyManaged(log)).
+		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(mgr.GetScheme(), log, r.WatchFilterValue)).
+		WithEventFilter(predicates.ResourceIsNotExternallyManaged(mgr.GetScheme(), log)).
 		Watches(
-			&source.Kind{Type: &clusterv1.Cluster{}},
+			&clusterv1.Cluster{},
 			handler.EnqueueRequestsFromMapFunc(
 				util.ClusterToInfrastructureMapFunc(ctx,
 					infrav1.GroupVersion.WithKind("MicrovmCluster"),
@@ -252,7 +251,7 @@ func (r *MicrovmClusterReconciler) SetupWithManager(
 				),
 			),
 			builder.WithPredicates(
-				predicates.ClusterUnpaused(log),
+				predicates.ClusterUnpaused(mgr.GetScheme(), log),
 			),
 		)
 

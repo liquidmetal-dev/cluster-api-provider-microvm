@@ -24,20 +24,25 @@ import (
 	"os"
 	"time"
 
-	"github.com/spf13/pflag"
 	client "github.com/liquidmetal-dev/controller-pkg/client"
+	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	cgrecord "k8s.io/client-go/tools/record"
-	klog "k8s.io/klog/v2"
-	"k8s.io/klog/v2/klogr"
+	"k8s.io/component-base/logs"
+	v1 "k8s.io/component-base/logs/api/v1"
+	"k8s.io/klog/v2"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	expclusterv1 "sigs.k8s.io/cluster-api/exp/api/v1beta1"
+	"sigs.k8s.io/cluster-api/util/flags"
 	"sigs.k8s.io/cluster-api/util/record"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	//+kubebuilder:scaffold:imports
 	infrav1 "github.com/liquidmetal-dev/cluster-api-provider-microvm/api/v1alpha1"
@@ -62,7 +67,6 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 
 	enableLeaderElection        bool
-	metricsAddr                 string
 	leaderElectionNamespace     string
 	watchNamespace              string
 	profilerAddress             string
@@ -76,6 +80,9 @@ var (
 	leaderElectionLeaseDuration time.Duration
 	leaderElectionRenewDeadline time.Duration
 	leaderElectionRetryPeriod   time.Duration
+
+	logOptions     = logs.NewOptions()
+	managerOptions = flags.ManagerOptions{}
 )
 
 const (
@@ -88,13 +95,6 @@ const (
 )
 
 func initFlags(fs *pflag.FlagSet) {
-	fs.StringVar(
-		&metricsAddr,
-		"metrics-bind-addr",
-		"localhost:8080",
-		"The address the metric endpoint binds to.",
-	)
-
 	fs.BoolVar(
 		&enableLeaderElection,
 		"leader-elect",
@@ -193,6 +193,11 @@ func initFlags(fs *pflag.FlagSet) {
 		":9440",
 		"The address the health endpoint binds to.",
 	)
+
+	logs.AddFlags(fs, logs.SkipLoggingConfigurationFlags())
+	v1.AddFlags(logOptions, fs)
+
+	flags.AddManagerOptions(fs, &managerOptions)
 }
 
 func main() {
@@ -202,19 +207,38 @@ func main() {
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
 
+	if err := v1.ValidateAndApply(logOptions, nil); err != nil {
+		setupLog.Error(err, "unable to validate and apply log options")
+		os.Exit(1)
+	}
+	ctrl.SetLogger(klog.Background())
+
+	_, metricsOptions, err := flags.GetManagerOptions(managerOptions)
+	if err != nil {
+		setupLog.Error(err, "Unable to start manager: invalid flags")
+	}
+
+	var watchNamespaces map[string]cache.Config
 	if watchNamespace != "" {
 		setupLog.Info("Watching cluster-api objects only in namespace for reconciliation", "namespace", watchNamespace)
+		watchNamespaces = map[string]cache.Config{
+			watchNamespace: {},
+		}
 	}
 
 	if profilerAddress != "" {
 		setupLog.Info("Profiler listening for requests", "profiler-address", profilerAddress)
-
 		go func() {
-			setupLog.Error(http.ListenAndServe(profilerAddress, nil), "listen and serve error")
+			server := &http.Server{
+				Addr:              profilerAddress,
+				ReadHeaderTimeout: 3 * time.Second,
+			}
+			err := server.ListenAndServe()
+			if err != nil {
+				setupLog.Error(err, "listen and serve error")
+			}
 		}()
 	}
-
-	ctrl.SetLogger(klogr.New())
 
 	// Machine and cluster operations can create enough events to trigger the event recorder spam filter
 	// Setting the burst size higher ensures all events will be recorded and submitted to the API
@@ -222,19 +246,28 @@ func main() {
 		BurstSize: defaultEventBurstSize,
 	})
 
+	restConfig := ctrl.GetConfigOrDie()
+	restConfig.UserAgent = "cluster-api-provider-microvm-controller"
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                     scheme,
-		MetricsBindAddress:         metricsAddr,
+		Metrics:                    *metricsOptions,
 		LeaderElection:             enableLeaderElection,
 		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
 		LeaderElectionID:           "controller-leader-elect-capmvm",
 		LeaderElectionNamespace:    leaderElectionNamespace,
-		SyncPeriod:                 &syncPeriod,
-		Namespace:                  watchNamespace,
-		EventBroadcaster:           broadcaster,
-		Port:                       webhookPort,
-		CertDir:                    webhookCertDir,
-		HealthProbeBindAddress:     healthAddr,
+		RenewDeadline:              &leaderElectionRenewDeadline,
+		RetryPeriod:                &leaderElectionRetryPeriod,
+		Cache: cache.Options{
+			DefaultNamespaces: watchNamespaces,
+			SyncPeriod:        &syncPeriod,
+		},
+		WebhookServer: webhook.NewServer(webhook.Options{
+			Port:    webhookPort,
+			CertDir: webhookCertDir,
+		}),
+		EventBroadcaster:       broadcaster,
+		HealthProbeBindAddress: healthAddr,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -275,7 +308,7 @@ func main() {
 func setupReconcilers(ctx context.Context, mgr ctrl.Manager) error {
 	managerOptions := controller.Options{
 		MaxConcurrentReconciles: microvmClusterConcurrency,
-		RecoverPanic:            true,
+		RecoverPanic:            ptr.To[bool](true),
 	}
 
 	if err := (&controllers.MicrovmClusterReconciler{
