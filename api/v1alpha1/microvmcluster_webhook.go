@@ -12,6 +12,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var _ = logf.Log.WithName("mvmcluster-resource")
@@ -33,26 +34,26 @@ var (
 )
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
-func (r *MicrovmCluster) ValidateCreate() error {
+func (r *MicrovmCluster) ValidateCreate() (admission.Warnings, error) {
 	var allErrs field.ErrorList
 
 	allErrs = append(allErrs, r.Spec.Placement.Validate()...)
 
 	if len(allErrs) == 0 {
-		return nil
+		return nil, nil
 	}
 
-	return apierrors.NewInvalid(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
+	return nil, apierrors.NewInvalid(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-func (r *MicrovmCluster) ValidateDelete() error {
-	return nil
+func (r *MicrovmCluster) ValidateDelete() (admission.Warnings, error) {
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (r *MicrovmCluster) ValidateUpdate(old runtime.Object) error {
-	return nil
+func (r *MicrovmCluster) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
+	return nil, nil
 }
 
 // Default satisfies the defaulting webhook interface.

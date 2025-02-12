@@ -39,7 +39,7 @@ func FailureDomainSpread(proxy framework.ClusterProxy, namespace, clusterName st
 	lister := proxy.GetClient()
 	inClustersNamespaceListOption := client.InNamespace(namespace)
 	matchClusterListOption := client.MatchingLabels{
-		clusterv1.ClusterLabelName: clusterName,
+		clusterv1.ClusterNameLabel: clusterName,
 	}
 
 	machineList := &clusterv1.MachineList{}
