@@ -30,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	infrav1 "github.com/liquidmetal-dev/cluster-api-provider-microvm/api/v1alpha1"
 	"github.com/liquidmetal-dev/cluster-api-provider-microvm/internal/defaults"
@@ -57,9 +56,6 @@ type MicrovmMachineReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *MicrovmMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
@@ -390,7 +386,7 @@ func (r *MicrovmMachineReconciler) SetupWithManager(
 ) error {
 	log := ctrl.LoggerFrom(ctx)
 
-	clusterToObjectFunc, err := util.ClusterToObjectsMapper(
+	clusterToObjectFunc, err := util.ClusterToTypedObjectsMapper(
 		r.Client,
 		&infrav1.MicrovmMachineList{},
 		mgr.GetScheme(),
@@ -402,22 +398,22 @@ func (r *MicrovmMachineReconciler) SetupWithManager(
 	builder := ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
 		For(&infrav1.MicrovmMachine{}).
-		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(log, r.WatchFilterValue)).
-		WithEventFilter(predicates.ResourceIsNotExternallyManaged(log)).
+		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(mgr.GetScheme(), log, r.WatchFilterValue)).
+		WithEventFilter(predicates.ResourceIsNotExternallyManaged(mgr.GetScheme(), log)).
 		Watches(
-			&source.Kind{Type: &clusterv1.Machine{}},
+			&clusterv1.Machine{},
 			handler.EnqueueRequestsFromMapFunc(
 				util.MachineToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("MicrovmMachine")),
 			),
 		).
 		Watches(
-			&source.Kind{Type: &infrav1.MicrovmCluster{}},
+			&infrav1.MicrovmCluster{},
 			handler.EnqueueRequestsFromMapFunc(r.MicroVMClusterToMicrovmMachine(ctx, log)),
 		).
 		Watches(
-			&source.Kind{Type: &clusterv1.Cluster{}},
+			&clusterv1.Cluster{},
 			handler.EnqueueRequestsFromMapFunc(clusterToObjectFunc),
-			builder.WithPredicates(predicates.ClusterUnpausedAndInfrastructureReady(log)),
+			builder.WithPredicates(predicates.ClusterPausedTransitionsOrInfrastructureReady(mgr.GetScheme(), log)),
 		)
 
 	if err := builder.Complete(r); err != nil {
@@ -437,7 +433,7 @@ func (r *MicrovmMachineReconciler) MicroVMClusterToMicrovmMachine(
 	ctx context.Context,
 	log logr.Logger,
 ) handler.MapFunc {
-	return func(o client.Object) []ctrl.Request {
+	return func(ctx context.Context, o client.Object) []ctrl.Request {
 		mvmCluster, ok := o.(*infrav1.MicrovmCluster)
 		if !ok {
 			log.Error(errExpectedMicrovmCluster, "failed to get microvmcluster")

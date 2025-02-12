@@ -12,6 +12,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var machineLog = logf.Log.WithName("microvmmachine-resource")
@@ -33,17 +34,17 @@ var (
 )
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
-func (r *MicrovmMachine) ValidateCreate() error {
-	return nil
+func (r *MicrovmMachine) ValidateCreate() (admission.Warnings, error) {
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-func (r *MicrovmMachine) ValidateDelete() error {
-	return nil
+func (r *MicrovmMachine) ValidateDelete() (admission.Warnings, error) {
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (r *MicrovmMachine) ValidateUpdate(old runtime.Object) error {
+func (r *MicrovmMachine) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	machineLog.Info("validate upadate", "name", r.Name)
 
 	var allErrs field.ErrorList
@@ -54,7 +55,7 @@ func (r *MicrovmMachine) ValidateUpdate(old runtime.Object) error {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "microvm machine spec is immutable"))
 	}
 
-	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
+	return nil, aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)
 }
 
 // Default satisfies the defaulting webhook interface.
