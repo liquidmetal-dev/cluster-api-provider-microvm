@@ -18,7 +18,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2/klogr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
@@ -287,7 +286,7 @@ func (m *MachineScope) GetProviderID() string {
 
 // GetInstanceID gets the instance ID (i.e. UID) of the machine.
 func (m *MachineScope) GetInstanceID() string {
-	parsed, err := noderefutil.NewProviderID(m.GetProviderID())
+	parsed, err := NewProviderID(m.GetProviderID())
 	if err != nil {
 		return ""
 	}

@@ -184,6 +184,7 @@ func createMicrovmCluster() *infrav1.MicrovmCluster {
 					Name:       testClusterName,
 				},
 			},
+			UID: "123",
 		},
 		Spec: infrav1.MicrovmClusterSpec{
 			Placement: infrav1.Placement{
@@ -275,7 +276,7 @@ func createMachine() *clusterv1.Machine {
 			Name:      testMachineName,
 			Namespace: testClusterNamespace,
 			Labels: map[string]string{
-				clusterv1.ClusterLabelName: testClusterName,
+				clusterv1.ClusterNameLabel: testClusterName,
 			},
 		},
 		Spec: clusterv1.MachineSpec{
