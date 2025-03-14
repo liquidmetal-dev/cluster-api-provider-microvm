@@ -17,11 +17,11 @@ jobs:
       packages: write
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Docker login
-      uses: docker/login-action@v1
+      uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
@@ -37,7 +37,7 @@ jobs:
     needs: [build]
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Update manifests
@@ -46,7 +46,7 @@ jobs:
         sed -i "s/dev/${TAG}/g" config/default/manager_image_patch.yaml
         kustomize build config/default/ > infrastructure-components.yaml
     - name: Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         prerelease: false
         draft: true
