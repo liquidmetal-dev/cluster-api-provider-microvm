@@ -7,6 +7,10 @@ updates:
       interval: "weekly"
     labels:
       - "kind/cleanup"
+    groups:
+      dependencies:
+        patterns:
+          - "*"
 
   # Main go mod
   - package-ecosystem: "gomod"
