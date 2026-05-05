@@ -1,100 +1,94 @@
 version: 2
 updates:
-  # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  # github-actions
+  - directory: "/"
+    package-ecosystem: "github-actions"
+    open-pull-requests-limit: 5
     schedule:
       interval: "weekly"
-    labels:
-      - "kind/cleanup"
+      time: "09:00"
     groups:
-      dependencies:
-        patterns:
-          - "*"
-
-  # Main go mod
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "weekly"
+      all-github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "dependabot"
+      include: scope
     labels:
       - "kind/cleanup"
       - "area/dependency"
-    groups:
-      dependencies:
-        patterns:
-          - "*"
+
+  # Go - root directory
+  - directory: "/"
+    package-ecosystem: "gomod"
+    open-pull-requests-limit: 5
+    schedule:
+      interval: "weekly"
+      time: "09:00"
+    commit-message:
+      prefix: "dependabot"
+      include: scope
     ignore:
-      # Ignore Cluster-API as its upgraded manually.
-      - dependency-name: "sigs.k8s.io/cluster-api*"
-        update-types:
-          ["version-update:semver-major", "version-update:semver-minor"]
       # Ignore controller-runtime as its upgraded manually.
       - dependency-name: "sigs.k8s.io/controller-runtime"
-        update-types:
-          ["version-update:semver-major", "version-update:semver-minor"]
       # Ignore k8s and its transitives modules as they are upgraded manually together with controller-runtime.
       - dependency-name: "k8s.io/*"
-        update-types:
-          ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "github.com/prometheus/*"
+        update-types: [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+          ] # Consume only patch updates.
       - dependency-name: "go.etcd.io/*"
-        update-types:
-          ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "google.golang.org/grpc"
-        update-types:
-          ["version-update:semver-major", "version-update:semver-minor"]
-      # Bumping the kustomize API independently can break compatibility with client-go as they share k8s.io/kube-openapi as a dependency.
-      # Bumping kustomize itself has led to using Go versions newer than what's available in the image builder jobs, breaking our builds.
-      - dependency-name: "sigs.k8s.io/kustomize/*"
-        update-types:
-          ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "sigs.k8s.io/cloud-provider-azure"
+      # Ignore subpackage releases of opentelemetry-go; just watch go.opentelemetry.io/otel.
+      - dependency-name: "go.opentelemetry.io/contrib/*"
+      - dependency-name: "go.opentelemetry.io/otel/exporters/*"
+      - dependency-name: "go.opentelemetry.io/otel/metric"
+      - dependency-name: "go.opentelemetry.io/otel/sdk*"
+      - dependency-name: "go.opentelemetry.io/otel/trace"
+    labels:
+      - "kind/cleanup"
+      - "area/dependency"
 
+  # Go - hack/tools directory
+  - directory: "/hack/tools"
+    package-ecosystem: "gomod"
+    open-pull-requests-limit: 5
+    schedule:
+      interval: "weekly"
+      time: "09:00"
+    commit-message:
+      prefix: "dependabot"
+      include: scope
+    ignore:
+      # Ignore controller-runtime as its upgraded manually.
+      - dependency-name: "sigs.k8s.io/controller-runtime"
+      # Ignore k8s and its transitives modules as they are upgraded manually together with controller-runtime.
+      - dependency-name: "k8s.io/*"
+      - dependency-name: "go.etcd.io/*"
+      - dependency-name: "google.golang.org/grpc"
+      # Ignore subpackage releases of opentelemetry-go; just watch go.opentelemetry.io/otel.
+      - dependency-name: "go.opentelemetry.io/contrib/*"
+      - dependency-name: "go.opentelemetry.io/otel/exporters/*"
+      - dependency-name: "go.opentelemetry.io/otel/metric"
+      - dependency-name: "go.opentelemetry.io/otel/sdk*"
+      - dependency-name: "go.opentelemetry.io/otel/trace"
+    labels:
+      - "kind/cleanup"
+      - "area/dependency"
+
+  # Docker
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-    labels:
-      - "kind/cleanup"
-      - "area/dependency"
-    groups:
-      dependencies:
-        patterns:
-          - "*"
-
-  # Enable version updates for Go tools
-  - package-ecosystem: "gomod"
-    directory: "/hack/tools"
-    schedule:
-      interval: "weekly"
-      day: "wednesday"
-    labels:
-      - "kind/cleanup"
-      - "area/dependency"
-    groups:
-      dependencies:
-        patterns:
-          - "*"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "dependabot"
+      include: scope
     ignore:
-      # Ignore Cluster-API as its upgraded manually.
-      - dependency-name: "sigs.k8s.io/cluster-api*"
-        update-types:
-          ["version-update:semver-major", "version-update:semver-minor"]
-      # Ignore controller-runtime as its upgraded manually.
-      - dependency-name: "sigs.k8s.io/controller-runtime"
-        update-types:
-          ["version-update:semver-major", "version-update:semver-minor"]
-      # Ignore k8s and its transitives modules as they are upgraded manually together with controller-runtime.
-      - dependency-name: "k8s.io/*"
-        update-types:
-          ["version-update:semver-major", "version-update:semver-minor"]
-      - dependency-name: "go.etcd.io/*"
-        update-types:
-          ["version-update:semver-major", "version-update:semver-minor"]
-      - dependency-name: "google.golang.org/grpc"
-        update-types:
-          ["version-update:semver-major", "version-update:semver-minor"]
-      # Bumping the kustomize API independently can break compatibility with client-go as they share k8s.io/kube-openapi as a dependency.
-      - dependency-name: "sigs.k8s.io/kustomize/api"
-        update-types:
-          ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "golang"
+    labels:
+      - "kind/cleanup"
+      - "area/dependency"
