@@ -9,7 +9,7 @@ go 1.23.0
 replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.10.5
 
 require (
-	github.com/go-logr/logr v1.4.2
+	github.com/go-logr/logr v1.4.3
 	github.com/liquidmetal-dev/controller-pkg/client v0.0.0-20250206153520-fa7b57540c18
 	github.com/liquidmetal-dev/controller-pkg/services/microvm v0.0.0-20250207135305-fccf00f7a407
 	github.com/liquidmetal-dev/controller-pkg/types/microvm v0.0.0-20250207115528-f599d8cc9a1d
