@@ -313,8 +313,13 @@ func main() {
 }
 
 func setupReconcilers(ctx context.Context, mgr ctrl.Manager) error {
-	managerOptions := controller.Options{
+	clusterOptions := controller.Options{
 		MaxConcurrentReconciles: microvmClusterConcurrency,
+		RecoverPanic:            ptr.To[bool](true),
+	}
+
+	machineOptions := controller.Options{
+		MaxConcurrentReconciles: microvmMachineConcurrency,
 		RecoverPanic:            ptr.To[bool](true),
 	}
 
@@ -323,7 +328,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager) error {
 		Scheme:           mgr.GetScheme(),
 		Recorder:         mgr.GetEventRecorderFor("microvmcluster-controller"),
 		WatchFilterValue: watchFilterValue,
-	}).SetupWithManager(ctx, mgr, managerOptions); err != nil {
+	}).SetupWithManager(ctx, mgr, clusterOptions); err != nil {
 		return fmt.Errorf("unable to create microvm cluster controller: %w", err)
 	}
 
@@ -333,7 +338,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager) error {
 		Recorder:         mgr.GetEventRecorderFor("microvmmachine-controller"),
 		WatchFilterValue: watchFilterValue,
 		MvmClientFunc:    client.NewFlintlockClient,
-	}).SetupWithManager(ctx, mgr, managerOptions); err != nil {
+	}).SetupWithManager(ctx, mgr, machineOptions); err != nil {
 		return fmt.Errorf("unable to create microvm machine controller: %w", err)
 	}
 
